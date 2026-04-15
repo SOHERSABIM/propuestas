@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sohersa BIM | Planta Volvo Mty.</title>
+  <style>
+    :root {
+      --sohersa-green: #6fbe3b;
+      --sohersa-navy: #06104f;
+      --sohersa-blue: #103f73;
+      --text: #11203a;
+      --muted: #61708d;
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --line: #dce3ef;
+      --shadow: 0 18px 50px rgba(6, 16, 79, 0.10);
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: linear-gradient(148deg, #ffffff 0%, #f5f7fb 56%, #eef3fb 100%);
+      overflow-x: hidden;
+    }
+    .hero-accent-top,.hero-accent-mid,.hero-accent-bottom {
+      position: absolute; z-index: 0; transform: skewX(-28deg);
+      border-radius: 16px; pointer-events: none;
+    }
+    .hero-accent-top { top: -70px; left: -60px; width: 260px; height: 110px; background: var(--sohersa-green); opacity: 0.95; }
+    .hero-accent-mid { right: -80px; top: 120px; width: 420px; height: 220px; background: var(--sohersa-navy); opacity: 0.98; }
+    .hero-accent-bottom { left: 48%; top: 360px; width: 140px; height: 260px; background: var(--sohersa-green); opacity: 0.95; }
+    .container { width: min(1180px, calc(100% - 32px)); margin: 0 auto; position: relative; z-index: 1; }
+    .hero { position: relative; padding: 28px 0 46px; overflow: hidden; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 38px; }
+    .brand { display: flex; align-items: center; gap: 14px; font-weight: 800; letter-spacing: 0.02em; }
+    .brand-mark {
+      width: 46px; height: 46px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--sohersa-green), #58a92a 65%, var(--sohersa-blue));
+      display: grid; place-items: center; color: white; font-size: 21px;
+      box-shadow: 0 12px 24px rgba(111, 190, 59, 0.28);
+    }
+    .brand-copy small {
+      display: block; color: var(--muted); font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase; font-size: 11px; margin-top: 2px;
+    }
+    .nav-chip {
+      padding: 12px 18px; background: rgba(255,255,255,0.8);
+      border: 1px solid rgba(6, 16, 79, 0.08); backdrop-filter: blur(10px);
+      border-radius: 999px; color: var(--sohersa-navy); text-decoration: none;
+      font-weight: 700; box-shadow: 0 10px 20px rgba(6, 16, 79, 0.05);
+    }
+    .hero-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 28px; align-items: stretch; }
+    .hero-panel,.summary-panel {
+      position: relative; background: rgba(255,255,255,0.78);
+      border: 1px solid rgba(6, 16, 79, 0.08); backdrop-filter: blur(12px);
+      border-radius: 30px; box-shadow: var(--shadow); overflow: hidden;
+    }
+    .hero-panel {
+      padding: 40px; min-height: 440px;
+      background:
+        linear-gradient(130deg, rgba(6,16,79,0.98) 0%, rgba(6,16,79,0.98) 62%, rgba(255,255,255,0) 62%),
+        linear-gradient(180deg, #ffffff 0%, #f7f9fd 100%);
+      color: white;
+    }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px;
+      border-radius: 999px; background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18); font-size: 12px; letter-spacing: 0.08em;
+      font-weight: 800; text-transform: uppercase; margin-bottom: 18px;
+    }
+    .hero h1 { margin: 0; font-size: clamp(2.4rem, 6vw, 4.6rem); line-height: 0.95; max-width: 560px; letter-spacing: -0.04em; }
+    .hero p.lead { margin: 18px 0 26px; max-width: 560px; color: rgba(255,255,255,0.88); font-size: 1.05rem; line-height: 1.65; }
+    .hero-kpis { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; max-width: 760px; }
+    .kpi { background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.12); padding: 16px; border-radius: 18px; }
+    .kpi strong { display: block; font-size: 1.2rem; margin-bottom: 4px; }
+    .kpi span { font-size: 0.86rem; color: rgba(255,255,255,0.74); line-height: 1.4; }
+    .summary-panel { padding: 26px; display: flex; flex-direction: column; gap: 18px; }
+    .section-title { margin: 0 0 6px; color: var(--sohersa-navy); font-size: 1.1rem; letter-spacing: -0.02em; }
+    .meta-grid { display: grid; gap: 12px; }
+    .meta-item { background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border: 1px solid var(--line); border-radius: 18px; padding: 16px 16px 14px; }
+    .meta-label { display: block; color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800; margin-bottom: 6px; }
+    .meta-value { font-size: 1rem; font-weight: 800; color: var(--sohersa-navy); }
+    .cost-box {
+      background: linear-gradient(135deg, var(--sohersa-green), #5db22f);
+      color: white; border-radius: 22px; padding: 22px; box-shadow: 0 14px 30px rgba(111, 190, 59, 0.28);
+    }
+    .cost-box small { display: block; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.9; margin-bottom: 10px; font-weight: 800; }
+    .cost-box strong { display: block; font-size: clamp(1.8rem, 4vw, 2.4rem); letter-spacing: -0.04em; line-height: 1; margin-bottom: 8px; }
+    .cost-box span { display: block; opacity: 0.92; line-height: 1.55; font-size: 0.94rem; }
+    .main { padding: 8px 0 56px; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 22px; }
+    .tab-btn {
+      appearance: none; border: 1px solid var(--line); background: white;
+      color: var(--muted); border-radius: 999px; padding: 12px 16px; font-weight: 800;
+      cursor: pointer; transition: all 0.2s ease; box-shadow: 0 8px 16px rgba(6,16,79,0.04);
+    }
+    .tab-btn.active,.tab-btn:hover { background: var(--sohersa-navy); color: white; border-color: var(--sohersa-navy); transform: translateY(-1px); }
+    .tab-panel { display: none; animation: fade 0.25s ease; }
+    .tab-panel.active { display: block; }
+    @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 22px; }
+    .card {
+      background: var(--card); border: 1px solid rgba(6,16,79,0.08);
+      border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; position: relative; overflow: hidden;
+    }
+    .card::after {
+      content: ""; position: absolute; right: -32px; top: -32px; width: 110px; height: 110px;
+      background: linear-gradient(135deg, rgba(111,190,59,0.18), rgba(255,255,255,0)); border-radius: 50%;
+    }
+    .card h3 { margin: 0 0 12px; color: var(--sohersa-navy); font-size: 1.18rem; letter-spacing: -0.03em; }
+    .card p,.card li { color: #31415f; line-height: 1.6; font-size: 0.96rem; }
+    .mini-tag {
+      display: inline-block; padding: 7px 10px; border-radius: 999px;
+      background: rgba(111,190,59,0.12); color: #4e8d28; font-size: 0.76rem;
+      font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px;
+    }
+    .accordion { display: grid; gap: 14px; }
+    .acc-item {
+      border: 1px solid var(--line); border-radius: 20px; background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+      overflow: hidden; box-shadow: 0 10px 18px rgba(6,16,79,0.04);
+    }
+    .acc-btn {
+      width: 100%; background: transparent; border: none; text-align: left; padding: 18px 20px;
+      cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 18px; font: inherit;
+    }
+    .acc-btn strong { color: var(--sohersa-navy); font-size: 1rem; }
+    .acc-btn span { color: var(--muted); font-size: 0.9rem; line-height: 1.45; display: block; margin-top: 3px; font-weight: 600; }
+    .acc-icon {
+      flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+      background: rgba(6,16,79,0.06); color: var(--sohersa-navy); font-size: 1.2rem; transition: transform 0.2s ease;
+    }
+    .acc-item.open .acc-icon { transform: rotate(45deg); }
+    .acc-body { max-height: 0; overflow: hidden; transition: max-height 0.28s ease; }
+    .acc-inner { padding: 0 20px 20px; border-top: 1px solid rgba(220,227,239,0.8); }
+    .acc-inner ul { margin: 14px 0 0 18px; padding: 0; }
+    .team-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
+    .team-card {
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      border: 1px solid var(--line); border-radius: 20px; padding: 18px; min-height: 200px; position: relative; overflow: hidden;
+    }
+    .team-card::before {
+      content: ""; position: absolute; left: 0; top: 0; width: 100%; height: 5px;
+      background: linear-gradient(90deg, var(--sohersa-green), var(--sohersa-blue));
+    }
+    .team-n {
+      display: inline-flex; width: 42px; height: 42px; border-radius: 14px; align-items: center; justify-content: center;
+      background: rgba(6,16,79,0.06); color: var(--sohersa-navy); font-weight: 900; margin-bottom: 14px;
+    }
+    .team-card h4 { margin: 0 0 8px; color: var(--sohersa-navy); font-size: 1.02rem; }
+    .team-card p { margin: 0; color: #3f4f6b; line-height: 1.6; font-size: 0.92rem; }
+    .money-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; margin-top: 16px; }
+    .money-item { padding: 20px; border-radius: 20px; border: 1px solid var(--line); background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); }
+    .money-item strong { display: block; color: var(--sohersa-navy); font-size: 1.5rem; letter-spacing: -0.03em; margin-top: 8px; }
+    .money-item span { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800; }
+    .timeline { display: grid; gap: 14px; }
+    .step {
+      display: grid; grid-template-columns: 52px 1fr; gap: 14px; align-items: start; padding: 14px;
+      border-radius: 18px; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border: 1px solid var(--line);
+    }
+    .step-index {
+      width: 52px; height: 52px; border-radius: 16px; background: var(--sohersa-navy); color: white;
+      display: grid; place-items: center; font-weight: 900; box-shadow: 0 12px 24px rgba(6,16,79,0.2);
+    }
+    .footer { padding: 20px 0 44px; }
+    .footer-box {
+      background: linear-gradient(135deg, var(--sohersa-navy), #0f235a 65%, #132d68 100%);
+      color: white; border-radius: 28px; padding: 28px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px;
+      box-shadow: 0 18px 40px rgba(6,16,79,0.2);
+    }
+    .footer p { color: rgba(255,255,255,0.82); line-height: 1.6; }
+    .contact-list { display: grid; gap: 12px; }
+    .contact-item {
+      padding: 14px 16px; border-radius: 18px; background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .contact-item small {
+      display: block; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.72rem;
+      opacity: 0.75; font-weight: 800; margin-bottom: 6px;
+    }
+    .contact-item strong,.contact-item a { color: white; text-decoration: none; font-size: 0.98rem; font-weight: 800; }
+    @media (max-width: 1040px) {
+      .hero-grid,.grid-2,.footer-box,.team-grid,.money-grid { grid-template-columns: 1fr; }
+      .hero-panel {
+        background: linear-gradient(180deg, rgba(6,16,79,0.98) 0%, rgba(6,16,79,0.98) 100%), linear-gradient(180deg, #ffffff 0%, #f7f9fd 100%);
+      }
+      .hero-kpis { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+    @media (max-width: 700px) {
+      .topbar { flex-direction: column; align-items: flex-start; }
+      .hero-panel,.summary-panel,.card,.footer-box { padding: 22px; border-radius: 24px; }
+      .hero-kpis { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-accent-top"></div>
+    <div class="hero-accent-mid"></div>
+    <div class="hero-accent-bottom"></div>
+    <div class="container">
+      <div class="topbar">
+        <div class="brand">
+          <div class="brand-mark">S</div>
+          <div class="brand-copy">
+            <div style="font-size:1.2rem;color:#06104f;">Sohersa BIM</div>
+            <small>One Page Interactivo</small>
+          </div>
+        </div>
+        <a class="nav-chip" href="#detalle">Explorar propuesta</a>
+      </div>
+      <div class="hero-grid">
+        <section class="hero-panel">
+          <div class="eyebrow">Planta Volvo Mty. · TCO_LAB_26084_PVM</div>
+          <h1>Levantamiento As-Built y Modelado BIM</h1>
+          <p class="lead">
+            Resumen ejecutivo e interactivo de la propuesta para captura de realidad, procesamiento de nube de puntos y modelado BIM As-Built para una planta industrial de alta escala, con enfoque en trazabilidad técnica, claridad operativa y una presentación alineada a la identidad visual de Sohersa.
+          </p>
+          <div class="hero-kpis">
+            <div class="kpi"><strong>26 semanas</strong><span>Duración estimada del proyecto.</span></div>
+            <div class="kpi"><strong>200,000 m²</strong><span>Superficie a impactar en el alcance.</span></div>
+            <div class="kpi"><strong>7 personas</strong><span>Equipo operativo y de coordinación propuesto.</span></div>
+            <div class="kpi"><strong>LOD 200–350</strong><span>Nivel de desarrollo por disciplina.</span></div>
+          </div>
+        </section>
+        <aside class="summary-panel">
+          <div>
+            <h2 class="section-title">Resumen del proyecto</h2>
+            <div class="meta-grid">
+              <div class="meta-item"><span class="meta-label">Cliente</span><div class="meta-value">Tenco</div></div>
+              <div class="meta-item"><span class="meta-label">Servicio</span><div class="meta-value">Levantamiento As-Built</div></div>
+              <div class="meta-item"><span class="meta-label">Tipo de construcción</span><div class="meta-value">Industrial</div></div>
+              <div class="meta-item"><span class="meta-label">Disciplinas</span><div class="meta-value">Estructura · Arquitectura · Datos</div></div>
+            </div>
+          </div>
+          <div class="cost-box">
+            <small>Total con IVA</small>
+            <strong>$2,093,323.74 MXN</strong>
+            <span>Incluye levantamiento de nube de puntos, modelado BIM As-Built, procesamiento, georreferenciación y paquete de planos de detalle para sistemas de datos.</span>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </header>
+  <main class="main" id="detalle">
+    <div class="container">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="alcance">Alcance</button>
+        <button class="tab-btn" data-tab="equipo">Equipo involucrado</button>
+        <button class="tab-btn" data-tab="entregables">Entregables</button>
+        <button class="tab-btn" data-tab="economico">Económico</button>
+        <button class="tab-btn" data-tab="plan">Plan de trabajo</button>
+        <button class="tab-btn" data-tab="arranque">Arranque y notas</button>
+      </div>
+
+      <section class="tab-panel active" id="alcance">
+        <div class="grid-2">
+          <article class="card">
+            <div class="mini-tag">Captura de realidad</div>
+            <h3>Levantamiento de campo</h3>
+            <div class="accordion">
+              <div class="acc-item open">
+                <button class="acc-btn"><div><strong>Escaneo láser terrestre LiDAR</strong><span>Red de 9 puntos de escaneo para interiores, estructura, arquitectura e instalaciones visibles.</span></div><div class="acc-icon">+</div></button>
+                <div class="acc-body" style="max-height: 240px;"><div class="acc-inner"><ul><li>Captura de nube de puntos de condiciones existentes.</li><li>Levantamiento enfocado en geometría visible y accesible.</li><li>Base técnica para modelado BIM posterior.</li></ul></div></div>
+              </div>
+              <div class="acc-item">
+                <button class="acc-btn"><div><strong>Vuelo fotogramétrico con dron</strong><span>DJI Matrice 4 Enterprise para cubiertas y exteriores del predio.</span></div><div class="acc-icon">+</div></button>
+                <div class="acc-body"><div class="acc-inner"><ul><li>Cobertura del exterior y cubiertas del predio.</li><li>Integración con nube terrestre para mayor continuidad espacial.</li><li>Aplicable a superficie total de 600,000 m².</li></ul></div></div>
+              </div>
+              <div class="acc-item">
+                <button class="acc-btn"><div><strong>Georreferenciación</strong><span>Control de precisión con GCP y GNSS RTK e-Survey.</span></div><div class="acc-icon">+</div></button>
+                <div class="acc-body"><div class="acc-inner"><ul><li>Establecimiento de puntos de control.</li><li>Integración de coordenadas reales a nube consolidada.</li><li>Base para alineación espacial confiable del proyecto.</li></ul></div></div>
+              </div>
+            </div>
+          </article>
+          <article class="card">
+            <div class="mini-tag">Modelado BIM</div>
+            <h3>Procesamiento y desarrollo As-Built</h3>
+            <div class="accordion">
+              <div class="acc-item open">
+                <button class="acc-btn"><div><strong>Procesamiento de nube de puntos</strong><span>Registro, alineación, fusión y consolidación de insumos capturados en campo.</span></div><div class="acc-icon">+</div></button>
+                <div class="acc-body" style="max-height: 240px;"><div class="acc-inner"><ul><li>Registro y alineación de escaneos terrestres.</li><li>Fusión con nube fotogramétrica de cubiertas y exteriores.</li><li>Entrega de nube procesada como base de modelado.</li></ul></div></div>
+              </div>
+              <div class="acc-item">
+                <button class="acc-btn"><div><strong>Arquitectura y estructura</strong><span>Modelado en Revit con LOD 200 para referencia geométrica y contexto espacial.</span></div><div class="acc-icon">+</div></button>
+                <div class="acc-body"><div class="acc-inner"><ul><li>Estructura: columnas, trabes, losas, muros estructurales y cimentación visible.</li><li>Arquitectura: muros, tabiques, acabados, puertas, ventanas, cubiertas y fachadas.</li><li>Enfoque as-built basado en condiciones visibles y escaneadas.</li></ul></div></div>
+              </div>
+              <div class="acc-item">
+                <button class="acc-btn"><div><strong>Sistemas de datos LOD 350</strong><span>Modelado especializado con documentación de detalle por sistema.</span></div><div class="acc-icon">+</div></button>
+                <div class="acc-body"><div class="acc-inner"><ul><li>Alarma contra incendio.</li><li>CCTV, Voz y Datos, Control de accesos.</li><li>BMS y Audio con paquete de planos por sistema.</li></ul></div></div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="equipo">
+        <div class="card" style="margin-bottom:22px;">
+          <div class="mini-tag">Estructura operativa</div>
+          <h3>Equipo propuesto para ejecución</h3>
+          <p>
+            Se propone una estructura compacta y especializada, orientada a eficiencia de campo, trazabilidad de información y producción técnica en Revit. El equipo se compone por 2 técnicos especialistas para el levantamiento, 4 modeladores BIM para el desarrollo del modelo y 1 coordinador BIM para la gestión técnica, revisión integral y control de entregables.
+          </p>
+        </div>
+        <div class="team-grid">
+          <article class="team-card">
+            <div class="team-n">2</div>
+            <h4>Técnicos especialistas de levantamiento</h4>
+            <p>Responsables de la planeación y ejecución del escaneo láser terrestre, operación de dron, control de estaciones, captura fotogramétrica, levantamiento de GCP y verificación de calidad de datos en campo.</p>
+          </article>
+          <article class="team-card">
+            <div class="team-n">4</div>
+            <h4>Modeladores BIM</h4>
+            <p>Encargados del procesamiento técnico de insumos y del modelado As-Built en Revit de arquitectura, estructura y sistemas de datos, manteniendo consistencia geométrica, jerarquía de elementos y criterios LOD definidos.</p>
+          </article>
+          <article class="team-card">
+            <div class="team-n">1</div>
+            <h4>Coordinador BIM</h4>
+            <p>Figura central para la gestión del flujo de trabajo, validación de estándares de modelado, coordinación interdisciplinaria, revisión de paquetes de entrega y seguimiento general del cronograma técnico.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="entregables">
+        <div class="grid-2">
+          <article class="card">
+            <div class="mini-tag">Modelos</div>
+            <h3>Entregables BIM</h3>
+            <ul>
+              <li>Modelo de Estructura LOD 200.</li>
+              <li>Modelo de Arquitectura LOD 200.</li>
+              <li>Modelo de Datos LOD 350.</li>
+              <li>Paquete de planos de detalle de sistemas de Datos.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <div class="mini-tag">Datos base</div>
+            <h3>Entregables de captura y procesamiento</h3>
+            <ul>
+              <li>Nube de puntos georreferenciada.</li>
+              <li>Consolidación de escaneo LiDAR terrestre y vuelo dron.</li>
+              <li>Insumo técnico listo para trazabilidad y modelado futuro.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="economico">
+        <div class="card">
+          <div class="mini-tag">Propuesta económica</div>
+          <h3>Resumen financiero del servicio</h3>
+          <div class="money-grid">
+            <div class="money-item"><span>Levantamiento de nube de puntos</span><strong>$690,240.00</strong></div>
+            <div class="money-item"><span>Modelado BIM As-Built</span><strong>$1,114,349.43</strong></div>
+            <div class="money-item"><span>Total neto</span><strong>$1,804,589.43</strong></div>
+            <div class="money-item"><span>Total con IVA</span><strong>$2,093,323.74</strong></div>
+          </div>
+          <div class="accordion" style="margin-top:18px;">
+            <div class="acc-item open">
+              <button class="acc-btn"><div><strong>Esquema de pagos</strong><span>Despliega para consultar el calendario financiero del proyecto.</span></div><div class="acc-icon">+</div></button>
+              <div class="acc-body" style="max-height: 220px;"><div class="acc-inner"><ul><li>Anticipo del 40% del costo neto del proyecto.</li><li>Segundo pago del 20% al término del escaneo.</li><li>Finiquito del 40% al término del modelado.</li></ul></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="plan">
+        <div class="card" style="margin-bottom:22px;">
+          <div class="mini-tag">Planeación de ejecución</div>
+          <h3>Plan de trabajo técnico por etapa</h3>
+          <p>
+            La estrategia de ejecución se plantea para aprovechar la capacidad instalada del equipo de 2 técnicos especialistas de levantamiento, 4 modeladores BIM y 1 coordinador BIM, priorizando una captura ordenada de información, una consolidación confiable de la nube de puntos y una fase de modelado continua con revisiones progresivas. El programa total contempla 26 semanas: 4 semanas para levantamiento físico, 2 semanas para procesamiento y limpieza de nube de puntos, y 20 semanas para modelado BIM y documentación.
+          </p>
+        </div>
+        <div class="timeline">
+          <div class="step">
+            <div class="step-index">1</div>
+            <div>
+              <strong>Semanas 1 a 4 · Levantamiento físico en sitio</strong>
+              <p>Durante esta etapa, los 2 técnicos especialistas ejecutan la captura integral de condiciones existentes mediante escaneo láser terrestre LiDAR, vuelo fotogramétrico con dron para cubiertas y exteriores, y levantamiento de puntos de control para georreferenciación. El coordinador BIM supervisa rutas de captura, prioridades por frente, secuencia de acceso y control de calidad preliminar de la información obtenida en campo.</p>
+              <p><strong>Objetivo de la etapa:</strong> cerrar la adquisición completa y ordenada de información base para evitar retrabajos posteriores de modelado.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-index">2</div>
+            <div>
+              <strong>Semanas 5 a 6 · Procesamiento, registro y limpieza de nube de puntos</strong>
+              <p>Concluido el levantamiento, se desarrolla la fase técnica de oficina para registrar y alinear escaneos, fusionar la información terrestre con la fotogrametría del dron, depurar ruido, validar continuidad geométrica y consolidar la nube georreferenciada. En esta etapa participan principalmente el coordinador BIM y el equipo de modelado en tareas de preparación de insumos, zonificación y definición de criterios de trabajo por disciplina.</p>
+              <p><strong>Objetivo de la etapa:</strong> generar una base confiable, limpia y estructurada para iniciar el modelado con máxima eficiencia.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-index">3</div>
+            <div>
+              <strong>Semanas 7 a 10 · Arranque de modelado y estructuración del entorno BIM</strong>
+              <p>Los 4 modeladores inician el desarrollo del modelo As-Built en Revit a partir de la nube consolidada. En paralelo se estructura el archivo base, se definen zonas de trabajo, nomenclaturas, criterios de segmentación y estrategia de revisión. En esta primera fase de modelado se prioriza la implantación general del inmueble y los elementos principales de arquitectura y estructura para establecer el contexto espacial completo del proyecto.</p>
+              <p><strong>Objetivo de la etapa:</strong> dejar montada la base geométrica de referencia sobre la cual se integrarán las disciplinas contratadas.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-index">4</div>
+            <div>
+              <strong>Semanas 11 a 18 · Desarrollo intensivo de modelos por disciplina</strong>
+              <p>Con la base general establecida, el equipo concentra esfuerzo en el modelado disciplinar: arquitectura LOD 200, estructura LOD 200 y sistemas de datos LOD 350. El coordinador BIM distribuye cargas de trabajo, revisa consistencia entre zonas y mantiene seguimiento de avances semanales. La producción se organiza por paquetes controlados para asegurar trazabilidad, uniformidad de criterios y revisión continua en lugar de una validación final única.</p>
+              <p><strong>Objetivo de la etapa:</strong> acelerar la producción manteniendo control técnico sobre calidad, coherencia geométrica y cumplimiento del alcance.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-index">5</div>
+            <div>
+              <strong>Semanas 19 a 22 · Consolidación, revisión coordinada y ajustes</strong>
+              <p>En esta etapa se integran las zonas modeladas, se homologan criterios gráficos y se corrigen observaciones derivadas de revisiones internas. El coordinador BIM centraliza el control de cambios y valida que la información cumpla con los niveles de desarrollo comprometidos. Se ajustan pendientes, se revisa integridad de elementos y se prepara el modelo para salida documental.</p>
+              <p><strong>Objetivo de la etapa:</strong> transformar la producción parcial en un entregable integral, técnicamente consistente y listo para documentación.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-index">6</div>
+            <div>
+              <strong>Semanas 23 a 26 · Documentación final, cierre de entregables y control de calidad</strong>
+              <p>La fase final se destina a la emisión del paquete de planos de detalle para sistemas de datos, verificación de integridad de modelos, control de calidad final y preparación de archivos de entrega. El coordinador BIM lidera la revisión definitiva, mientras el equipo de modelado atiende observaciones de cierre y ajustes de consistencia documental.</p>
+              <p><strong>Objetivo de la etapa:</strong> cerrar el proyecto con modelos coordinados, documentación clara y una entrega ordenada de insumos y productos finales.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="arranque">
+        <div class="grid-2">
+          <article class="card">
+            <div class="mini-tag">Inicio de proyecto</div>
+            <h3>Ruta de arranque</h3>
+            <div class="timeline">
+              <div class="step"><div class="step-index">1</div><div><strong>Generales y contrato</strong><p>Envío de información para elaboración contractual.</p></div></div>
+              <div class="step"><div class="step-index">2</div><div><strong>Firma y anticipo</strong><p>Formalización administrativa y habilitación para arranque.</p></div></div>
+              <div class="step"><div class="step-index">3</div><div><strong>Entrega de insumos</strong><p>Recepción de archivos e información técnica necesaria.</p></div></div>
+              <div class="step"><div class="step-index">4</div><div><strong>Plan de trabajo</strong><p>Planeación detallada, definición de jornadas y calendario.</p></div></div>
+              <div class="step"><div class="step-index">5</div><div><strong>Ejecución</strong><p>Inicio de actividades conforme al plan acordado.</p></div></div>
+            </div>
+          </article>
+          <article class="card">
+            <div class="mini-tag">Condiciones clave</div>
+            <h3>Notas técnicas relevantes</h3>
+            <ul>
+              <li>El levantamiento depende de condiciones climáticas favorables.</li>
+              <li>La captura LiDAR representa únicamente elementos visibles y accesibles.</li>
+              <li>Las áreas sin acceso quedan fuera de nube de puntos y modelo.</li>
+              <li>Arquitectura y estructura LOD 200 tienen carácter esquemático y de contexto.</li>
+              <li>No incluye diseño, ingeniería, cálculo ni propuestas de mejora.</li>
+              <li>Los planos independientes aplican únicamente a sistemas de Datos.</li>
+              <li>El programa puede ajustarse por retrasos ajenos a Sohersa.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-box">
+        <div>
+          <div class="mini-tag" style="background:rgba(111,190,59,0.18);color:#b8eb92;">Sohersa BIM</div>
+          <h3 style="margin-top:0;color:white;font-size:1.7rem;">Presentación ejecutiva, clara y navegable</h3>
+          <p>
+            Este one page fue diseñado para comunicar la cotización de forma sintética, técnica e interactiva, permitiendo explorar el alcance, el equipo, el plan de trabajo y el esquema económico desde una sola vista.
+          </p>
+        </div>
+        <div class="contact-list">
+          <div class="contact-item"><small>Contacto</small><strong>a.vizcaino@gruposohersa.com</strong></div>
+          <div class="contact-item"><small>Teléfono</small><strong>+52 33 1601 3380</strong></div>
+          <div class="contact-item"><small>Web</small><a href="https://www.sohersabim.com" target="_blank" rel="noreferrer">www.sohersabim.com</a></div>
+          <div class="contact-item"><small>Ubicación</small><strong>Franz Liszt 5293, La Estancia, Zapopan, Jalisco</strong></div>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <script>
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.tab;
+        tabButtons.forEach(b => b.classList.remove('active'));
+        tabPanels.forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(target).classList.add('active');
+      });
+    });
+    document.querySelectorAll('.acc-item').forEach(item => {
+      const btn = item.querySelector('.acc-btn');
+      const body = item.querySelector('.acc-body');
+      btn.addEventListener('click', () => {
+        const isOpen = item.classList.contains('open');
+        item.classList.toggle('open');
+        body.style.maxHeight = isOpen ? '0px' : body.scrollHeight + 'px';
+      });
+    });
+  </script>
+</body>
+</html>
