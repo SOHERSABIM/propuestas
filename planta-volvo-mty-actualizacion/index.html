@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Sohersa BIM | Volvo Mty - Actualización As-Built</title>
+<style>
+body { font-family: Arial; margin:0; background:#f5f7fb; }
+.container { max-width:1100px; margin:auto; padding:40px; }
+h1 { color:#06104f; }
+.card { background:white; padding:20px; border-radius:12px; margin-bottom:20px; box-shadow:0 10px 20px rgba(0,0,0,0.05);}
+.tab { cursor:pointer; padding:10px 15px; background:#eee; display:inline-block; margin-right:10px; border-radius:8px;}
+.tab.active { background:#06104f; color:white;}
+.section { display:none; }
+.section.active { display:block; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Planta Volvo Mty - Actualización BIM As-Built</h1>
+<p>Propuesta interactiva Sohersa BIM</p>
+
+<div>
+<span class="tab active" onclick="show('alcance')">Alcance</span>
+<span class="tab" onclick="show('equipo')">Equipo</span>
+<span class="tab" onclick="show('plan')">Plan de trabajo</span>
+<span class="tab" onclick="show('economico')">Económico</span>
+</div>
+
+<!-- ALCANCE -->
+<div id="alcance" class="section active card">
+
+<h3>Alcance del servicio</h3>
+
+<p>
+El presente servicio contempla el <b>levantamiento As-Built y actualización del modelo BIM existente</b>, 
+tomando como base la nube de puntos generada en sitio.
+</p>
+
+<ul>
+<li>Escaneo láser terrestre LiDAR</li>
+<li>Georreferenciación con GNSS RTK</li>
+<li>Procesamiento de nube de puntos</li>
+<li>Actualización del modelo BIM existente (NO modelado desde cero)</li>
+<li>Actualización de sistemas de datos LOD 300</li>
+</ul>
+
+<p><b>IMPORTANTE:</b></p>
+<p>
+El alcance se limita exclusivamente a la revisión, ajuste y adecuación del modelo existente
+proporcionado por el cliente. No incluye reconstrucción total ni modelado integral.
+</p>
+
+</div>
+
+<!-- EQUIPO -->
+<div id="equipo" class="section card">
+
+<h3>Equipo involucrado</h3>
+
+<ul>
+<li><b>2 Técnicos especialistas</b> — levantamiento LiDAR y captura de información</li>
+<li><b>4 Modeladores BIM</b> — actualización del modelo y documentación</li>
+<li><b>1 Coordinador BIM</b> — control técnico, revisión y gestión</li>
+</ul>
+
+</div>
+
+<!-- PLAN -->
+<div id="plan" class="section card">
+
+<h3>Plan de trabajo</h3>
+
+<p>Duración total: 12 semanas</p>
+
+<h4>Semanas 1–4 | Levantamiento</h4>
+<p>
+Captura de nube de puntos mediante escaneo láser terrestre y establecimiento de puntos de control.
+</p>
+
+<h4>Semanas 5–6 | Procesamiento</h4>
+<p>
+Registro, limpieza, alineación y georreferenciación de la nube de puntos.
+</p>
+
+<h4>Semanas 7–12 | Actualización BIM</h4>
+<p>
+Revisión, comparación y ajuste del modelo existente contra la nube de puntos,
+actualizando únicamente elementos con discrepancias relevantes.
+</p>
+
+</div>
+
+<!-- ECONOMICO -->
+<div id="economico" class="section card">
+
+<h3>Resumen económico</h3>
+
+<p><b>Total:</b> $1,272,282.05 MXN</p>
+
+<ul>
+<li>BIW: $162,103.44</li>
+<li>CAB: $287,074.58</li>
+<li>Paintshop: $574,616.86</li>
+<li>Viáticos: $73,000.00</li>
+</ul>
+
+<p><b>Esquema de pagos:</b></p>
+<ul>
+<li>40% anticipo</li>
+<li>20% al finalizar levantamiento</li>
+<li>40% al finalizar modelado</li>
+</ul>
+
+</div>
+
+</div>
+
+<script>
+function show(id){
+document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+event.target.classList.add('active');
+}
+</script>
+
+</body>
+</html>
