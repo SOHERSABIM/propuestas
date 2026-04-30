@@ -1,131 +1,100 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Sohersa BIM | Volvo Mty - Actualización As-Built</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sohersa BIM | Planta Volvo Mty - Actualización As-Built</title>
 <style>
-body { font-family: Arial; margin:0; background:#f5f7fb; }
-.container { max-width:1100px; margin:auto; padding:40px; }
-h1 { color:#06104f; }
-.card { background:white; padding:20px; border-radius:12px; margin-bottom:20px; box-shadow:0 10px 20px rgba(0,0,0,0.05);}
-.tab { cursor:pointer; padding:10px 15px; background:#eee; display:inline-block; margin-right:10px; border-radius:8px;}
-.tab.active { background:#06104f; color:white;}
-.section { display:none; }
-.section.active { display:block; }
+:root{--green:#67b838;--navy:#050b45;--blue:#0c3d72;--text:#111f3a;--muted:#65728a;--line:#dce4ef;--bg:#f5f7fb;--card:#fff;--shadow:0 18px 50px rgba(5,11,69,.12)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--text);background:linear-gradient(145deg,#fff 0%,#f5f7fb 55%,#edf3fb 100%);overflow-x:hidden}
+.container{width:min(1180px,calc(100% - 32px));margin:auto;position:relative;z-index:1}.hero{position:relative;padding:28px 0 44px;overflow:hidden}
+.shape{position:absolute;transform:skewX(-28deg);border-radius:18px;pointer-events:none}.s1{left:-60px;top:-70px;width:270px;height:115px;background:var(--green)}.s2{right:-100px;top:120px;width:470px;height:245px;background:var(--navy)}.s3{left:48%;top:360px;width:150px;height:275px;background:var(--green)}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:36px;gap:16px}.brand{display:flex;align-items:center;gap:14px;font-weight:900}.mark{width:48px;height:48px;border-radius:15px;background:linear-gradient(135deg,var(--green),#58a92a 62%,var(--blue));display:grid;place-items:center;color:#fff;font-size:23px;box-shadow:0 12px 24px rgba(103,184,56,.28)}.brand small{display:block;text-transform:uppercase;letter-spacing:.08em;font-size:11px;color:var(--muted);font-weight:700;margin-top:2px}.chip{padding:12px 18px;border-radius:999px;background:rgba(255,255,255,.84);border:1px solid rgba(5,11,69,.08);box-shadow:0 10px 22px rgba(5,11,69,.06);text-decoration:none;color:var(--navy);font-weight:800}
+.heroGrid{display:grid;grid-template-columns:1.18fr .82fr;gap:28px}.heroPanel,.side{background:rgba(255,255,255,.78);border:1px solid rgba(5,11,69,.08);backdrop-filter:blur(12px);border-radius:30px;box-shadow:var(--shadow);overflow:hidden}.heroPanel{min-height:455px;padding:40px;color:#fff;background:linear-gradient(130deg,rgba(5,11,69,.98) 0%,rgba(5,11,69,.98) 62%,rgba(255,255,255,0) 62%),linear-gradient(#fff,#f7f9fd);position:relative}.heroPanel:after{content:"";position:absolute;right:35px;bottom:35px;width:250px;height:178px;border-radius:22px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.14) 0 1px,transparent 1px 22px),repeating-linear-gradient(0deg,rgba(255,255,255,.11) 0 1px,transparent 1px 18px);border:1px solid rgba(255,255,255,.16);transform:skewX(-10deg);opacity:.45}.eyebrow{display:inline-flex;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);font-size:12px;letter-spacing:.08em;font-weight:900;text-transform:uppercase;margin-bottom:18px}.hero h1{margin:0;font-size:clamp(2.35rem,5vw,4.35rem);line-height:.98;max-width:650px;letter-spacing:-.045em;position:relative;z-index:2}.lead{margin:18px 0 26px;max-width:625px;color:rgba(255,255,255,.88);font-size:1.05rem;line-height:1.65;position:relative;z-index:2}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;position:relative;z-index:2}.kpi{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:16px}.kpi strong{display:block;font-size:1.12rem;margin-bottom:4px}.kpi span{font-size:.84rem;color:rgba(255,255,255,.75);line-height:1.4}
+.side{padding:26px;display:flex;flex-direction:column;gap:18px}.meta{display:grid;gap:12px}.item{background:linear-gradient(#fff,#f8fafc);border:1px solid var(--line);border-radius:18px;padding:16px}.label{display:block;color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;font-weight:900;margin-bottom:6px}.value{font-weight:900;color:var(--navy)}.cost{background:linear-gradient(135deg,var(--green),#58ad2e);color:#fff;border-radius:22px;padding:22px;box-shadow:0 14px 30px rgba(103,184,56,.28)}.cost small{display:block;text-transform:uppercase;letter-spacing:.08em;font-weight:900;margin-bottom:10px}.cost strong{display:block;font-size:clamp(1.7rem,4vw,2.35rem);letter-spacing:-.04em;line-height:1;margin-bottom:8px}.cost span{line-height:1.55;opacity:.92;font-size:.94rem}
+.main{padding:8px 0 56px}.tabs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px}.tab{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:12px 16px;font-weight:900;cursor:pointer;box-shadow:0 8px 16px rgba(5,11,69,.04)}.tab.active,.tab:hover{background:var(--navy);color:#fff;border-color:var(--navy)}.panel{display:none;animation:fade .25s ease}.panel.active{display:block}@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card{background:#fff;border:1px solid rgba(5,11,69,.08);border-radius:22px;box-shadow:var(--shadow);padding:24px;position:relative;overflow:hidden}.card:after{content:"";position:absolute;right:-32px;top:-32px;width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,rgba(103,184,56,.18),transparent);pointer-events:none}.tag{display:inline-block;padding:7px 10px;border-radius:999px;background:rgba(103,184,56,.12);color:#4e8d28;font-size:.76rem;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}h3{margin:0 0 12px;color:var(--navy);font-size:1.2rem;letter-spacing:-.03em}p,li{color:#31415f;line-height:1.6;font-size:.96rem}.warn{border-left:5px solid var(--green);background:linear-gradient(rgba(103,184,56,.1),rgba(255,255,255,.92));border-radius:18px;padding:18px;margin-top:16px}.warn strong{color:var(--navy)}
+.acc{display:grid;gap:14px}.accItem{border:1px solid var(--line);border-radius:20px;background:linear-gradient(#fff,#fbfcfe);overflow:hidden;box-shadow:0 10px 18px rgba(5,11,69,.04)}.accBtn{width:100%;border:0;background:transparent;text-align:left;padding:18px 20px;cursor:pointer;display:flex;justify-content:space-between;gap:18px;font:inherit}.accBtn strong{color:var(--navy)}.accBtn span{display:block;color:var(--muted);font-size:.9rem;line-height:1.45;margin-top:3px;font-weight:700}.plus{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(5,11,69,.06);color:var(--navy);font-size:1.2rem;transition:.2s}.accItem.open .plus{transform:rotate(45deg)}.accBody{max-height:0;overflow:hidden;transition:max-height .28s}.accIn{padding:0 20px 20px;border-top:1px solid rgba(220,228,239,.8)}
+.mini{background:linear-gradient(#fff,#f8fafc);border:1px solid var(--line);border-radius:20px;padding:18px;position:relative;overflow:hidden}.mini:before{content:"";position:absolute;left:0;top:0;width:100%;height:5px;background:linear-gradient(90deg,var(--green),var(--blue))}.num{display:inline-flex;width:42px;height:42px;border-radius:14px;align-items:center;justify-content:center;background:rgba(5,11,69,.06);color:var(--navy);font-weight:900;margin-bottom:14px}.mini h4{margin:0 0 8px;color:var(--navy);font-size:1.03rem}.mini strong.amount{display:block;color:var(--navy);font-size:1.45rem;letter-spacing:-.03em;margin:8px 0}.money{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.money .mini span{color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;font-weight:900}
+.timeline{display:grid;gap:14px}.step{display:grid;grid-template-columns:52px 1fr;gap:14px;align-items:start;padding:14px;border-radius:18px;background:linear-gradient(#fff,#f8fafc);border:1px solid var(--line)}.stepNo{width:52px;height:52px;border-radius:16px;background:var(--navy);color:#fff;display:grid;place-items:center;font-weight:900;box-shadow:0 12px 24px rgba(5,11,69,.2)}
+.footer{padding:20px 0 44px}.foot{background:linear-gradient(135deg,var(--navy),#0f235a 65%,#132d68);color:#fff;border-radius:28px;padding:28px;display:grid;grid-template-columns:1.4fr 1fr;gap:20px;box-shadow:0 18px 40px rgba(5,11,69,.2)}.foot p{color:rgba(255,255,255,.82)}.contact{display:grid;gap:12px}.contact div{padding:14px 16px;border-radius:18px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1)}.contact small{display:block;text-transform:uppercase;letter-spacing:.08em;font-size:.72rem;opacity:.75;font-weight:900;margin-bottom:6px}.contact strong,.contact a{color:#fff;text-decoration:none;font-weight:900}
+@media(max-width:1040px){.heroGrid,.grid2,.grid3,.foot{grid-template-columns:1fr}.heroPanel{background:linear-gradient(rgba(5,11,69,.98),rgba(5,11,69,.98))}.heroPanel:after{display:none}.kpis{grid-template-columns:repeat(2,1fr)}}@media(max-width:700px){.top{flex-direction:column;align-items:flex-start}.heroPanel,.side,.card,.foot{padding:22px;border-radius:24px}.kpis,.money{grid-template-columns:1fr}}
 </style>
 </head>
-
 <body>
+<header class="hero"><div class="shape s1"></div><div class="shape s2"></div><div class="shape s3"></div><div class="container">
+  <div class="top"><div class="brand"><div class="mark">S</div><div><div style="font-size:1.2rem;color:#06104f">Sohersa BIM</div><small>Propuesta interactiva</small></div></div><a class="chip" href="#detalle">Explorar propuesta</a></div>
+  <div class="heroGrid">
+    <section class="heroPanel">
+      <div class="eyebrow">Planta Volvo Mty - 2 · TCO_LAB_26084_PVM</div>
+      <h1>Actualización BIM As-Built contra nube de puntos</h1>
+      <p class="lead">Propuesta interactiva para levantamiento LiDAR, georreferenciación, procesamiento de nube de puntos y actualización del modelo BIM existente de sistemas de datos. El enfoque es comparar el modelo base en Revit contra la realidad capturada en sitio y ajustar únicamente las discrepancias relevantes.</p>
+      <div class="kpis">
+        <div class="kpi"><strong>12 semanas</strong><span>Duración estimada del proyecto.</span></div>
+        <div class="kpi"><strong>129,596 m²</strong><span>Superficie a impactar.</span></div>
+        <div class="kpi"><strong>Datos LOD 300</strong><span>Especialidad contratada.</span></div>
+        <div class="kpi"><strong>No desde cero</strong><span>Actualización de modelo existente.</span></div>
+      </div>
+    </section>
+    <aside class="side">
+      <div><h2 class="section-title">Resumen del proyecto</h2><div class="meta">
+        <div class="item"><span class="label">Cliente</span><div class="value">Tenco</div></div>
+        <div class="item"><span class="label">Servicio</span><div class="value">Levantamiento As-Built</div></div>
+        <div class="item"><span class="label">Tipo</span><div class="value">Industrial</div></div>
+        <div class="item"><span class="label">Alcance BIM</span><div class="value">Actualización de modelo existente</div></div>
+      </div></div>
+      <div class="cost"><small>Total neto</small><strong>$1,272,282.05 MXN</strong><span>Incluye BIW, CAB, Paintshop, viáticos, levantamiento LiDAR, georreferenciación, procesamiento y actualización de modelo BIM de datos LOD 300.</span></div>
+    </aside>
+  </div>
+</div></header>
+<main class="main" id="detalle"><div class="container">
+  <div class="tabs">
+    <button class="tab active" data-tab="alcance">Alcance</button><button class="tab" data-tab="edificios">Edificios</button><button class="tab" data-tab="equipo">Equipo</button><button class="tab" data-tab="plan">Plan de trabajo</button><button class="tab" data-tab="economico">Económico</button><button class="tab" data-tab="notas">Notas clave</button>
+  </div>
 
-<div class="container">
+  <section class="panel active" id="alcance"><div class="grid2">
+    <article class="card"><div class="tag">Alcance técnico</div><h3>Actualización BIM As-Built</h3><p>El servicio contempla levantamiento físico de campo y actualización del modelo BIM existente proporcionado por el cliente, tomando como base la nube de puntos generada durante el levantamiento.</p><div class="warn"><strong>Condición esencial:</strong><p>No contempla desarrollo de modelo BIM desde cero ni modelado integral de la nube de puntos. El trabajo consiste en revisión, comparación y ajuste del modelo existente contra la nube levantada en sitio.</p></div></article>
+    <article class="card"><div class="tag">Flujo de trabajo</div><h3>De campo a modelo actualizado</h3><div class="acc">
+      <div class="accItem open"><button class="accBtn"><div><strong>1. Levantamiento LiDAR</strong><span>Captura de interiores, estructura, arquitectura e instalaciones visibles.</span></div><div class="plus">+</div></button><div class="accBody" style="max-height:220px"><div class="accIn"><ul><li>Escaneo láser terrestre mediante red de estaciones.</li><li>Captura de elementos visibles y accesibles.</li><li>Base para contraste con modelo Revit existente.</li></ul></div></div></div>
+      <div class="accItem"><button class="accBtn"><div><strong>2. Georreferenciación</strong><span>Control con GNSS RTK e-Survey y puntos GCP.</span></div><div class="plus">+</div></button><div class="accBody"><div class="accIn"><ul><li>Establecimiento de puntos de control.</li><li>Integración de coordenadas reales.</li><li>Consolidación espacial de nube.</li></ul></div></div></div>
+      <div class="accItem"><button class="accBtn"><div><strong>3. Actualización del modelo</strong><span>Ajuste de sistemas de datos conforme a discrepancias relevantes.</span></div><div class="plus">+</div></button><div class="accBody"><div class="accIn"><ul><li>Alarma contra incendio.</li><li>CCTV, Voz y Datos.</li><li>Control de accesos, BMS y Audio.</li><li>Actualización de vistas y planos donde aplique.</li></ul></div></div></div>
+    </div></article>
+  </div></section>
 
-<h1>Planta Volvo Mty - Actualización BIM As-Built</h1>
-<p>Propuesta interactiva Sohersa BIM</p>
+  <section class="panel" id="edificios"><div class="card" style="margin-bottom:22px"><div class="tag">Áreas de intervención</div><h3>Desglose por edificio</h3><p>La propuesta se estructura por edificio, diferenciando captura LiDAR, georreferenciación y actualización del modelo BIM existente de sistemas de datos.</p></div><div class="grid3">
+    <article class="mini"><h4>Edificio BIW</h4><strong class="amount">$162,103.44</strong><p>Levantamiento: $57,700.00</p><p>Actualización BIM: $104,403.44</p></article>
+    <article class="mini"><h4>Edificio CAB</h4><strong class="amount">$287,074.58</strong><p>Levantamiento: $92,900.00</p><p>Actualización BIM: $194,174.58</p></article>
+    <article class="mini"><h4>Edificio Paintshop</h4><strong class="amount">$574,616.86</strong><p>Levantamiento: $200,900.00</p><p>Actualización BIM: $373,716.86</p></article>
+  </div></section>
 
-<div>
-<span class="tab active" onclick="show('alcance')">Alcance</span>
-<span class="tab" onclick="show('equipo')">Equipo</span>
-<span class="tab" onclick="show('plan')">Plan de trabajo</span>
-<span class="tab" onclick="show('economico')">Económico</span>
-</div>
+  <section class="panel" id="equipo"><div class="card" style="margin-bottom:22px"><div class="tag">Capacidad instalada</div><h3>Equipo involucrado</h3><p>Estructura enfocada en control técnico, trazabilidad entre nube de puntos, modelo existente y documentación.</p></div><div class="grid3">
+    <article class="mini"><div class="num">2</div><h4>Técnicos especialistas</h4><p>Escaneo LiDAR, control de estaciones, apoyo en georreferenciación, logística técnica y validación preliminar de información capturada.</p></article>
+    <article class="mini"><div class="num">4</div><h4>Modeladores BIM</h4><p>Revisión del modelo Revit, comparación contra nube, actualización de sistemas de datos LOD 300 y ajuste de vistas/planos.</p></article>
+    <article class="mini"><div class="num">1</div><h4>Coordinador BIM</h4><p>Control técnico, revisión de entregables, validación de criterios, seguimiento de avances y gestión de observaciones.</p></article>
+  </div></section>
 
-<!-- ALCANCE -->
-<div id="alcance" class="section active card">
+  <section class="panel" id="plan"><div class="card" style="margin-bottom:22px"><div class="tag">Programa de ejecución</div><h3>Plan de trabajo de 12 semanas</h3><p>Programa orientado a actualizar el modelo existente de forma controlada, evitando modelado innecesario y enfocando el esfuerzo en discrepancias relevantes.</p></div><div class="timeline">
+    <div class="step"><div class="stepNo">1</div><div><strong>Semanas 1 a 3 · Levantamiento físico</strong><p>Captura LiDAR en áreas de intervención, establecimiento de puntos de control y revisión preliminar de cobertura.</p></div></div>
+    <div class="step"><div class="stepNo">2</div><div><strong>Semanas 4 a 5 · Procesamiento y limpieza</strong><p>Registro, alineación, limpieza, georreferenciación y preparación de nube para comparación con modelo Revit.</p></div></div>
+    <div class="step"><div class="stepNo">3</div><div><strong>Semanas 6 a 8 · Comparación modelo vs nube</strong><p>Identificación de discrepancias relevantes, clasificación por edificio y definición de ajustes requeridos.</p></div></div>
+    <div class="step"><div class="stepNo">4</div><div><strong>Semanas 9 a 11 · Actualización BIM</strong><p>Ajuste de sistemas especiales, adecuación de vistas y actualización de planos únicamente donde existan modificaciones.</p></div></div>
+    <div class="step"><div class="stepNo">5</div><div><strong>Semana 12 · Control de calidad y cierre</strong><p>Revisión final, validación de entregables, preparación de archivos y cierre del paquete de entrega.</p></div></div>
+  </div></section>
 
-<h3>Alcance del servicio</h3>
+  <section class="panel" id="economico"><div class="grid2">
+    <article class="card"><div class="tag">Resumen económico</div><h3>Montos principales</h3><div class="money"><div class="mini"><span>Subtotal general</span><strong class="amount">$1,096,794.87</strong></div><div class="mini"><span>IVA 16%</span><strong class="amount">$175,487.18</strong></div><div class="mini"><span>Total neto</span><strong class="amount">$1,272,282.05</strong></div><div class="mini"><span>Viáticos</span><strong class="amount">$73,000.00</strong></div></div></article>
+    <article class="card"><div class="tag">Condiciones de pago</div><h3>Esquema financiero</h3><ul><li>Anticipo del 40% del costo neto del proyecto.</li><li>Segundo pago del 20% al término del escaneo.</li><li>Finiquito del 40% al término del modelado.</li></ul></article>
+  </div></section>
 
-<p>
-El presente servicio contempla el <b>levantamiento As-Built y actualización del modelo BIM existente</b>, 
-tomando como base la nube de puntos generada en sitio.
-</p>
-
-<ul>
-<li>Escaneo láser terrestre LiDAR</li>
-<li>Georreferenciación con GNSS RTK</li>
-<li>Procesamiento de nube de puntos</li>
-<li>Actualización del modelo BIM existente (NO modelado desde cero)</li>
-<li>Actualización de sistemas de datos LOD 300</li>
-</ul>
-
-<p><b>IMPORTANTE:</b></p>
-<p>
-El alcance se limita exclusivamente a la revisión, ajuste y adecuación del modelo existente
-proporcionado por el cliente. No incluye reconstrucción total ni modelado integral.
-</p>
-
-</div>
-
-<!-- EQUIPO -->
-<div id="equipo" class="section card">
-
-<h3>Equipo involucrado</h3>
-
-<ul>
-<li><b>2 Técnicos especialistas</b> — levantamiento LiDAR y captura de información</li>
-<li><b>4 Modeladores BIM</b> — actualización del modelo y documentación</li>
-<li><b>1 Coordinador BIM</b> — control técnico, revisión y gestión</li>
-</ul>
-
-</div>
-
-<!-- PLAN -->
-<div id="plan" class="section card">
-
-<h3>Plan de trabajo</h3>
-
-<p>Duración total: 12 semanas</p>
-
-<h4>Semanas 1–4 | Levantamiento</h4>
-<p>
-Captura de nube de puntos mediante escaneo láser terrestre y establecimiento de puntos de control.
-</p>
-
-<h4>Semanas 5–6 | Procesamiento</h4>
-<p>
-Registro, limpieza, alineación y georreferenciación de la nube de puntos.
-</p>
-
-<h4>Semanas 7–12 | Actualización BIM</h4>
-<p>
-Revisión, comparación y ajuste del modelo existente contra la nube de puntos,
-actualizando únicamente elementos con discrepancias relevantes.
-</p>
-
-</div>
-
-<!-- ECONOMICO -->
-<div id="economico" class="section card">
-
-<h3>Resumen económico</h3>
-
-<p><b>Total:</b> $1,272,282.05 MXN</p>
-
-<ul>
-<li>BIW: $162,103.44</li>
-<li>CAB: $287,074.58</li>
-<li>Paintshop: $574,616.86</li>
-<li>Viáticos: $73,000.00</li>
-</ul>
-
-<p><b>Esquema de pagos:</b></p>
-<ul>
-<li>40% anticipo</li>
-<li>20% al finalizar levantamiento</li>
-<li>40% al finalizar modelado</li>
-</ul>
-
-</div>
-
-</div>
-
+  <section class="panel" id="notas"><div class="grid2">
+    <article class="card"><div class="tag">Protección de alcance</div><h3>Condiciones críticas</h3><ul><li>No se contempla modelado integral de nube ni generación de modelo desde cero.</li><li>El cliente deberá proporcionar modelo BIM base en formato nativo Revit.</li><li>No se generarán elementos inexistentes en el modelo original.</li><li>Actualización de planos solo en áreas o elementos modificados.</li><li>Reconstrucción completa, incremento de LOD o incorporaciones adicionales se cotizan por separado.</li></ul></article>
+    <article class="card"><div class="tag">Condiciones de ejecución</div><h3>Restricciones técnicas</h3><ul><li>Levantamiento sujeto a condiciones climáticas favorables.</li><li>El cliente gestiona accesos, permisos y autorizaciones.</li><li>LiDAR captura únicamente elementos visibles y accesibles.</li><li>Áreas sin acceso quedan fuera de nube y modelo.</li><li>Vigencia de propuesta: 30 días naturales.</li></ul></article>
+  </div></section>
+</div></main>
+<footer class="footer"><div class="container"><div class="foot"><div><div class="tag" style="background:rgba(103,184,56,.18);color:#b8eb92">Sohersa BIM</div><h3 style="color:#fff;font-size:1.7rem">Actualización As-Built con trazabilidad técnica</h3><p>Propuesta interactiva para comunicar alcance, equipo, programa, costos y límites técnicos de forma clara y profesional.</p></div><div class="contact"><div><small>Contacto</small><strong>a.vizcaino@gruposohersa.com</strong></div><div><small>Teléfono</small><strong>+52 33 1601 3380</strong></div><div><small>Web</small><a href="https://www.sohersabim.com" target="_blank">www.sohersabim.com</a></div><div><small>Ubicación</small><strong>Franz Liszt 5293, La Estancia, Zapopan, Jalisco</strong></div></div></div></div></footer>
 <script>
-function show(id){
-document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-document.getElementById(id).classList.add('active');
-event.target.classList.add('active');
-}
+document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));btn.classList.add('active');document.getElementById(btn.dataset.tab).classList.add('active')}));
+document.querySelectorAll('.accItem').forEach(item=>{let btn=item.querySelector('.accBtn'),body=item.querySelector('.accBody');btn.addEventListener('click',()=>{let open=item.classList.contains('open');item.classList.toggle('open');body.style.maxHeight=open?'0px':body.scrollHeight+'px'})});
 </script>
-
 </body>
 </html>
