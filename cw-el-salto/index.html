@@ -14,9 +14,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: one long proposal, sticky brand bar carrying the capture-alternative switch and the live total;
-   sections alternate flat ground and white bands; the hero and footer reuse the diagonal green/navy cuts
-   and the chevron strip of SOHERSA's printed quotation. */
+/* Layout: one long proposal, sticky brand bar with section nav and the total; sections alternate flat ground
+   and white bands; the hero and footer reuse the diagonal green/navy cuts and the chevron strip of SOHERSA's
+   printed quotation. Single capture solution: drone photogrammetry everywhere plus laser scanning in six visits. */
 :root{
   --green:#5DB531; --green-deep:#2F7D2B; --green-tint:#E6F4DF; --green-ink:#237A1E; --on-green:#0B1340;
   --navy:#0B1340; --navy-2:#182055; --navy-tint:#E9EBF6;
@@ -24,7 +24,7 @@
   --fg:#121735; --fg-2:#454C6B; --muted:#6F7792;
   --on-navy:#FFFFFF; --on-navy-2:#C7CDE8; --hero-line:rgba(255,255,255,.22); --hero-tile:rgba(255,255,255,.07);
   --plate:#FFFFFF; --logo-plate:transparent;
-  --c-captura:#1F2C7A; --c-modelado:#5DB531; --c-adicional:#D99100;
+  --c-captura:#1F2C7A; --c-modelado:#5DB531; --c-laser:#D99100; --c-laser-ink:#8A5A00; --c-laser-tint:#FFF4DC;
   --warn-tint:#FFF4DC; --warn-ink:#8A5A00;
   --shadow:0 12px 32px rgba(11,19,64,.10);
   --radius:14px;
@@ -40,7 +40,7 @@
     --fg:#EDF0F8; --fg-2:#B9C0DB; --muted:#8A93BA;
     --on-navy:#FFFFFF; --on-navy-2:#C7CDE8; --hero-line:rgba(255,255,255,.18); --hero-tile:rgba(255,255,255,.06);
     --plate:#FFFFFF; --logo-plate:#FFFFFF;
-    --c-captura:#8FA3FF; --c-modelado:#6FCB47; --c-adicional:#F2B33D;
+    --c-captura:#8FA3FF; --c-modelado:#6FCB47; --c-laser:#F2B33D; --c-laser-ink:#F2C675; --c-laser-tint:#3A2C0A;
     --warn-tint:#3A2C0A; --warn-ink:#F2C675;
     --shadow:0 12px 32px rgba(0,0,0,.45);
     color-scheme:dark;
@@ -53,7 +53,7 @@
   --fg:#EDF0F8; --fg-2:#B9C0DB; --muted:#8A93BA;
   --on-navy:#FFFFFF; --on-navy-2:#C7CDE8; --hero-line:rgba(255,255,255,.18); --hero-tile:rgba(255,255,255,.06);
   --plate:#FFFFFF; --logo-plate:#FFFFFF;
-  --c-captura:#8FA3FF; --c-modelado:#6FCB47; --c-adicional:#F2B33D;
+  --c-captura:#8FA3FF; --c-modelado:#6FCB47; --c-laser:#F2B33D; --c-laser-ink:#F2C675; --c-laser-tint:#3A2C0A;
   --warn-tint:#3A2C0A; --warn-ink:#F2C675;
   --shadow:0 12px 32px rgba(0,0,0,.45);
   color-scheme:dark;
@@ -80,6 +80,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .tag{display:inline-block;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;padding:2px 7px;border-radius:6px;border:1px solid var(--line-2);color:var(--fg-2);background:var(--surface);white-space:nowrap}
 .tag.green{background:var(--green-tint);border-color:transparent;color:var(--green-ink)}
 .tag.navy{background:var(--navy);border-color:transparent;color:var(--on-navy)}
+.tag.laser{background:var(--c-laser-tint);border-color:transparent;color:var(--c-laser-ink)}
 .note{background:var(--warn-tint);color:var(--warn-ink);border-radius:10px;padding:12px 14px;font-size:14px;line-height:1.45}
 .callout{border-left:4px solid var(--green);background:var(--green-tint);border-radius:0 12px 12px 0;padding:14px 18px}
 .callout h4{font-size:17px;margin-bottom:6px}
@@ -98,9 +99,11 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .topbar-right{display:flex;align-items:center;gap:10px;margin-left:auto;order:2}
 .total-pill{font-family:var(--font-mono);font-size:14px;background:var(--navy);color:var(--on-navy);padding:8px 12px;border-radius:999px;white-space:nowrap;line-height:1.2}
 .total-pill small{opacity:.8;font-size:10.5px;margin-right:6px;letter-spacing:.06em;text-transform:uppercase}
-@media (min-width:1080px){.nav{order:2;flex:1 1 auto}.topbar-right{order:3}}
+@media (min-width:1080px){.nav{order:2;flex:1 1 0px;min-width:0}.topbar-right{order:3}}
+@media (max-width:1420px){.total-pill small{display:none}}
+@media (min-width:1080px) and (max-width:1260px){.nav a{padding:8px 7px;font-size:13.5px}}
 @media (max-width:1079px){.nav{flex-basis:100%;margin-top:-4px}}
-@media (max-width:700px){.topbar .seg{display:none}.topbar .logo-plate img{height:28px}.topbar .wrap{min-height:52px;gap:2px 10px;padding-block:6px}.nav a{padding:6px 8px;font-size:13px}.total-pill{font-size:12.5px;padding:7px 10px}.total-pill small{display:none}}
+@media (max-width:700px){.topbar .logo-plate img{height:28px}.topbar .wrap{min-height:52px;gap:2px 10px;padding-block:6px}.nav a{padding:6px 8px;font-size:13px}.total-pill{font-size:12.5px;padding:7px 10px}.total-pill small{display:none}}
 section[id],#top{scroll-margin-top:84px}
 @media (max-width:1079px){section[id],#top{scroll-margin-top:118px}}
 @media (max-width:700px){section[id],#top{scroll-margin-top:100px}}
@@ -110,12 +113,11 @@ section[id],#top{scroll-margin-top:84px}
 .seg-btn{padding:6px 12px;border-radius:999px;font-family:var(--font-display);font-weight:600;font-size:13px;color:var(--fg-2);white-space:nowrap;transition:background .2s,color .2s}
 .seg-btn:hover{color:var(--fg)}
 .seg-btn.is-on{background:var(--green);color:var(--on-green)}
-.seg.lg .seg-btn{padding:9px 16px;font-size:14px}
 
 /* ---------- hero ---------- */
 .hero{position:relative;background:var(--navy);color:var(--on-navy);overflow:hidden;isolation:isolate}
 .hero-art{position:absolute;inset:0;width:100%;height:100%;z-index:-1}
-.hero .wrap{padding-block:clamp(44px,7vw,92px);display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:44px;align-items:end}
+.hero .wrap{padding-block:clamp(44px,7vw,92px);display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px;align-items:end}
 .hero-logo{display:inline-flex;background:var(--plate);border-radius:10px;padding:8px 14px;margin-bottom:28px}
 .hero-logo img{height:44px;width:auto;display:block}
 .hero .eyebrow{color:var(--green)}
@@ -127,7 +129,7 @@ section[id],#top{scroll-margin-top:84px}
 .chip b{color:var(--on-navy);font-weight:600}
 .kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .kpi{background:var(--hero-tile);border:1px solid var(--hero-line);border-radius:12px;padding:14px 14px 12px;min-width:0}
-.kpi b{display:block;font-family:var(--font-display);font-size:clamp(24px,2.6vw,32px);font-weight:800;line-height:1;color:var(--on-navy);white-space:nowrap}
+.kpi b{display:block;font-family:var(--font-display);font-size:clamp(22px,2vw,30px);font-weight:800;line-height:1;color:var(--on-navy);white-space:nowrap;letter-spacing:-.01em}
 .kpi b em{font-style:normal;color:var(--green)}
 .kpi span{display:block;font-size:12.5px;color:var(--on-navy-2);margin-top:7px;line-height:1.3}
 @media (max-width:900px){.hero .wrap{grid-template-columns:1fr;gap:30px}}
@@ -146,7 +148,10 @@ section{padding-block:clamp(44px,7vw,84px)}
 .card h3 .tag{vertical-align:middle;margin-left:6px}
 .grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
 .grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+@media (max-width:1000px){.grid-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:900px){.grid-3{grid-template-columns:1fr}.grid-2{grid-template-columns:1fr}}
+@media (max-width:560px){.grid-4{grid-template-columns:1fr}}
 dl.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px 14px;margin:0}
 dl.kv dt{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding-top:3px;white-space:nowrap}
 dl.kv dd{margin:0;font-weight:500;min-width:0;overflow-wrap:anywhere}
@@ -157,6 +162,7 @@ dl.kv dd{margin:0;font-weight:500;min-width:0;overflow-wrap:anywhere}
 
 /* ---------- site map ---------- */
 .site{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:22px;align-items:start}
+.site>div{min-width:0}
 @media (max-width:900px){.site{grid-template-columns:1fr}}
 .map{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;overflow:hidden}
 .map svg{width:100%;height:auto;display:block}
@@ -167,50 +173,91 @@ dl.kv dd{margin:0;font-weight:500;min-width:0;overflow-wrap:anywhere}
 .map .out{fill:url(#hatch);stroke:var(--line-2);stroke-width:1.2}
 .map .zone{fill:var(--green);fill-opacity:.22;stroke:var(--green-deep);stroke-width:2;cursor:pointer;transition:fill-opacity .2s}
 .map .zone:hover,.map .zone.is-on{fill-opacity:.55}
+.map .zone.dim{fill-opacity:.12}
 .map .pin circle{fill:var(--navy);stroke:var(--plate);stroke-width:2}
 .map .pin text{fill:var(--on-navy);font-size:12px;font-weight:600;text-anchor:middle;dominant-baseline:central;letter-spacing:0;pointer-events:none}
+.map .zlabel{font-family:var(--font-display);font-size:12px;font-weight:700;fill:var(--green-ink);letter-spacing:.02em;text-transform:none;pointer-events:none}
+.map .axis{fill:none;stroke:var(--c-captura);stroke-width:1.6;stroke-dasharray:7 5;opacity:.85;pointer-events:none}
+.map .scan rect{fill:var(--c-laser);stroke:var(--plate);stroke-width:2}
+.map .scan text{fill:var(--on-green);font-family:var(--font-display);font-weight:800;font-size:11px;text-anchor:middle;dominant-baseline:central;letter-spacing:0;text-transform:none}
+.map .scan{cursor:pointer}
+.map .scan.is-on rect{stroke:var(--navy);stroke-width:3}
+.map .cp polygon{fill:var(--surface);stroke:var(--c-captura);stroke-width:1.6}
+.map .cp circle{fill:var(--c-captura)}
+.map .cp text{fill:var(--fg-2);font-size:9.5px;letter-spacing:.04em;text-transform:none}
 .map .north text{fill:var(--fg-2)}
-.map .legend{font-size:11px}
-.zone-list{display:grid;gap:8px;margin-top:14px}
+.map .legend text{text-transform:none;letter-spacing:0;font-size:11px}
+.map.off-zones .zone,.map.off-zones .pin,.map.off-zones .zlabel{display:none}
+.map.off-scan .scan{display:none}
+.map.off-cp .cp{display:none}
+.map.off-axis .axis{display:none}
+.layers{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.layer{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-family:var(--font-display);font-weight:600;font-size:13px;color:var(--fg-2);background:var(--surface)}
+.layer i{width:11px;height:11px;border-radius:3px;display:inline-block}
+.layer[aria-pressed="true"]{border-color:var(--green);color:var(--fg);background:var(--green-tint)}
+.layer[aria-pressed="false"] i{opacity:.3}
+.zone-list{display:grid;gap:8px}
 .zone-btn{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface);transition:border-color .2s,background .2s}
 .zone-btn:hover{border-color:var(--green)}
 .zone-btn.is-on{border-color:var(--green);background:var(--green-tint)}
 .zone-btn .n{flex:0 0 26px;height:26px;border-radius:50%;background:var(--navy);color:var(--on-navy);font-family:var(--font-display);font-weight:700;display:grid;place-items:center;font-size:13px}
 .zone-btn b{font-family:var(--font-display);font-weight:600;font-size:15px;display:block}
 .zone-btn span{font-size:13px;color:var(--muted);display:block}
+.zone-btn .zt{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
 .zone-desc{margin-top:14px;padding:16px;border-radius:12px;background:var(--surface);border:1px solid var(--line);min-height:120px}
 .zone-desc h4{font-size:18px;margin-bottom:6px}
 .zone-desc p{color:var(--fg-2);font-size:14.5px}
+.zone-desc .facts{display:grid;gap:6px;margin-top:12px}
+.zone-desc .fact{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;font-size:13.5px;color:var(--fg-2)}
+.zone-desc .fact i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-top:4px}
+.zone-desc .fact i.obra{background:var(--navy-tint);border:1px solid var(--line-2)}
+.zone-desc .fact i.laser{background:var(--c-laser);transform:rotate(45deg);width:10px;height:10px;margin-top:5px;margin-left:1px}
+.zone-desc .fact i.dron{background:var(--green);border-radius:50%}
+.zone-desc .fact button{color:var(--green-ink);font-weight:600;text-decoration:underline;text-underline-offset:2px}
 .stat-row{display:flex;flex-wrap:wrap;gap:16px 26px;margin-top:14px}
 .stat-row div b{display:block;font-family:var(--font-display);font-size:24px;font-weight:800;line-height:1}
 .stat-row div span{font-size:12.5px;color:var(--muted)}
+.scan-list{display:grid;gap:8px;margin-top:14px}
+.scan-item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:var(--surface);font-size:14px;cursor:pointer}
+.scan-item .lz{width:22px;height:22px;display:grid;place-items:center}
+.scan-item .lz i{display:block;width:12px;height:12px;background:var(--c-laser);transform:rotate(45deg);border:2px solid var(--plate);box-sizing:content-box}
+.scan-item b{font-family:var(--font-display);font-weight:600;display:block;line-height:1.2}
+.scan-item span{font-size:12.5px;color:var(--muted);display:block}
+.scan-item .wk{display:flex;gap:4px}
+.scan-item.is-on{border-color:var(--c-laser);background:var(--c-laser-tint)}
+.scan-item .wk button.tag{cursor:pointer}
+.scan-item .wk button.tag:hover{filter:brightness(.95)}
+.golink{color:var(--green-ink);font-weight:600;text-decoration:underline;text-underline-offset:2px;font-size:13.5px}
+.scan-item:hover{border-color:var(--c-laser)}
 
 /* ---------- methodology ---------- */
-.alts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
-@media (max-width:900px){.alts{grid-template-columns:1fr}}
-.alt-card{position:relative;background:var(--surface);border:2px solid var(--line);border-radius:var(--radius);padding:22px;transition:border-color .2s,box-shadow .2s}
-.band .alt-card{background:var(--bg)}
-.alt-card.is-on{border-color:var(--green);box-shadow:var(--shadow)}
-.alt-card .flag{position:absolute;top:-12px;left:18px;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:999px;background:var(--surface-2);color:var(--fg-2);border:1px solid var(--line)}
-.alt-card.is-on .flag{background:var(--green);color:var(--on-green);border-color:transparent}
-.alt-card h3{font-size:22px;font-weight:800;margin-top:6px}
-.alt-card .sub{color:var(--fg-2);margin-top:4px;font-size:14.5px}
-.alt-card .price{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--navy);color:var(--on-navy)}
-.alt-card .price b{display:block;font-family:var(--font-mono);font-size:22px;letter-spacing:-.01em}
-.alt-card .price span{font-size:12px;color:var(--on-navy-2)}
+.sol{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+@media (max-width:900px){.sol{grid-template-columns:1fr}}
+.sol-card{position:relative;background:var(--surface);border:2px solid var(--line);border-radius:var(--radius);padding:22px}
+.band .sol-card{background:var(--bg)}
+.sol-card.main{border-color:var(--green);box-shadow:var(--shadow)}
+.sol-card .flag{position:absolute;top:-12px;left:18px;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:999px;background:var(--surface-2);color:var(--fg-2);border:1px solid var(--line)}
+.sol-card.main .flag{background:var(--green);color:var(--on-green);border-color:transparent}
+.sol-card.laser .flag{background:var(--c-laser);color:var(--on-green);border-color:transparent}
+.sol-card h3{font-size:21px;font-weight:800;margin-top:6px}
+.sol-card .sub{color:var(--fg-2);margin-top:6px;font-size:14.5px}
+.sol-card p.txt{margin-top:12px;font-size:14.5px;color:var(--fg)}
+.sol-card .ic{width:44px;height:44px;border-radius:12px;background:var(--navy);color:var(--green);display:grid;place-items:center;margin-bottom:10px}
+.sol-card.laser .ic{color:var(--c-laser)}
+.sol-card .ic svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .spec{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 12px;margin-top:16px;font-size:14.5px}
 .spec dt{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding-top:3px;white-space:nowrap}
 .spec dd{margin:0;color:var(--fg)}
-.alt-pick{margin-top:18px;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-2);border-radius:999px;padding:8px 16px;font-family:var(--font-display);font-weight:600;font-size:14px}
-.alt-card.is-on .alt-pick{background:var(--green);color:var(--on-green);border-color:transparent}
-.cmp-wrap{overflow-x:auto;margin-top:26px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
-.band .cmp-wrap{background:var(--bg)}
-table.cmp{width:100%;border-collapse:collapse;min-width:640px;font-size:14.5px}
-table.cmp th,table.cmp td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
-table.cmp th{font-family:var(--font-display);font-weight:700;font-size:14px;letter-spacing:.02em;background:var(--surface-2)}
-table.cmp td:first-child{font-weight:600;width:22%}
-table.cmp th.on,table.cmp td.on{background:var(--green-tint)}
-table.cmp tr:last-child td{border-bottom:0}
+.prec{display:grid;gap:8px}
+.prec .pr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border-bottom:1px dashed var(--line);padding-bottom:8px;font-size:14px}
+.prec .pr:last-child{border-bottom:0}
+.prec .pr b{font-family:var(--font-display);font-weight:800;font-size:20px;white-space:nowrap;color:var(--green-ink)}
+.prec .pr small{display:block;font-size:12.5px;color:var(--muted)}
+.equip{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.equip span{border:1px solid var(--line-2);border-radius:10px;padding:8px 12px;font-family:var(--font-display);font-weight:600;font-size:14px;background:var(--surface);display:inline-flex;align-items:center;gap:8px}
+.band .equip span{background:var(--bg)}
+.equip span i{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block}
+.equip span i.l{background:var(--c-laser)}
 .flow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:22px}
 @media (max-width:980px){.flow{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:520px){.flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -219,11 +266,15 @@ table.cmp tr:last-child td{border-bottom:0}
 .step i{display:block;font-style:normal;font-family:var(--font-mono);font-size:11px;color:var(--green-ink);letter-spacing:.08em}
 .step b{display:block;font-family:var(--font-display);font-size:15.5px;font-weight:700;margin-top:4px;line-height:1.2}
 .step span{display:block;font-size:13px;color:var(--fg-2);margin-top:6px;line-height:1.35}
-.mini{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:22px}
-@media (max-width:700px){.mini{grid-template-columns:1fr}}
-.mini .card{padding:16px 18px}
-.mini .card h4{font-size:16px;margin-bottom:6px}
-.mini .card p{font-size:14px;color:var(--fg-2)}
+.step em{display:block;font-style:normal;font-size:12.5px;color:var(--c-laser-ink);margin-top:6px;line-height:1.35}
+.stages{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:22px}
+@media (max-width:980px){.stages{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.stages{grid-template-columns:1fr}}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}
+.band .stage{background:var(--bg)}
+.stage b{display:block;font-family:var(--font-display);font-size:16px;font-weight:700;line-height:1.15}
+.stage span{display:block;font-size:13px;color:var(--fg-2);margin-top:6px;line-height:1.35}
+.stage em{display:block;font-style:normal;font-family:var(--font-mono);font-size:12px;color:var(--green-ink);margin-top:8px}
 
 /* ---------- disciplines explorer ---------- */
 .explorer{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:22px;align-items:start}
@@ -237,7 +288,8 @@ table.cmp tr:last-child td{border-bottom:0}
 .dcard .ic svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .dcard b{display:block;font-family:var(--font-display);font-weight:700;font-size:15px;line-height:1.15}
 .dcard span{display:block;font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-top:4px}
-.detail{position:sticky;top:calc(84px + env(safe-area-inset-top,0px));background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+.detail{position:sticky;top:calc(84px + env(safe-area-inset-top,0px));scroll-margin-top:calc(110px + env(safe-area-inset-top,0px));background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+.band .detail{background:var(--bg)}
 .detail .head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap}
 .detail h3{font-size:24px;font-weight:800}
 .detail .amount{font-family:var(--font-mono);font-size:22px;background:var(--navy);color:var(--on-navy);padding:8px 12px;border-radius:10px;white-space:nowrap}
@@ -261,32 +313,32 @@ table.cmp tr:last-child td{border-bottom:0}
 .summary .rows{margin-top:18px;display:grid;gap:8px}
 .summary .row{display:flex;justify-content:space-between;gap:12px;align-items:baseline;font-size:15px;color:var(--on-navy-2)}
 .summary .row b{font-family:var(--font-mono);font-weight:500;color:var(--on-navy)}
-.summary .row.sub{font-size:13.5px}
+.summary .row.sub{font-size:13.5px;padding-left:14px}
+.summary .row.sub b{color:var(--on-navy-2)}
+.summary .row.head{color:var(--on-navy);font-weight:600}
 .summary .total{margin-top:14px;padding-top:14px;border-top:1px solid var(--hero-line)}
 .summary .total span{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--on-navy-2)}
 .summary .total b{display:block;font-family:var(--font-mono);font-size:clamp(28px,3.4vw,38px);letter-spacing:-.01em;line-height:1.1;margin-top:4px}
 .summary .total i{display:block;font-style:normal;font-size:13px;color:var(--on-navy-2);margin-top:4px}
-.summary .seg{margin-top:18px;background:rgba(255,255,255,.08);border-color:var(--hero-line)}
-.summary .seg-btn{color:var(--on-navy-2)}
-.summary .seg-btn.is-on{color:var(--on-green)}
 .chart{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.band .chart{background:var(--bg)}
 .chart .head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .chart h3{font-size:18px;font-weight:700}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--fg-2)}
 .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 .bar-row{display:grid;grid-template-columns:minmax(150px,220px) minmax(0,1fr) 112px;gap:12px;align-items:center;padding:5px 0;border-radius:8px}
 .bar-row:hover{background:var(--surface-2)}
-.bar-row.dim{opacity:.35}
 .bar-label{font-size:13.5px;font-weight:500;line-height:1.2;min-width:0}
 .bar-track{height:14px;background:var(--surface-2);border-radius:4px;position:relative;min-width:0}
 .bar-fill{position:absolute;inset:0 auto 0 0;border-radius:0 4px 4px 0;transition:width .4s}
 .bar-fill.captura{background:var(--c-captura)}
 .bar-fill.modelado{background:var(--c-modelado)}
-.bar-fill.adicional{background:var(--c-adicional)}
+.bar-fill.laser{background:var(--c-laser)}
 .bar-val{font-family:var(--font-mono);font-size:13px;text-align:right;white-space:nowrap}
-.legend i.captura{background:var(--c-captura)}.legend i.modelado{background:var(--c-modelado)}.legend i.adicional{background:var(--c-adicional)}
+.legend i.captura{background:var(--c-captura)}.legend i.modelado{background:var(--c-modelado)}.legend i.laser{background:var(--c-laser)}
 @media (max-width:640px){.bar-row{grid-template-columns:minmax(0,1fr) auto;gap:6px 10px}.bar-label{grid-column:1;grid-row:1}.bar-val{grid-column:2;grid-row:1}.bar-track{grid-column:1/-1;grid-row:2}}
 .tbl-wrap{margin-top:22px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.band .tbl-wrap{background:var(--bg)}
 table.cost{width:100%;border-collapse:collapse;font-size:14.5px}
 table.cost th,table.cost td{padding:12px 16px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
 table.cost th{font-family:var(--font-display);font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--fg-2);background:var(--surface-2)}
@@ -309,21 +361,23 @@ table.cost tr.total td.amt{font-family:var(--font-mono);font-size:19px}
 .inv-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:22px}
 @media (max-width:980px){.inv-cards{grid-template-columns:1fr}}
 .unit{display:grid;gap:10px}
+.unit h4{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--green-ink);margin:6px 0 0}
 .unit .u{display:flex;justify-content:space-between;gap:10px;align-items:baseline;border-bottom:1px dashed var(--line);padding-bottom:8px;font-size:14px}
 .unit .u b{font-family:var(--font-mono);font-weight:500;white-space:nowrap}
 .unit .u.hl{background:var(--green-tint);border-radius:8px;padding:8px 10px;border-bottom:0}
+.unit .u.hl.l{background:var(--c-laser-tint)}
 .pay{display:grid;gap:8px;margin-top:8px}
 .pay .p{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;font-size:14px}
 .pay .p i{font-style:normal;font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--green-ink);min-width:44px;line-height:1.2}
 .pay .p b{display:block;font-family:var(--font-mono);font-weight:500}
 .pay .bar{display:flex;height:14px;border-radius:4px;overflow:hidden;margin:8px 0 2px;gap:2px}
 .pay .bar i{display:block;height:100%}
-.sim .stepper{display:flex;align-items:center;gap:10px;margin:12px 0}
+.sim .stepper{display:grid;grid-template-columns:40px 48px 40px minmax(0,1fr);align-items:center;gap:8px;margin:10px 0}
 .sim .stepper button{width:40px;height:40px;border-radius:50%;background:var(--navy);color:var(--on-navy);display:grid;place-items:center;font-family:var(--font-display);font-size:20px;font-weight:700}
 .sim .stepper button:disabled{opacity:.35;cursor:default}
-.sim .stepper output{font-family:var(--font-display);font-size:34px;font-weight:800;min-width:2ch;text-align:center}
-.sim .stepper small{font-size:13px;color:var(--muted)}
-.sim .res{display:grid;gap:6px;font-size:14px}
+.sim .stepper output{font-family:var(--font-display);font-size:30px;font-weight:800;text-align:center}
+.sim .stepper small{font-size:13px;color:var(--muted);line-height:1.25}
+.sim .res{display:grid;gap:6px;font-size:14px;margin-top:8px}
 .sim .res div{display:flex;justify-content:space-between;gap:10px}
 .sim .res b{font-family:var(--font-mono);font-weight:500}
 .sim .res .t{border-top:1px solid var(--line);padding-top:6px;margin-top:4px;font-weight:600}
@@ -333,45 +387,104 @@ table.cost tr.total td.amt{font-family:var(--font-mono);font-size:19px}
 .terms li{break-inside:avoid}
 @media (max-width:800px){.terms ul{columns:1}}
 
-/* ---------- gantt ---------- */
-.gantt{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px 14px;overflow:hidden}
-.band .gantt{background:var(--bg)}
-.g-head,.g-row{display:grid;grid-template-columns:200px minmax(0,1fr);gap:12px;align-items:center}
-.g-head{margin-bottom:6px}
-.g-months{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
-.g-months span{padding:4px 0;border-left:1px solid var(--line);padding-left:4px;overflow:hidden;white-space:nowrap}
-.g-months span.y{color:var(--fg-2);font-weight:500}
+/* ---------- programa (weeks) ---------- */
+.scrub{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;align-items:stretch;margin-bottom:18px}
+@media (max-width:900px){.scrub{grid-template-columns:1fr}}
+.scrub .card{display:flex;flex-direction:column;gap:10px}
+.wk-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.wk-big{font-family:var(--font-display);font-weight:800;font-size:clamp(34px,4vw,46px);line-height:1}
+.wk-big small{display:block;font-family:var(--font-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--green-ink);font-weight:500;margin-bottom:4px}
+.wk-phase{font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--fg);text-align:right}
+.wk-phase small{display:block;font-size:12.5px;color:var(--muted);font-family:var(--font-body);font-weight:400}
+input[type=range].wk{width:100%;accent-color:var(--green);margin:6px 0 0;height:28px}
+.wk-ticks{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:10.5px;color:var(--muted);margin-top:-2px}
+.wk-btns{display:flex;gap:8px;flex-wrap:wrap}
+.wk-btns button{border:1px solid var(--line-2);border-radius:999px;padding:7px 13px;font-family:var(--font-display);font-weight:600;font-size:13.5px;background:var(--surface);color:var(--fg-2)}
+.band .wk-btns button{background:var(--bg)}
+.wk-btns button:hover{border-color:var(--green);color:var(--green-ink)}
+.wk-btns button.go{background:var(--navy);color:var(--on-navy);border-color:transparent}
+.wk-btns button.go:hover{color:var(--green)}
+.wk-visit{border-radius:12px;padding:12px 14px;background:var(--surface-2);display:grid;gap:4px}
+.wk-visit.on{background:var(--green-tint)}
+.wk-visit.laser{background:var(--c-laser-tint)}
+.wk-visit b{font-family:var(--font-display);font-weight:700;font-size:16px;line-height:1.2}
+.wk-visit span{font-size:13.5px;color:var(--fg-2)}
+.wk-visit .badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.wk-fronts h4{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--green-ink);margin:0 0 8px}
+.fronts{display:flex;flex-wrap:wrap;gap:6px}
+.fronts span{font-size:12.5px;border:1px solid var(--line-2);border-radius:999px;padding:3px 9px;color:var(--fg-2);background:var(--surface)}
+.band .fronts span{background:var(--bg)}
+.fronts span.off{opacity:.55;border-style:dashed}
+.fronts .none{font-size:13.5px;color:var(--muted)}
+.gantt-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.band .gantt-scroll{background:var(--bg)}
+.gantt{position:relative;padding:16px 18px 14px;min-width:0}
+@media (max-width:760px){.gantt{min-width:700px}.g-head,.g-row{grid-template-columns:150px minmax(0,1fr);gap:8px}.g-label{font-size:12px}}
+@media (max-width:700px){.map{overflow-x:auto}.map svg{min-width:640px}}
+.g-head,.g-row{display:grid;grid-template-columns:210px minmax(0,1fr);gap:12px;align-items:center}
+.g-head{margin-bottom:4px}
+.g-phases{position:relative;height:24px}
+.g-phases span{position:absolute;top:0;height:22px;border-radius:5px;font-family:var(--font-display);font-size:11.5px;font-weight:700;letter-spacing:.02em;display:flex;align-items:center;padding:0 7px;overflow:hidden;white-space:nowrap;color:var(--fg-2);background:var(--surface-2);border:1px solid var(--line);cursor:pointer}
+.g-phases span.ini,.g-phases span.int{background:var(--green-tint);border-color:transparent;color:var(--green-ink)}
+.g-phases span.max{background:var(--green);border-color:transparent;color:var(--on-green)}
+.g-phases span.fin{background:var(--green-tint);border-color:transparent;color:var(--green-ink);opacity:.8}
+.g-phases span.cie{background:var(--navy-tint);border-color:transparent;color:var(--fg-2)}
+.g-phases span.is-on{box-shadow:0 0 0 2px var(--navy)}
+@media (max-width:1100px){.g-phases span{font-size:10.5px;padding:0 5px;letter-spacing:0}}
+.g-phases span:hover{filter:brightness(.96)}
+.g-weeks{position:relative;height:18px;font-family:var(--font-mono);font-size:10.5px;color:var(--muted)}
+.g-weeks span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+.g-weeks span::before{content:"";position:absolute;left:50%;top:-4px;height:4px;border-left:1px solid var(--line-2)}
 .g-group{font-family:var(--font-display);font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-2);margin:14px 0 4px;display:flex;align-items:center;gap:10px}
 .g-group i{display:inline-block;width:18px;height:10px;border-radius:3px}
 .g-group i.obra{background:var(--navy-tint);border:1px solid var(--line-2)}
 .g-group i.serv{background:var(--green)}
-.g-row{min-height:30px}
-.g-label{font-size:13px;line-height:1.2;color:var(--fg);min-width:0}
-.g-label small{display:block;font-size:11.5px;color:var(--muted)}
-.g-track{position:relative;height:22px;background-image:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 8.3333%);border-radius:0}
-.g-bar{position:absolute;top:4px;height:14px;border-radius:4px;min-width:3px;cursor:default}
+.g-row{min-height:28px}
+.g-label{font-size:13px;line-height:1.2;color:var(--fg);min-width:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.g-label small{display:block;flex-basis:100%;font-size:11.5px;color:var(--muted)}
+.g-label .tag{font-size:10px;padding:1px 6px}
+.g-row.active .g-label{color:var(--green-ink);font-weight:600}
+.g-track{position:relative;height:22px;
+  background-image:
+    repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 7.5472%),
+    linear-gradient(90deg,transparent 0 7.547%,color-mix(in srgb,var(--green) 9%,transparent) 7.547% 18.868%,color-mix(in srgb,var(--green) 20%,transparent) 18.868% 54.717%,color-mix(in srgb,var(--green) 9%,transparent) 54.717% 75.472%,color-mix(in srgb,var(--green) 5%,transparent) 75.472% 92.453%,color-mix(in srgb,var(--navy) 7%,transparent) 92.453% 100%)}
+.g-bar{position:absolute;top:4px;height:14px;border-radius:4px;min-width:3px;cursor:default;transition:background .2s,border-color .2s}
 .g-bar.obra{background:var(--navy-tint);border:1px solid var(--line-2);top:5px;height:12px}
+.g-bar.obra.is-on{background:var(--c-captura);border-color:transparent}
+.g-bar.obra.out{background:repeating-linear-gradient(135deg,var(--surface) 0 3px,var(--line-2) 3px 5px);border:1px solid var(--line-2)}
 .g-bar.serv{background:var(--green)}
 .g-bar.serv.soft{background:var(--green-tint);border:1px dashed var(--green-deep)}
-.g-bar.gap{background:repeating-linear-gradient(135deg,var(--surface) 0 3px,var(--line-2) 3px 5px);border:1px solid var(--line-2)}
-.g-dot{position:absolute;top:7px;width:8px;height:8px;border-radius:50%;background:var(--navy);border:2px solid var(--plate);transform:translateX(-50%);box-sizing:content-box}
+.g-dot{position:absolute;top:7px;width:8px;height:8px;border-radius:50%;background:var(--navy);border:2px solid var(--plate);transform:translateX(-50%);box-sizing:content-box;cursor:pointer;transition:transform .15s}
 .g-dot.d{background:var(--green-deep)}
-.gantt{position:relative}
+.g-dot.arr{background:var(--navy);width:10px;height:10px;top:6px}
+.g-dot.fin{background:var(--green-ink);width:10px;height:10px;top:6px}
+.g-dot.l{background:var(--c-laser);border-radius:2px;width:9px;height:9px;top:6.5px;transform:translateX(-50%) rotate(45deg)}
+.g-dot.is-on{transform:translateX(-50%) scale(1.5);z-index:4}
+.g-dot.l.is-on{transform:translateX(-50%) rotate(45deg) scale(1.45)}
+.g-dot.m{background:var(--surface);border:2px solid var(--c-captura);width:6px;height:6px;top:8px}
 .g-overlay{position:absolute;inset:0;pointer-events:none}
-.g-line{position:absolute;width:0;border-left:2px dashed var(--c-adicional);pointer-events:auto}
-.g-line.start{border-color:var(--green-deep)}
-.g-flag{position:absolute;transform:translateX(-50%);font-family:var(--font-mono);font-size:10.5px;background:var(--navy);color:var(--on-navy);padding:2px 6px;border-radius:5px;white-space:nowrap}
-@media (max-width:700px){.g-head,.g-row{grid-template-columns:118px minmax(0,1fr);gap:8px}.g-label{font-size:12px}.g-label small{display:none}.g-months span{font-size:9.5px;padding-left:2px}.g-flag{display:none}}
+.g-cursor{position:absolute;width:0;border-left:2px solid var(--c-captura);opacity:.9}
+.g-cursor .lab{position:absolute;top:-1px;left:0;transform:translateX(-50%);font-family:var(--font-mono);font-size:10.5px;background:var(--navy);color:var(--on-navy);padding:2px 6px;border-radius:5px;white-space:nowrap}
 .g-key{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--fg-2);margin-top:12px}
+.g-hint{display:none;font-size:12.5px;color:var(--muted);margin-top:8px}
+@media (max-width:760px){.g-hint{display:block}}
 .g-key i{display:inline-block;vertical-align:middle;margin-right:6px}
-.stages{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:22px}
-@media (max-width:980px){.stages{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:480px){.stages{grid-template-columns:1fr}}
-.stage{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}
-.band .stage{background:var(--bg)}
-.stage b{display:block;font-family:var(--font-display);font-size:16px;font-weight:700;line-height:1.15}
-.stage span{display:block;font-size:13px;color:var(--fg-2);margin-top:6px;line-height:1.35}
-.stage em{display:block;font-style:normal;font-family:var(--font-mono);font-size:12px;color:var(--green-ink);margin-top:8px}
+.phases{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:22px}
+@media (max-width:1100px){.phases{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:640px){.phases{grid-template-columns:1fr}}
+.phase{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0;text-align:left;transition:border-color .2s;display:block;width:100%}
+.band .phase{background:var(--bg)}
+.phase:hover,.phase.is-on{border-color:var(--green)}
+.phase.is-on{box-shadow:var(--shadow)}
+.phase i{display:block;font-style:normal;font-family:var(--font-mono);font-size:11px;color:var(--green-ink);letter-spacing:.08em;text-transform:uppercase}
+.phase b{display:block;font-family:var(--font-display);font-size:16px;font-weight:700;line-height:1.15;margin-top:4px}
+.phase span{display:block;font-size:13px;color:var(--fg-2);margin-top:6px;line-height:1.35}
+.phase em{display:flex;flex-wrap:wrap;gap:4px;font-style:normal;margin-top:8px}
+.phase em .tag{font-size:10.5px}
+.prog-notes{margin-top:18px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.prog-notes{grid-template-columns:1fr}}
+.prog-notes .card{padding:14px 16px;font-size:13.5px;color:var(--fg-2)}
+.prog-notes .card b{display:block;font-family:var(--font-display);font-size:15px;color:var(--fg);margin-bottom:4px}
 
 /* ---------- deliverables ---------- */
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
@@ -442,14 +555,10 @@ footer .f-col b{color:var(--on-navy);font-weight:600}
   <div class="wrap">
     <a class="brand" href="#top" aria-label="SOHERSA BIM, inicio"><span class="logo-plate"><img src="logo-sohersa.png" alt="SOHERSA BIM"></span></a>
     <nav class="nav" aria-label="Secciones">
-      <a href="#resumen">Resumen</a><a href="#sitio">Sitio</a><a href="#metodologia">Metodología</a><a href="#alcances">Alcances</a><a href="#inversion">Inversión</a><a href="#programa">Programa</a><a href="#entregables">Entregables</a><a href="#condiciones">Condiciones</a><a href="#pasos">Siguientes pasos</a>
+      <a href="#resumen">Resumen</a><a href="#sitio">Sitio</a><a href="#programa">Programa</a><a href="#metodologia">Metodología</a><a href="#alcances">Alcances</a><a href="#inversion">Inversión</a><a href="#entregables">Entregables</a><a href="#condiciones">Condiciones</a><a href="#pasos">Siguientes pasos</a>
     </nav>
     <div class="topbar-right">
-      <div class="seg" role="radiogroup" aria-label="Alternativa de captura">
-        <button class="seg-btn" data-alt="base" role="radio" aria-checked="true">Recomendada</button>
-        <button class="seg-btn" data-alt="combinada" role="radio" aria-checked="false">Combinada</button>
-      </div>
-      <div class="total-pill"><small>Total IVA incl.</small><span data-sum="total">$870,163.64</span></div>
+      <div class="total-pill"><small>Total IVA incl.</small><span data-sum="total">$1,176,605.75</span></div>
     </div>
   </div>
 </div>
@@ -469,9 +578,9 @@ footer .f-col b{color:var(--on-navy);font-weight:600}
       <div class="hero-logo"><img src="logo-sohersa.png" alt="SOHERSA BIM"></div>
       <div class="eyebrow">Propuesta técnica y económica · C&amp;W_LAB_26399_LCW</div>
       <h1>Levantamiento y modelado BIM As-Built<small>Instalaciones e infraestructura exterior · Parque industrial El Salto, Jalisco</small></h1>
-      <p class="lead">Preparada para Cushman &amp; Wakefield, Project &amp; Development Services. Captura en sitio de las redes subterráneas antes de su cobertura y modelo BIM LOD 350 georreferenciado de diez disciplinas, con planos As-Built, memoria de levantamiento y entregas parciales sujetas al programa de obra.</p>
+      <p class="lead">Preparada para Cushman &amp; Wakefield, Project &amp; Development Services. Fotogrametría con dron georreferenciada con GNSS RTK sobre todo el polígono, escaneo láser terrestre en las zonas de mayor complejidad y modelo BIM LOD 350 georreferenciado de diez disciplinas, con planos As-Built, memoria de levantamiento y entregas parciales sujetas al programa de obra.</p>
       <div class="chips">
-        <span class="chip">Fecha <b>30 de octubre de 2026</b></span>
+        <span class="chip">Fecha <b>6 de noviembre de 2026</b></span>
         <span class="chip">Vigencia <b>30 días naturales</b></span>
         <span class="chip">Atención <b>Jorge A. Bobadilla Contreras · BIM Manager</b></span>
       </div>
@@ -479,10 +588,10 @@ footer .f-col b{color:var(--on-navy);font-weight:600}
     <div class="kpis" aria-label="Cifras clave de la propuesta">
       <div class="kpi"><b>58,950 <em>m²</em></b><span>Superficie de intervención</span></div>
       <div class="kpi"><b>10</b><span>Disciplinas modeladas en Revit, LOD 350</span></div>
-      <div class="kpi"><b>1 <em>+</em> 18</b><span>Visita de arranque + visitas de seguimiento con dron</span></div>
-      <div class="kpi"><b>32 <em>sem</em></b><span>Duración estimada del servicio</span></div>
+      <div class="kpi"><b>1 <em>+</em> 31</b><span>Visita de arranque + visitas de seguimiento con dron</span></div>
+      <div class="kpi"><b>6</b><span>Visitas con escaneo láser terrestre en zonas de mayor complejidad</span></div>
+      <div class="kpi"><b>53 <em>sem</em></b><span>Duración del servicio a partir del inicio de obra</span></div>
       <div class="kpi"><b>≤ 5 <em>cm</em></b><span>Precisión de ubicación de instalaciones</span></div>
-      <div class="kpi"><b>RVT <em>+</em> IFC</b><span>Modelos entregados en ambos formatos</span></div>
     </div>
   </div>
 </header>
@@ -494,7 +603,7 @@ footer .f-col b{color:var(--on-navy);font-weight:600}
     <div class="sec-head">
       <div class="eyebrow">01 · Información general</div>
       <h2>Una propuesta en dos rubros: levantamiento en sitio y modelo BIM As-Built</h2>
-      <p>Esta página es la versión interactiva de la cotización C&amp;W_LAB_26399_LCW. Cambia entre las dos alternativas de captura en cualquier momento; los montos, entregables y tiempos se actualizan en toda la página.</p>
+      <p>Esta página es la versión interactiva de la cotización C&amp;W_LAB_26399_LCW, actualizada el 6 de noviembre de 2026 con el programa de obra en semanas y la solución final de captura. Recorre el sitio, el programa de visitas y el desglose por disciplina; los montos son los de la propuesta.</p>
     </div>
     <div class="grid-3">
       <div class="card">
@@ -525,8 +634,8 @@ footer .f-col b{color:var(--on-navy);font-weight:600}
           <dt>Servicio</dt><dd>Levantamiento y modelado BIM As-Built</dd>
           <dt>Ubicación</dt><dd>El Salto, Jalisco</dd>
           <dt>Superficie</dt><dd>58,950 m² de intervención</dd>
-          <dt>Duración</dt><dd>32 semanas</dd>
-          <dt>Inicio</dt><dd>Segunda quincena de noviembre de 2026</dd>
+          <dt>Duración</dt><dd>53 semanas a partir del inicio de obra</dd>
+          <dt>Inicio</dt><dd>Semana 0 = inicio de obra, previsto para 2027</dd>
         </dl>
       </div>
     </div>
@@ -539,56 +648,106 @@ footer .f-col b{color:var(--on-navy);font-weight:600}
     <div class="sec-head">
       <div class="eyebrow">02 · El sitio</div>
       <h2>Polígono de intervención</h2>
-      <p>Esquema de referencia elaborado a partir del layout general del parque. Toca cada zona para ver qué comprende. El polígono suma 58,950 m² y un eje de vialidades de aproximadamente 1,350 m, que es el trazo principal de los corredores de infraestructura.</p>
+      <p>Esquema de referencia elaborado a partir del layout general del parque. Toca cada zona para ver qué comprende, cuándo se ejecuta y dónde entra el escaneo láser. El polígono suma 58,950 m² y un eje de vialidades de aproximadamente 1,350 m, que es el trazo principal de los corredores de infraestructura.</p>
     </div>
     <div class="site">
-      <div class="map">
-        <svg viewBox="0 0 1000 560" role="img" aria-label="Esquema del parque industrial con el polígono de intervención: acceso y caseta, corredor poniente, corredor central y vialidad sur">
+      <div>
+        <div class="layers" role="group" aria-label="Capas del esquema">
+          <button class="layer" data-layer="zones" aria-pressed="true"><i style="background:var(--green)"></i>Zonas del polígono</button>
+          <button class="layer" data-layer="scan" aria-pressed="true"><i style="background:var(--c-laser);transform:rotate(45deg);width:9px;height:9px"></i>Escaneo láser</button>
+          <button class="layer" data-layer="cp" aria-pressed="true"><i style="background:var(--c-captura)"></i>Red de control GNSS</button>
+          <button class="layer" data-layer="axis" aria-pressed="true"><i style="background:none;border-top:2px dashed var(--c-captura);height:0;border-radius:0"></i>Eje de vialidades</button>
+        </div>
+        <div class="map" id="map">
+        <svg viewBox="0 0 1000 580" role="img" aria-label="Esquema del parque industrial con el polígono de intervención: acceso y caseta, corredor poniente, corredor central y vialidad sur; zonas de escaneo láser y red de control">
           <defs>
             <pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="10" style="stroke:var(--line-2);stroke-width:1"/></pattern>
             <pattern id="park" width="8" height="14" patternUnits="userSpaceOnUse"><rect x="1" y="1" width="6" height="12" style="fill:none;stroke:var(--line-2);stroke-width:.8"/></pattern>
+            <pattern id="roof" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M0 12h24M12 0v24" style="stroke:var(--line);stroke-width:.6"/></pattern>
           </defs>
           <!-- avenue -->
-          <polygon class="road" points="0,20 48,20 150,560 102,560"/>
-          <line x1="24" y1="20" x2="126" y2="560" style="stroke:var(--line-2);stroke-dasharray:10 8;stroke-width:1"/>
+          <polygon class="road" points="0,20 48,20 150,580 102,580"/>
+          <line x1="24" y1="20" x2="126" y2="580" style="stroke:var(--line-2);stroke-dasharray:10 8;stroke-width:1"/>
+          <text x="40" y="300" transform="rotate(79 40 300)" style="font-size:10px">Vialidad principal</text>
           <!-- site boundary -->
           <polygon class="edge" points="60,73 975,73 975,492 140,492"/>
-          <!-- parking rows (north) -->
+          <!-- parking rows -->
           <rect x="430" y="84" width="500" height="14" fill="url(#park)"/>
           <rect x="604" y="440" width="102" height="36" fill="url(#park)"/>
+          <rect x="940" y="120" width="30" height="300" fill="url(#park)"/>
           <!-- predio fuera del proyecto -->
           <polygon class="out" points="145,103 268,97 330,402 207,408"/>
           <text x="238" y="245" text-anchor="middle" transform="rotate(-80 238 245)">Predio fuera del proyecto</text>
           <!-- naves -->
           <rect class="bld" x="392" y="120" width="541" height="147" rx="2"/>
+          <rect x="392" y="120" width="541" height="147" fill="url(#roof)" pointer-events="none"/>
           <text x="662" y="198" text-anchor="middle">Nave norte</text>
-          <rect class="bld" x="345" y="118" width="28" height="52" rx="2"/>
-          <circle cx="359" cy="132" r="6" style="fill:none;stroke:var(--line-2)"/><circle cx="359" cy="150" r="6" style="fill:none;stroke:var(--line-2)"/>
           <rect class="bld" x="390" y="333" width="213" height="144" rx="2"/>
+          <rect x="390" y="333" width="213" height="144" fill="url(#roof)" pointer-events="none"/>
           <text x="496" y="409" text-anchor="middle">Nave sur poniente</text>
           <rect class="bld" x="707" y="333" width="216" height="144" rx="2"/>
+          <rect x="707" y="333" width="216" height="144" fill="url(#roof)" pointer-events="none"/>
           <text x="815" y="409" text-anchor="middle">Nave sur oriente</text>
+          <!-- tanques y cuarto de bombas (referencia según layout) -->
+          <rect x="343" y="112" width="34" height="42" rx="3" style="fill:none;stroke:var(--line-2);stroke-dasharray:4 3;stroke-width:1"/>
+          <circle cx="360" cy="125" r="7" style="fill:var(--surface);stroke:var(--line-2);stroke-width:1.2"/><circle cx="360" cy="143" r="7" style="fill:var(--surface);stroke:var(--line-2);stroke-width:1.2"/>
+          <rect class="bld" x="346" y="158" width="28" height="18" rx="2"/>
           <!-- access: glorieta y caseta -->
           <circle cx="310" cy="462" r="20" style="fill:var(--surface);stroke:var(--line-2);stroke-width:1.2"/>
           <circle cx="310" cy="462" r="8" style="fill:var(--surface-2);stroke:var(--line-2)"/>
           <rect x="262" y="418" width="36" height="24" rx="2" style="fill:var(--surface);stroke:var(--line-2);stroke-width:1.2"/>
+          <text x="280" y="412" text-anchor="middle" style="font-size:9.5px">Caseta</text>
+          <!-- eje de vialidades -->
+          <g class="axis" aria-hidden="true">
+            <path d="M304,84 L331,396 L347,452"/>
+            <path d="M338,306 L683,306"/>
+            <path d="M350,322 L350,440"/>
+            <path d="M150,452 L288,462"/>
+          </g>
           <!-- zones -->
-          <polygon class="zone" data-zone="acceso" points="123,410 327,400 337,400 337,490 137,490"><title>Acceso y caseta</title></polygon>
-          <polygon class="zone" data-zone="poniente" points="270,79 337,79 337,400 327,400"><title>Corredor poniente</title></polygon>
-          <polygon class="zone" data-zone="central" points="337,293 683,293 683,320 337,320"><title>Corredor central</title></polygon>
-          <polygon class="zone" data-zone="sur" points="337,320 363,320 363,490 337,490"><title>Vialidad sur</title></polygon>
+          <polygon class="zone" data-zone="acceso" points="123,410 327,400 337,400 337,490 137,490"><title>Zona 1 · Acceso y caseta de ingreso</title></polygon>
+          <polygon class="zone" data-zone="poniente" points="270,79 337,79 337,400 327,400"><title>Zona 2 · Corredor poniente</title></polygon>
+          <polygon class="zone" data-zone="central" points="337,293 683,293 683,320 337,320"><title>Zona 3 · Corredor central</title></polygon>
+          <polygon class="zone" data-zone="sur" points="337,320 363,320 363,490 337,490"><title>Zona 4 · Vialidad sur</title></polygon>
+          <!-- zone labels -->
+          <text class="zlabel" x="186" y="432">Acceso y caseta</text>
+          <text class="zlabel" x="306" y="238" transform="rotate(84 306 238)" text-anchor="middle">Corredor poniente</text>
+          <text class="zlabel" x="510" y="286" text-anchor="middle">Corredor central</text>
+          <text class="zlabel" x="373" y="405" transform="rotate(90 373 405)" text-anchor="middle">Vialidad sur</text>
           <!-- pins -->
-          <g class="pin" data-zone="acceso" pointer-events="none"><circle cx="215" cy="452" r="12"/><text x="215" y="452">1</text></g>
-          <g class="pin" data-zone="poniente" pointer-events="none"><circle cx="303" cy="190" r="12"/><text x="303" y="190">2</text></g>
-          <g class="pin" data-zone="central" pointer-events="none"><circle cx="520" cy="306" r="12"/><text x="520" y="306">3</text></g>
-          <g class="pin" data-zone="sur" pointer-events="none"><circle cx="350" cy="430" r="12"/><text x="350" y="430">4</text></g>
+          <g class="pin" data-zone="acceso" pointer-events="none"><circle cx="150" cy="470" r="12"/><text x="150" y="470">1</text></g>
+          <g class="pin" data-zone="poniente" pointer-events="none"><circle cx="296" cy="130" r="12"/><text x="296" y="130">2</text></g>
+          <g class="pin" data-zone="central" pointer-events="none"><circle cx="600" cy="306" r="12"/><text x="600" y="306">3</text></g>
+          <g class="pin" data-zone="sur" pointer-events="none"><circle cx="350" cy="470" r="12"/><text x="350" y="470">4</text></g>
+          <!-- laser scan markers -->
+          <g class="scan" data-scan="acceso" transform="translate(292,445)"><rect x="-9" y="-9" width="18" height="18" rx="3" transform="rotate(45)"/><text x="0" y="0">L</text><title>Escaneo láser · acceso y caseta · semanas 18 y 27</title></g>
+          <g class="scan" data-scan="central" transform="translate(352,306)"><rect x="-9" y="-9" width="18" height="18" rx="3" transform="rotate(45)"/><text x="0" y="0">L</text><title>Escaneo láser · cruces del corredor central · semanas 14 y 22</title></g>
+          <g class="scan" data-scan="central" transform="translate(672,306)"><rect x="-9" y="-9" width="18" height="18" rx="3" transform="rotate(45)"/><text x="0" y="0">L</text><title>Escaneo láser · cruces del corredor central · semanas 14 y 22</title></g>
+          <g class="scan" data-scan="pci" transform="translate(390,140)"><rect x="-9" y="-9" width="18" height="18" rx="3" transform="rotate(45)"/><text x="0" y="0">L</text><title>Escaneo láser · cuarto de bombas y tanques PCI · semana 34 · ubicación de referencia según el layout</title></g>
+          <!-- control points (reference) -->
+          <g class="cp" aria-label="Red de control GNSS RTK, ubicación de referencia">
+            <g transform="translate(128,414)"><polygon points="0,-7 6,4 -6,4"/><circle r="1.6"/><text x="-9" y="-9">P1</text></g>
+            <g transform="translate(140,486)"><polygon points="0,-7 6,4 -6,4"/><circle r="1.6"/><text x="-9" y="16">P2</text></g>
+            <g transform="translate(272,86)"><polygon points="0,-7 6,4 -6,4"/><circle r="1.6"/><text x="-26" y="4">P3</text></g>
+            <g transform="translate(338,86)"><polygon points="0,-7 6,4 -6,4"/><circle r="1.6"/><text x="9" y="4">P4</text></g>
+            <g transform="translate(688,298)"><polygon points="0,-7 6,4 -6,4"/><circle r="1.6"/><text x="9" y="4">P5</text></g>
+            <g transform="translate(364,488)"><polygon points="0,-7 6,4 -6,4"/><circle r="1.6"/><text x="9" y="4">P6</text></g>
+          </g>
           <!-- north -->
           <g class="north"><polygon points="950,26 958,48 950,42 942,48" style="fill:var(--fg-2)"/><text x="950" y="62" text-anchor="middle">N</text></g>
           <!-- legend -->
-          <g class="legend"><rect x="60" y="520" width="18" height="12" class="zone" style="cursor:default"/><text x="84" y="530" style="text-transform:none;letter-spacing:0;font-size:11px">Polígono de intervención</text>
-          <rect x="250" y="520" width="18" height="12" class="out"/><text x="274" y="530" style="text-transform:none;letter-spacing:0;font-size:11px">Fuera del proyecto</text>
-          <rect x="400" y="520" width="18" height="12" class="bld"/><text x="424" y="530" style="text-transform:none;letter-spacing:0;font-size:11px">Naves (interiores fuera del alcance)</text></g>
+          <g class="legend">
+            <rect x="60" y="522" width="18" height="12" class="zone" style="cursor:default"/><text x="84" y="532">Polígono de intervención</text>
+            <rect x="60" y="548" width="18" height="12" class="out"/><text x="84" y="558">Fuera del proyecto</text>
+            <rect x="290" y="522" width="18" height="12" class="bld"/><text x="314" y="532">Naves · interiores fuera del alcance</text>
+            <g transform="translate(299,554)"><rect x="-6" y="-6" width="12" height="12" rx="2" transform="rotate(45)" style="fill:var(--c-laser);stroke:var(--plate);stroke-width:1.5"/></g><text x="314" y="558">Escaneo láser terrestre · 6 visitas</text>
+            <g transform="translate(609,529)"><polygon points="0,-6 5,4 -5,4" style="fill:var(--surface);stroke:var(--c-captura);stroke-width:1.4"/><circle r="1.4" style="fill:var(--c-captura)"/></g><text x="624" y="532">Red de control GNSS RTK · referencia</text>
+            <line x1="600" y1="554" x2="618" y2="554" class="axis" style="opacity:.9"/><text x="624" y="558">Eje de vialidades ≈ 1,350 m</text>
+          </g>
         </svg>
+        </div>
+        <p class="small muted" style="margin-top:10px">La ubicación de los puntos de control y de los tanques es de referencia: la red de control se acuerda con el responsable de obra fuera de las áreas de corte y relleno, y la posición de los equipos se confirma con el proyecto ejecutivo. La planta de tratamiento se ubicará conforme al proyecto ejecutivo.</p>
+        <div class="scan-list" id="scanList"></div>
       </div>
       <div>
         <div class="zone-list" id="zoneList"></div>
@@ -596,46 +755,123 @@ footer .f-col b{color:var(--on-navy);font-weight:600}
         <div class="stat-row">
           <div><b>58,950 m²</b><span>polígono de intervención</span></div>
           <div><b>≈ 1,350 m</b><span>eje de vialidades</span></div>
-          <div><b>30–40 m</b><span>espaciamiento típico de registros y pozos</span></div>
+          <div><b>6</b><span>escaneos láser en 4 zonas</span></div>
+          <div><b>±2 / ±3 cm</b><span>red de control, planimetría / altimetría</span></div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============ METODOLOGÍA ============ -->
-<section id="metodologia">
+<!-- ============ PROGRAMA ============ -->
+<section id="programa">
   <div class="wrap">
     <div class="sec-head">
-      <div class="eyebrow">03 · Metodología de captura</div>
-      <h2>Dos alternativas, una recomendación</h2>
-      <p>Se evaluaron fotogrametría, LiDAR, métodos convencionales y su combinación bajo cuatro criterios: cobertura completa en cada visita, mínima permanencia en zanja, precisión adecuada para LOD 350 y registro verificable de lo construido. Selecciona la alternativa para ver su efecto en toda la propuesta.</p>
-    </div>
-    <div class="alts" id="alts"></div>
-
-    <div class="cmp-wrap">
-      <table class="cmp" id="cmpTable">
-        <thead><tr><th>Criterio</th><th data-col="base">Recomendada · dron + GNSS RTK</th><th data-col="combinada">Combinada · dron + láser terrestre</th></tr></thead>
-        <tbody></tbody>
-      </table>
+      <div class="eyebrow">03 · Estrategia y programa de levantamientos</div>
+      <h2>Las visitas siguen a las zanjas, en semanas desde el inicio de obra</h2>
+      <p>Con base en las duraciones del programa preliminar de obra, y tomando como semana 0 la fecha de inicio de obra prevista para 2027, esta es la distribución de la visita de arranque y de las 31 visitas de seguimiento con dron, con las 6 visitas de escaneo láser terrestre. Mueve el control de semana o toca cualquier visita del programa para ver qué frentes están activos y qué se levanta.</p>
     </div>
 
-    <div class="mini">
-      <div class="card"><h4>Escaneo láser terrestre como método único</h4><p>No se propone como alternativa independiente: cubrir la extensión del polígono requiere un número elevado de estaciones, lo que aumenta la permanencia en cada frente y el riesgo de no capturar tramos antes de su cobertura. Se integra a la alternativa combinada en los frentes de zanja abiertos.</p></div>
-      <div class="card"><h4>Métodos convencionales de medición</h4><p>Estación total, nivel y medición directa generan información puntual, sin registro continuo de las instalaciones, y requieren mayor permanencia en zanja. Se integran al servicio a través del control geodésico con GNSS RTK, que es la base de todos los levantamientos.</p></div>
+    <div class="scrub">
+      <div class="card">
+        <div class="wk-head">
+          <div class="wk-big"><small>Semana de obra</small><span id="wkNum">0</span></div>
+          <div class="wk-phase" id="wkPhase"></div>
+        </div>
+        <input type="range" class="wk" id="wk" min="0" max="53" step="1" value="0" aria-label="Semana de obra">
+        <div class="wk-ticks" aria-hidden="true"><span>0</span><span>10</span><span>20</span><span>30</span><span>40</span><span>53</span></div>
+        <div class="wk-btns">
+          <button type="button" id="wkPrev">◀ Visita anterior</button>
+          <button type="button" id="wkNext" class="go">Siguiente visita ▶</button>
+          <button type="button" id="wkPlay">▶ Recorrer el programa</button>
+        </div>
+        <div class="wk-visit" id="wkVisit"></div>
+      </div>
+      <div class="card wk-fronts">
+        <h4>Frentes de obra en la semana seleccionada</h4>
+        <div class="fronts" id="wkFronts"></div>
+        <h4 style="margin-top:14px">Lo que capturamos</h4>
+        <p class="small" style="color:var(--fg-2)" id="wkCapture"></p>
+      </div>
+    </div>
+
+    <div class="gantt-scroll"><div class="gantt" id="gantt"></div></div>
+    <p class="g-hint">Desliza el programa hacia los lados para ver las 53 semanas.</p>
+    <div class="phases" id="phases"></div>
+    <div class="prog-notes">
+      <div class="card"><b>Supuesto de exposición</b>La frecuencia semanal en la fase de máxima actividad permite levantar cada tramo dentro de los siete días naturales en que permanece descubierto. En las fases quincenales, con menos frentes simultáneos, la liberación de los tramos para su relleno se coordina con los días de visita.</div>
+      <div class="card"><b>Semanas efectivas de obra</b>Las semanas se cuentan como semanas efectivas de obra. Durante los periodos vacacionales de la obra se suspenden las visitas ordinarias y se mantiene la disponibilidad para visitas extraordinarias, solicitadas con 48 a 72 horas de aviso.</div>
+      <div class="card"><b>Ajuste del programa</b>La distribución de visitas, incluidas las de escaneo láser terrestre, se ajustará a las actualizaciones del programa de obra y a los frentes efectivamente abiertos en cada periodo, dentro del número base de visitas establecido en la propuesta.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ METODOLOGÍA ============ -->
+<section id="metodologia" class="band">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">04 · Metodología de levantamiento</div>
+      <h2>Dron en todo el polígono, láser donde más aporta</h2>
+      <p>La solución propuesta combina la fotogrametría con dron georreferenciada con GNSS RTK sobre la totalidad del polígono de intervención con el escaneo láser terrestre en las zonas de mayor complejidad. Ambas capturas comparten la misma red de control, y el modelo se completa con el proyecto ejecutivo del contratista.</p>
+    </div>
+    <div class="sol">
+      <div class="sol-card main">
+        <span class="flag">31 visitas + arranque</span>
+        <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><path d="M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3"/></svg></div>
+        <h3>Fotogrametría con dron georreferenciada con GNSS RTK</h3>
+        <p class="sub">Todo el polígono, en cada visita de seguimiento.</p>
+        <p class="txt">Se establece una red de puntos de control permanentes con GNSS RTK, sobre la cual se georreferencian todos los vuelos. En cada visita se realiza un vuelo fotogramétrico sobre los frentes de trabajo activos, del cual se obtienen ortomosaico, nube de puntos y modelo digital de superficie, y sobre esta información se identifican la posición y la cota de corona de las instalaciones expuestas.</p>
+      </div>
+      <div class="sol-card laser">
+        <span class="flag">6 visitas</span>
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 20v-6"/><circle cx="12" cy="11" r="3"/><path d="M5 21h14"/><path d="M3 9a9 9 0 0 1 18 0"/></svg></div>
+        <h3>Escaneo láser terrestre en zonas de mayor complejidad</h3>
+        <p class="sub">Acceso y caseta, cruces del corredor central, cuarto de bombas y tanques, planta de tratamiento.</p>
+        <p class="txt">En las zonas con mayor concentración de instalaciones y en el interior de los cuartos de bombas, el escaneo se realiza durante las visitas programadas y se registra a la red de control GNSS, de modo que la nube láser y la nube fotogramétrica comparten el mismo sistema de coordenadas.</p>
+      </div>
+      <div class="sol-card">
+        <span class="flag">LOD 350</span>
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5-9-5z"/><path d="M3 13l9 5 9-5"/><path d="M3 8v5M21 8v5"/></svg></div>
+        <h3>Integración al modelo</h3>
+        <p class="sub">Ubicación levantada + proyecto ejecutivo del contratista.</p>
+        <p class="txt">La ubicación levantada se complementa con el proyecto ejecutivo del contratista para integrar diámetros, materiales, clases y especificaciones con nivel de desarrollo LOD 350. El escaneo láser incrementa la precisión geométrica de la captura, pero no sustituye la información del proyecto ejecutivo.</p>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-top:18px">
+      <div class="card">
+        <h3>Equipo</h3>
+        <div class="equip">
+          <span><i></i>Dron DJI Matrice 4 Enterprise</span>
+          <span><i></i>Receptor GNSS RTK</span>
+          <span><i class="l"></i>Escáner láser terrestre FARO Focus</span>
+        </div>
+        <p class="small muted" style="margin-top:14px">El personal de SOHERSA BIM no ingresa al interior de las zanjas: el escaneo láser en zanjas se realiza desde sus bordes, con condiciones seguras de acceso y estabilidad de taludes.</p>
+      </div>
+      <div class="card">
+        <h3>Precisión esperada</h3>
+        <div class="prec">
+          <div class="pr"><div>Red de control GNSS RTK<small>planimetría / altimetría</small></div><b>±2 cm / ±3 cm</b></div>
+          <div class="pr"><div>Fotogrametría con dron<small>ubicación de las instalaciones</small></div><b>hasta 5 cm</b></div>
+          <div class="pr"><div>Escaneo láser terrestre<small>exactitud relativa / absoluta referida a la red de control</small></div><b>±5 mm / ±2 cm</b></div>
+        </div>
+      </div>
     </div>
 
     <h3 style="font-size:20px;margin-top:30px">Tiempos de trabajo a partir de la instalación de cada tramo</h3>
     <div class="flow" id="flow"></div>
     <p class="small muted" style="margin-top:12px">Los tramos críticos se atienden en visitas extraordinarias solicitadas con 48 a 72 horas de aviso, dentro del número base de visitas. Por la cercanía con el Aeropuerto Internacional de Guadalajara, la operación del dron puede requerir autorizaciones de espacio aéreo.</p>
+
+    <h3 style="font-size:20px;margin-top:30px">Duración por etapa</h3>
+    <div class="stages" id="stages"></div>
   </div>
 </section>
 
 <!-- ============ ALCANCES ============ -->
-<section id="alcances" class="band">
+<section id="alcances">
   <div class="wrap">
     <div class="sec-head">
-      <div class="eyebrow">04 · Alcances por disciplina</div>
+      <div class="eyebrow">05 · Alcances por disciplina</div>
       <h2>Diez disciplinas modeladas en Revit, LOD 350</h2>
       <p>La ubicación de cada instalación se obtiene del levantamiento en sitio; sus diámetros, materiales y especificaciones, del proyecto ejecutivo del contratista. Toca una disciplina para ver sus elementos, cantidades de referencia, planos As-Built y monto.</p>
     </div>
@@ -644,35 +880,41 @@ footer .f-col b{color:var(--on-navy);font-weight:600}
       <div class="detail" id="detail"></div>
     </div>
 
-    <div class="incl grid-3">
+    <div class="incl grid-4">
       <div class="card">
         <h3>Visita de arranque y red de control</h3>
         <ul>
-          <li>Ubicación de puntos de control coordinada con el responsable de obra, en zonas protegidas.</li>
-          <li>Red de puntos de control permanentes georreferenciados con GNSS RTK: sistema de referencia único para todo el proyecto.</li>
-          <li>Vuelo fotogramétrico base sobre los 58,950 m² del polígono.</li>
-          <li>Ortomosaico, nube de puntos y modelo digital de superficie; curvas de nivel y superficie 3D del terreno integrada en Revit.</li>
-          <li>Registro de elementos visibles de instalaciones ya ejecutadas: registros, pozos, cajas y llegadas.</li>
+          <li>Ubicación de los puntos de control coordinada con el responsable de obra, en zonas protegidas contra afectaciones durante la construcción.</li>
+          <li>Red de puntos de control permanentes georreferenciados con GNSS RTK: sistema de referencia único para todos los levantamientos.</li>
+          <li>Vuelo fotogramétrico base del terreno natural sobre los 58,950 m² del polígono, previo al inicio de las terracerías.</li>
+          <li>Ortomosaico, nube de puntos y modelo digital de superficie; curvas de nivel y superficie 3D del terreno natural integrada en Revit como base del modelo.</li>
         </ul>
       </div>
       <div class="card">
-        <h3>Visitas de seguimiento <span class="tag green">18</span></h3>
+        <h3>Visitas de seguimiento <span class="tag green">31</span></h3>
         <ul>
-          <li>Vuelos con dron georreferenciado programados conforme al avance de obra y antes de cubrir las instalaciones; incluye la visita de cierre.</li>
-          <li>Frecuencia semanal con tres o más sistemas con zanja abierta; quincenal con uno o dos.</li>
-          <li>Visitas extraordinarias para tramos críticos con 48–72 h de aviso, dentro del número base.</li>
+          <li>Vuelos con dron georreferenciado, incluida la visita de cierre, programados conforme al avance de obra y previo a la cobertura de las instalaciones.</li>
+          <li>Frecuencia semanal en la fase de máxima actividad de las instalaciones subterráneas y quincenal en el resto del periodo, conforme al programa de levantamientos.</li>
+          <li>Visitas extraordinarias para tramos críticos con 48 a 72 h de aviso, dentro del número base.</li>
           <li>Por visita: ortomosaico, nube de puntos y MDS referidos a la red de control; posición y cota de corona de las instalaciones expuestas.</li>
           <li>Visita de cierre con vuelo completo al término de pavimentos, banquetas y áreas verdes.</li>
         </ul>
       </div>
       <div class="card">
+        <h3>Escaneo láser terrestre <span class="tag laser">6</span></h3>
+        <ul>
+          <li>Con equipo FARO Focus en seis de las visitas de seguimiento: instalaciones del acceso y de la caseta de ingreso, cruces del corredor central, cuarto de bombas y tanques de almacenamiento de protección contra incendios, y planta de tratamiento de aguas residuales, incluido el interior de los cuartos de bombas.</li>
+          <li>Registro de los escaneos a la red de control GNSS, para integrar la nube láser y la fotogramétrica en un mismo sistema de coordenadas.</li>
+          <li>Procesamiento y limpieza de la nube láser por visita; mayor densidad y precisión en las instalaciones expuestas en zanja.</li>
+        </ul>
+      </div>
+      <div class="card">
         <h3>Seguimiento y gestión de la información</h3>
         <ul>
-          <li>Coordinador dedicado como contacto único; sesiones semanales remotas y revisiones presenciales mensuales.</li>
+          <li>Coordinador dedicado como contacto único; sesiones semanales remotas y revisiones presenciales mensuales coincidentes con las visitas.</li>
           <li>Entregas parciales mensuales de revisión con los sistemas levantados y modelados en el periodo.</li>
-          <li>ISO 19650: nomenclatura por proyecto, originador, sistema, localización, tipo, disciplina y número; códigos de estado y revisión; flujo de aprobación en el CDE del cliente.</li>
-          <li>Modelos por disciplina con coordenadas compartidas y parámetros homologados.</li>
-          <li>Plan de ejecución BIM al inicio del servicio.</li>
+          <li>ISO 19650: nomenclatura por proyecto, originador, sistema, localización, tipo, disciplina y número; códigos de estado y revisión; flujo de aprobación en el entorno común de datos del cliente.</li>
+          <li>Modelos por disciplina con coordenadas compartidas y parámetros homologados; plan de ejecución BIM al inicio del servicio.</li>
         </ul>
       </div>
     </div>
@@ -680,7 +922,7 @@ footer .f-col b{color:var(--on-navy);font-weight:600}
     <div class="grid-2 excl">
       <div class="card">
         <h3>Bases de dimensionamiento</h3>
-        <p class="small" style="color:var(--fg-2)">A la fecha no se cuenta con el proyecto ejecutivo de las instalaciones. Las cantidades de referencia se estimaron a partir del eje de los corredores (≈ 1,350 m), con factores por distribución a uno o ambos lados de la vialidad, acometidas a naves, cruces y ramales; registros y pozos con espaciamientos de 30 a 40 m. Los sistemas por gravedad incluyen ajuste de cotas de plantilla por tramo y perfiles longitudinales; los bancos de ductos, el modelado individual de cada ducto.</p>
+        <p class="small" style="color:var(--fg-2)">A la fecha no se cuenta con el proyecto ejecutivo de las instalaciones. Las cantidades de referencia se estimaron a partir del eje de los corredores (≈ 1,350 m), con factores por distribución a uno o ambos lados de la vialidad, acometidas a naves, cruces y ramales; registros y pozos con espaciamientos de 30 a 40 m. Los sistemas por gravedad incluyen ajuste de cotas de plantilla por tramo y perfiles longitudinales; los bancos de ductos, el modelado individual de cada ducto. Al esfuerzo resultante se incorporó un margen que absorbe variaciones razonables.</p>
         <div class="callout" style="margin-top:14px"><h4>Ajuste por cantidades</h4><p class="small">Las cantidades se validarán contra el proyecto ejecutivo del contratista. Si las cantidades reales de una disciplina superan en más de 10 % las de referencia, el monto de esa disciplina se ajusta de forma proporcional a la diferencia.</p></div>
       </div>
       <div class="card">
@@ -688,13 +930,14 @@ footer .f-col b{color:var(--on-navy);font-weight:600}
         <ul>
           <li>Diseño, revisión o validación de la ingeniería del contratista o del cumplimiento normativo.</li>
           <li>Detección de instalaciones ocultas por métodos geofísicos, sondeos o excavaciones.</li>
-          <li>Interiores, arquitectura, estructura e instalaciones de naves y edificios satelitales.</li>
+          <li>Interiores, arquitectura, estructura e instalaciones de naves y edificios satelitales, con excepción de la caseta de ingreso y de los cuartos de bombas en los términos de los alcances.</li>
           <li>Cuantificaciones, catálogos de conceptos y generadores de obra.</li>
           <li>Detección y resolución de interferencias entre sistemas.</li>
-          <li>Levantamientos con fines de deslinde, catastrales o de trámite.</li>
+          <li>Levantamientos con fines de deslinde, catastrales o de trámite ante autoridades.</li>
           <li>Reposición de puntos de control dañados o cubiertos por terceros.</li>
           <li>Visitas adicionales al número base (se cotizan al costo unitario).</li>
-          <li>Sistema de alarmas, señalización, riego, cercas perimetrales y mobiliario exterior.</li>
+          <li>Escaneo láser terrestre fuera de las zonas establecidas en los alcances.</li>
+          <li>Sistema de alarmas, señalización horizontal y vertical, riego, cercas perimetrales y mobiliario exterior.</li>
         </ul>
       </div>
     </div>
@@ -702,33 +945,32 @@ footer .f-col b{color:var(--on-navy);font-weight:600}
 </section>
 
 <!-- ============ INVERSIÓN ============ -->
-<section id="inversion">
+<section id="inversion" class="band">
   <div class="wrap">
     <div class="sec-head">
-      <div class="eyebrow">05 · Propuesta económica</div>
+      <div class="eyebrow">06 · Propuesta económica</div>
       <h2>Inversión desglosada por captura y por disciplina</h2>
-      <p>Montos en pesos mexicanos. El alcance base corresponde a la alternativa recomendada; el alcance adicional de escaneo láser se suma al elegir la alternativa combinada.</p>
+      <p>Montos en pesos mexicanos. La captura en sitio se estima por visita ejecutada al costo unitario; el modelado, por avance de cada disciplina. Abre cada concepto de la tabla para leer su descripción.</p>
     </div>
     <div class="inv-top">
       <div class="summary">
-        <div class="eyebrow">Alternativa seleccionada</div>
-        <div class="alt-name" data-sum="altname">Recomendada · fotogrametría con dron + GNSS RTK</div>
+        <div class="eyebrow">Solución propuesta</div>
+        <div class="alt-name">Fotogrametría con dron + GNSS RTK y escaneo láser terrestre en 6 visitas</div>
         <div class="rows">
-          <div class="row"><span>Alcance base</span><b data-sum="base">$750,141.07</b></div>
-          <div class="row" data-sum="adrow" hidden><span>Alcance adicional · escaneo láser</span><b data-sum="adicional">$303,321.18</b></div>
-          <div class="row"><span>Subtotal</span><b data-sum="subtotal">$750,141.07</b></div>
-          <div class="row"><span>IVA 16 %</span><b data-sum="iva">$120,022.57</b></div>
+          <div class="row head"><span>Captura en sitio</span><b data-sum="captura">$494,841.25</b></div>
+          <div class="row sub"><span>Visita de arranque y red de control</span><b>$65,092.23</b></div>
+          <div class="row sub"><span>31 visitas de seguimiento con dron</span><b>$322,694.50</b></div>
+          <div class="row sub"><span>6 visitas con escaneo láser terrestre</span><b>$107,054.52</b></div>
+          <div class="row head"><span>Modelado y documentación BIM As-Built</span><b data-sum="modelado">$519,474.05</b></div>
+          <div class="row"><span>Subtotal</span><b data-sum="subtotal">$1,014,315.30</b></div>
+          <div class="row"><span>IVA 16 %</span><b data-sum="iva">$162,290.45</b></div>
         </div>
-        <div class="total"><span>Costo neto</span><b data-sum="total">$870,163.64</b><i>IVA incluido · MXN</i></div>
-        <div class="seg lg" role="radiogroup" aria-label="Alternativa de captura">
-          <button class="seg-btn" data-alt="base" role="radio" aria-checked="true">Recomendada</button>
-          <button class="seg-btn" data-alt="combinada" role="radio" aria-checked="false">Combinada</button>
-        </div>
+        <div class="total"><span>Costo neto</span><b data-sum="total">$1,176,605.75</b><i>IVA incluido · MXN</i></div>
       </div>
       <div class="chart">
         <div class="head">
           <h3>Distribución del subtotal</h3>
-          <div class="legend"><span><i class="captura"></i>Captura en sitio</span><span><i class="modelado"></i>Modelado y documentación</span><span data-sum="legad" hidden><i class="adicional"></i>Alcance adicional</span></div>
+          <div class="legend"><span><i class="captura"></i>Captura con dron</span><span><i class="laser"></i>Escaneo láser</span><span><i class="modelado"></i>Modelado y documentación</span></div>
         </div>
         <div class="seg" style="margin-bottom:10px" role="radiogroup" aria-label="Orden de las barras">
           <button class="seg-btn is-on" data-order="prop" role="radio" aria-checked="true">Orden de la propuesta</button>
@@ -757,12 +999,18 @@ footer .f-col b{color:var(--on-navy);font-weight:600}
       </div>
       <div class="card sim">
         <h3>¿Y si hacen falta más visitas?</h3>
-        <p class="small muted">Estimación informativa al costo unitario de la alternativa seleccionada. Las visitas adicionales se estiman conforme se ejecutan.</p>
+        <p class="small muted">Estimación informativa al costo unitario. Las visitas adicionales se estiman conforme se ejecutan.</p>
         <div class="stepper">
-          <button id="simMinus" aria-label="Quitar una visita">−</button>
+          <button type="button" id="simMinus" aria-label="Quitar una visita con dron">−</button>
           <output id="simN" aria-live="polite">0</output>
-          <button id="simPlus" aria-label="Agregar una visita">+</button>
-          <small>visitas adicionales</small>
+          <button type="button" id="simPlus" aria-label="Agregar una visita con dron">+</button>
+          <small>visitas con dron adicionales</small>
+        </div>
+        <div class="stepper">
+          <button type="button" id="simLMinus" aria-label="Quitar un escaneo láser">−</button>
+          <output id="simLN" aria-live="polite">0</output>
+          <button type="button" id="simLPlus" aria-label="Agregar un escaneo láser">+</button>
+          <small>escaneos láser adicionales</small>
         </div>
         <div class="res" id="simRes"></div>
       </div>
@@ -774,7 +1022,7 @@ footer .f-col b{color:var(--on-navy);font-weight:600}
         <li>Precios en pesos mexicanos; no incluyen el Impuesto al Valor Agregado.</li>
         <li>Anticipo del 40 % del monto total contratado a la firma del pedido o contrato, como condición para el inicio de los trabajos.</li>
         <li>Saldo mediante estimaciones mensuales con corte al último día de cada mes, amortizando de forma proporcional el anticipo en cada una.</li>
-        <li>Visita de arranque: se estima en su totalidad en el mes de su ejecución. Visitas de seguimiento: según el número ejecutado en el periodo, al costo unitario.</li>
+        <li>Visita de arranque: se estima en su totalidad en el mes de su ejecución. Visitas de seguimiento y de escaneo láser terrestre: según el número de visitas ejecutadas en el periodo, al costo unitario correspondiente.</li>
         <li>Modelado BIM As-Built: cada disciplina se estima por su porcentaje de avance, hasta un máximo acumulado de 90 % de su monto, con base en las cantidades del proyecto ejecutivo o, mientras no se reciba, en las cantidades de referencia.</li>
         <li>Entrega final: el 10 % restante del modelado de cada disciplina, sus planos As-Built y la memoria del proceso de levantamiento.</li>
         <li>Cada estimación se acompaña de un reporte de avance; el cliente cuenta con cinco días hábiles para su revisión y, sin observaciones, se considera aprobada.</li>
@@ -786,26 +1034,13 @@ footer .f-col b{color:var(--on-navy);font-weight:600}
   </div>
 </section>
 
-<!-- ============ PROGRAMA ============ -->
-<section id="programa" class="band">
-  <div class="wrap">
-    <div class="sec-head">
-      <div class="eyebrow">06 · Estrategia y programa de levantamientos</div>
-      <h2>Las visitas siguen a las zanjas, no al calendario</h2>
-      <p>Distribución estimada de la visita de arranque y las 18 visitas de seguimiento sobre el programa preliminar de obra del 22 de octubre de 2026, considerando el inicio del servicio en la segunda quincena de noviembre. La distribución se ajustará a las actualizaciones del programa y a los frentes efectivamente abiertos, dentro del número base de visitas.</p>
-    </div>
-    <div class="gantt" id="gantt"></div>
-    <div class="stages" id="stages"></div>
-  </div>
-</section>
-
 <!-- ============ ENTREGABLES ============ -->
 <section id="entregables">
   <div class="wrap">
     <div class="sec-head">
       <div class="eyebrow">07 · Entregables</div>
       <h2>Qué recibes y cuándo</h2>
-      <p>Todos los archivos se entregan en una plataforma de intercambio en la nube acordada con el cliente. Los formatos de reality capture incluyen RCP y RCS para el flujo de Autodesk y un formato universal adicional.</p>
+      <p>Todos los archivos se entregan en una plataforma de intercambio en la nube acordada con el cliente. Los formatos de reality capture incluyen RCP y RCS para el flujo de Autodesk y un formato universal adicional: LAS para la fotogrametría y E57 para el escaneo láser.</p>
     </div>
     <div class="tabs" id="dtabs" role="tablist"></div>
     <div class="dlist" id="dlist"></div>
@@ -837,7 +1072,7 @@ footer .f-col b{color:var(--on-navy);font-weight:600}
           <li>Sistema de referencia, red de control y precisión obtenida.</li>
           <li>Registro cronológico de las visitas, con los sistemas y frentes levantados en cada una.</li>
           <li>Relación de tramos verificados en campo y de tramos integrados conforme al proyecto ejecutivo.</li>
-          <li>Con el alcance adicional: metodología y precisión del escaneo láser terrestre.</li>
+          <li>Metodología y precisión del escaneo láser terrestre.</li>
         </ul>
       </div>
     </div>
@@ -861,14 +1096,14 @@ footer .f-col b{color:var(--on-navy);font-weight:600}
   <div class="wrap">
     <div class="sec-head">
       <div class="eyebrow">09 · Siguientes pasos</div>
-      <h2>Para arrancar antes de que se abra la primera zanja</h2>
-      <p>El inicio del proyecto está condicionado a la firma de la cotización o contrato y al pago del anticipo correspondiente.</p>
+      <h2>Para arrancar antes de que entren las terracerías</h2>
+      <p>El inicio del proyecto está condicionado a la firma de la cotización o contrato y al pago del anticipo correspondiente. La visita de arranque se realiza antes de las terracerías, por lo que el cliente notifica la fecha de inicio de obra con al menos cinco días hábiles de anticipación.</p>
     </div>
     <div class="steps">
       <div class="nstep"><i>1</i><b>Información para facturación</b><p>Constancia de situación fiscal actualizada y contactos del área de pagos (nombre, correo y celular) a <span class="mono">administracion@gruposohersa.com</span>.</p></div>
-      <div class="nstep"><i>2</i><b>Firma de cotización o contrato</b><p>Según corresponda, para la alternativa seleccionada.</p></div>
+      <div class="nstep"><i>2</i><b>Firma de cotización o contrato</b><p>Según corresponda.</p></div>
       <div class="nstep"><i>3</i><b>Pago del anticipo</b><p>40 % del monto contratado. Comprobante de pago a <span class="mono">administracion@gruposohersa.com</span>.</p></div>
-      <div class="nstep"><i>4</i><b>Envío de información del proyecto</b><p>Archivos, requisitos de información ISO 19650 y programación de apertura de zanjas para coordinar la visita de arranque.</p></div>
+      <div class="nstep"><i>4</i><b>Envío de información del proyecto</b><p>Archivos, requisitos de información ISO 19650, proyecto ejecutivo conforme se libere y fecha de inicio de obra para programar la visita de arranque.</p></div>
     </div>
     <div class="contact">
       <div class="card navy">
@@ -898,7 +1133,7 @@ footer .f-col b{color:var(--on-navy);font-weight:600}
     <div class="f-logo"><img src="logo-sohersa.png" alt="SOHERSA BIM"></div>
     <div class="f-col"><b>+52 33 1601 3380</b><br>a.vizcaino@gruposohersa.com</div>
     <div class="f-col"><b>C. Franz Liszt #5293, La Estancia</b><br>45030 Zapopan, Jalisco, México</div>
-    <div class="f-col"><b>Cotización C&amp;W_LAB_26399_LCW</b><br>30 de octubre de 2026 · vigencia 30 días naturales</div>
+    <div class="f-col"><b>Cotización C&amp;W_LAB_26399_LCW</b><br>6 de noviembre de 2026 · vigencia 30 días naturales</div>
   </div>
 </footer>
 
@@ -908,12 +1143,13 @@ footer .f-col b{color:var(--on-navy);font-weight:600}
 <script>
 (function(){
 'use strict';
-var IVA = 0.16;
+var IVA = 0.16, W_END = 53;
 var fmtMoney = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',minimumFractionDigits:2,maximumFractionDigits:2});
 function r2(v){ return Math.round(v*100)/100; }
 function money(v){ return fmtMoney.format(r2(v)); }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function h(tag, attrs, html){ var el=document.createElement(tag); if(attrs){ for(var k in attrs){ if(k==='class') el.className=attrs[k]; else if(k==='hidden'){ el.hidden=!!attrs[k]; } else el.setAttribute(k,attrs[k]); } } if(html!=null) el.innerHTML=html; return el; }
+function wx(w){ return (w/W_END*100); }
 
 /* ---------------- data ---------------- */
 var ICONS = {
@@ -926,170 +1162,159 @@ var ICONS = {
   ele:'<svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></svg>',
   alu:'<svg viewBox="0 0 24 24"><path d="M6 21h6M9 21V8"/><path d="M9 8h7l2-4H7z"/><path d="M14 8v3"/></svg>',
   vdc:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7"/><path d="M5.5 5.5a9 9 0 0 0 0 13M18.5 5.5a9 9 0 0 1 0 13"/><path d="M12 14v7"/></svg>',
-  pci:'<svg viewBox="0 0 24 24"><path d="M9 21V9a3 3 0 0 1 6 0v12"/><path d="M7 21h10M6 12h12M12 3v3"/><path d="M4 9h3M17 9h3"/></svg>',
-  arr:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>',
-  seg:'<svg viewBox="0 0 24 24"><path d="M4 8h16M4 16h16"/><circle cx="7" cy="8" r="2"/><circle cx="17" cy="16" r="2"/></svg>',
-  las:'<svg viewBox="0 0 24 24"><path d="M12 20v-6"/><circle cx="12" cy="11" r="3"/><path d="M5 21h14"/><path d="M3 9a9 9 0 0 1 18 0"/></svg>'
+  pci:'<svg viewBox="0 0 24 24"><path d="M9 21V9a3 3 0 0 1 6 0v12"/><path d="M7 21h10M6 12h12M12 3v3"/><path d="M4 9h3M17 9h3"/></svg>'
 };
 
 var ITEMS = [
-  {id:'arr', grupo:'captura', nombre:'Visita de arranque y red de control GNSS', corto:'Visita de arranque y red de control', monto:65092.23,
-   desc:'Establecimiento de la red de puntos de control georreferenciados con GNSS RTK en ubicaciones coordinadas con el sitio, vuelo fotogramétrico base del polígono, procesamiento de información y generación de curvas de nivel y superficie 3D del terreno integrada en Autodesk Revit.'},
-  {id:'seg', grupo:'captura', nombre:'Visitas de seguimiento con dron (18 visitas)', corto:'Visitas de seguimiento con dron (18)', monto:187370.91,
-   desc:'Dieciocho visitas de levantamiento fotogramétrico con dron georreferenciado con GNSS durante la ejecución de las instalaciones subterráneas y previo a su cobertura, con procesamiento de ortomosaico y nube de puntos por visita; las visitas adicionales se cotizan al costo unitario equivalente.'},
-  {id:'arq', grupo:'modelado', nombre:'Arquitectónico exterior As-Built', corto:'Arquitectónico exterior', monto:94449.83,
-   desc:'Modelado BIM georreferenciado LOD 350 y planos As-Built de pavimentos de tráfico pesado y ligero, banquetas, guarniciones, áreas de jardín y registros.',
+  {id:'arr', grupo:'captura', col:'captura', nombre:'Visita de arranque y red de control GNSS', corto:'Visita de arranque y red de control', monto:65092.23,
+   desc:'Establecimiento de la red de puntos de control georreferenciados con GNSS RTK en ubicaciones coordinadas con el sitio, vuelo fotogramétrico base del terreno natural del polígono previo al inicio de las terracerías, procesamiento de información y generación de curvas de nivel y superficie 3D del terreno integrada en Autodesk Revit.'},
+  {id:'seg', grupo:'captura', col:'captura', nombre:'Visitas de seguimiento con dron (31 visitas)', corto:'31 visitas de seguimiento con dron', monto:322694.50,
+   desc:'Treinta y una visitas de levantamiento fotogramétrico con dron georreferenciado con GNSS durante la ejecución de las instalaciones subterráneas y previo a su cobertura, con frecuencia semanal en la fase de máxima actividad y quincenal en el resto del periodo, y procesamiento de ortomosaico y nube de puntos por visita; las visitas adicionales se cotizan al costo unitario equivalente.'},
+  {id:'las', grupo:'captura', col:'laser', nombre:'Escaneo láser terrestre (6 visitas)', corto:'6 visitas con escaneo láser', monto:107054.52,
+   desc:'Escaneo láser terrestre con equipo FARO Focus en seis de las visitas de seguimiento, en las instalaciones del acceso y de la caseta de ingreso, los cruces del corredor central, el cuarto de bombas y los tanques de almacenamiento del sistema de protección contra incendios, y la planta de tratamiento de aguas residuales, incluido el interior de los cuartos de bombas, con registro de la nube de puntos a la red de control GNSS del proyecto; las visitas adicionales se cotizan al costo unitario equivalente.'},
+  {id:'arq', grupo:'modelado', col:'modelado', nombre:'Arquitectónico exterior As-Built', corto:'Arquitectónico exterior', monto:94449.83,
+   desc:'Modelado BIM georreferenciado LOD 350 y planos As-Built de pavimentos de tráfico pesado y ligero, banquetas, guarniciones, áreas de jardín y registros, así como de la caseta de ingreso a partir del proyecto ejecutivo.',
    qty:'58,950 m² de pavimentos, banquetas, guarniciones y áreas verdes',
-   elems:['Pavimentos de tráfico pesado y ligero','Banquetas y guarniciones','Áreas de jardín','Registros'],
-   modelo:'Modelo con niveles de pavimento terminado.',
-   planos:['Planta general de pavimentos, banquetas, guarniciones y áreas verdes','Planta de niveles de pavimento terminado','Secciones tipo de pavimentos y banquetas','Detalles tipo de guarniciones y registros']},
-  {id:'plu', grupo:'modelado', nombre:'Sistema pluvial As-Built', corto:'Sistema pluvial', monto:58122.97,
+   elems:['Pavimentos de tráfico pesado y ligero','Banquetas y guarniciones','Áreas de jardín','Registros','Caseta de ingreso, modelada a partir del proyecto ejecutivo'],
+   modelo:'Modelo con niveles de pavimento terminado y caseta de ingreso. La caseta se modela conforme al proyecto ejecutivo, sin verificación en sitio.',
+   planos:['Planta general de pavimentos, banquetas, guarniciones, áreas verdes y caseta de ingreso','Planta de niveles de pavimento terminado','Secciones tipo de pavimentos y banquetas','Detalles tipo de guarniciones y registros']},
+  {id:'plu', grupo:'modelado', col:'modelado', nombre:'Sistema pluvial As-Built', corto:'Sistema pluvial', monto:58122.97,
    desc:'Modelado BIM georreferenciado LOD 350 y planos As-Built del sistema pluvial, incluyendo tuberías, canal, pozos, coladeras y vaso regulador.',
    qty:'1,800 ml de tubería, canal, 60 pozos y coladeras, y vaso regulador',
    elems:['Tuberías y canal','Pozos y coladeras','Vaso regulador'],
    modelo:'Sistema por gravedad: cotas de plantilla y pendientes ajustadas por tramo.',
    planos:['Planta general de la red','Perfiles longitudinales por línea','Planta y secciones del canal y del vaso regulador','Detalles tipo de pozos y coladeras','Tabla de pozos con cotas de tapa y plantilla']},
-  {id:'agd', grupo:'modelado', nombre:'Sistema de agua doméstica As-Built', corto:'Agua doméstica', monto:29061.49,
+  {id:'agd', grupo:'modelado', col:'modelado', nombre:'Sistema de agua doméstica As-Built', corto:'Agua doméstica', monto:29061.49,
    desc:'Modelado BIM georreferenciado LOD 350 y planos As-Built de la red de agua doméstica, incluyendo tuberías, válvulas, cajas y tomas.',
    qty:'1,500 ml de tubería',
    elems:['Tuberías','Válvulas y cajas','Tomas'],
    modelo:'Red a presión con válvulas, cajas y tomas localizadas.',
    planos:['Planta general de la red con localización de válvulas, cajas y tomas','Detalles tipo de cajas de válvulas y tomas']},
-  {id:'san', grupo:'modelado', nombre:'Sistema sanitario As-Built', corto:'Sistema sanitario', monto:39959.54,
+  {id:'san', grupo:'modelado', col:'modelado', nombre:'Sistema sanitario As-Built', corto:'Sistema sanitario', monto:39959.54,
    desc:'Modelado BIM georreferenciado LOD 350 y planos As-Built de la red sanitaria, incluyendo tuberías, pozos de visita y descargas.',
    qty:'1,400 ml de tubería y 45 pozos de visita',
    elems:['Tuberías','Pozos de visita','Descargas'],
    modelo:'Sistema por gravedad: cotas de plantilla y pendientes ajustadas por tramo.',
    planos:['Planta general de la red','Perfiles longitudinales por colector','Detalles tipo de pozos de visita y descargas','Tabla de pozos con cotas de tapa y plantilla']},
-  {id:'agt', grupo:'modelado', nombre:'Sistema de agua tratada As-Built', corto:'Agua tratada', monto:47224.91,
-   desc:'Modelado BIM georreferenciado LOD 350 y planos As-Built de la red de agua tratada y de la planta de tratamiento de aguas residuales.',
+  {id:'agt', grupo:'modelado', col:'modelado', nombre:'Sistema de agua tratada As-Built', corto:'Agua tratada', monto:58122.97,
+   desc:'Modelado BIM georreferenciado LOD 350 y planos As-Built de la red de agua tratada y de la planta de tratamiento de aguas residuales, incluido el interior de su cuarto de bombas.',
    qty:'1,300 ml de tubería y planta de tratamiento',
-   elems:['Red de distribución','Planta de tratamiento de aguas residuales (PTAR)'],
-   modelo:'El interior de la planta se modela conforme al proyecto ejecutivo; no forma parte de la captura en sitio.',
+   elems:['Red de distribución','Planta de tratamiento de aguas residuales','Equipos de bombeo, tuberías y válvulas en el interior de su cuarto de bombas'],
+   modelo:'El interior del cuarto de bombas se captura con escaneo láser terrestre en la semana 40; los interiores de las unidades de proceso de la planta se modelan conforme al proyecto ejecutivo.',
    planos:['Planta general de la red','Arreglo general de la planta de tratamiento']},
-  {id:'gas', grupo:'modelado', nombre:'Sistema de gas natural As-Built', corto:'Gas natural', monto:21796.11,
+  {id:'gas', grupo:'modelado', col:'modelado', nombre:'Sistema de gas natural As-Built', corto:'Gas natural', monto:21796.11,
    desc:'Modelado BIM georreferenciado LOD 350 y planos As-Built de la red de gas natural, incluyendo tuberías, válvulas y estación de regulación y medición.',
    qty:'1,300 ml de tubería y estación de regulación y medición',
    elems:['Tuberías','Válvulas','Estación de regulación y medición'],
-   modelo:'Red a presión con válvulas y ERM localizadas.',
+   modelo:'Red a presión con válvulas y estación de regulación y medición localizadas.',
    planos:['Planta general de la red con localización de válvulas','Arreglo de la estación de regulación y medición']},
-  {id:'ele', grupo:'modelado', nombre:'Sistema eléctrico de media y baja tensión As-Built', corto:'Eléctrico media y baja tensión', monto:108980.57,
+  {id:'ele', grupo:'modelado', col:'modelado', nombre:'Sistema eléctrico de media y baja tensión As-Built', corto:'Eléctrico media y baja tensión', monto:108980.57,
    desc:'Modelado BIM georreferenciado LOD 350 y planos As-Built de la red eléctrica de media y baja tensión, incluyendo bancos de ductos, registros, transformadores y equipos de distribución.',
    qty:'2,000 ml de bancos de ductos, 60 registros, transformadores y equipos de distribución',
    elems:['Bancos de ductos con modelado individual de cada ducto','Registros','Transformadores y equipos de distribución'],
    modelo:'Modelo con arreglo de ductos por banco.',
    planos:['Planta general de media tensión','Planta general de baja tensión','Cortes tipo de bancos de ductos','Detalles tipo de registros','Localización de transformadores y equipos de distribución']},
-  {id:'alu', grupo:'modelado', nombre:'Sistema de alumbrado As-Built', corto:'Alumbrado', monto:21796.11,
+  {id:'alu', grupo:'modelado', col:'modelado', nombre:'Sistema de alumbrado As-Built', corto:'Alumbrado', monto:21796.11,
    desc:'Modelado BIM georreferenciado LOD 350 y planos As-Built del sistema de alumbrado exterior, incluyendo canalizaciones, registros, bases y postes.',
    qty:'1,400 ml de canalización y 60 postes',
    elems:['Canalizaciones','Registros','Bases y postes'],
    modelo:'Canalizaciones y postes localizados sobre el modelo de sitio.',
    planos:['Planta general de canalizaciones, registros y postes','Detalle tipo de base de poste']},
-  {id:'vdc', grupo:'modelado', nombre:'Sistemas de voz y datos y CCTV As-Built', corto:'Voz y datos y CCTV', monto:29061.49,
+  {id:'vdc', grupo:'modelado', col:'modelado', nombre:'Sistemas de voz y datos y CCTV As-Built', corto:'Voz y datos y CCTV', monto:29061.49,
    desc:'Modelado BIM georreferenciado LOD 350 y planos As-Built de las canalizaciones, registros y dispositivos de los sistemas de voz y datos y CCTV.',
    qty:'1,500 ml de canalización, registros y dispositivos',
    elems:['Canalizaciones','Registros','Dispositivos y cámaras'],
-   modelo:'Canalizaciones compartidas de voz y datos y CCTV en un mismo modelo.',
+   modelo:'Canalizaciones de voz y datos y CCTV en un mismo modelo.',
    planos:['Planta general de canalizaciones y registros','Localización de cámaras y dispositivos','Cortes tipo de canalización']},
-  {id:'pci', grupo:'modelado', nombre:'Sistema de protección contra incendios As-Built', corto:'Protección contra incendios', monto:47224.91,
-   desc:'Modelado BIM georreferenciado LOD 350 y planos As-Built de la red de protección contra incendios, incluyendo tuberías, hidrantes, válvulas, tanques de almacenamiento y cuarto de bombas.',
+  {id:'pci', grupo:'modelado', col:'modelado', nombre:'Sistema de protección contra incendios As-Built', corto:'Protección contra incendios', monto:58122.97,
+   desc:'Modelado BIM georreferenciado LOD 350 y planos As-Built de la red de protección contra incendios, incluyendo tuberías, hidrantes, válvulas, tanques de almacenamiento y cuarto de bombas con su interior.',
    qty:'1,800 ml de tubería, hidrantes, tanques de almacenamiento y cuarto de bombas',
-   elems:['Tuberías e hidrantes','Válvulas','Tanques de almacenamiento','Cuarto de bombas'],
-   modelo:'Los interiores del cuarto de bombas y los tanques se modelan conforme al proyecto ejecutivo.',
-   planos:['Planta general de la red con localización de hidrantes y válvulas','Arreglo general del cuarto de bombas y de los tanques de almacenamiento','Detalles tipo de hidrantes y válvulas']},
-  {id:'las', grupo:'adicional', nombre:'Escaneo láser terrestre complementario (17 visitas)', corto:'Escaneo láser terrestre (17)', monto:303321.18,
-   desc:'Escaneo láser terrestre con equipo FARO Focus en los frentes de zanja abiertos durante diecisiete visitas de seguimiento, complementario al vuelo fotogramétrico, con registro de la nube de puntos a la red de control GNSS del proyecto; las visitas adicionales se cotizan al costo unitario equivalente.'}
+   elems:['Tuberías e hidrantes','Válvulas','Tanques de almacenamiento','Cuarto de bombas con sus equipos de bombeo, tuberías y válvulas'],
+   modelo:'El cuarto de bombas y los tanques se capturan con escaneo láser terrestre en la semana 34, incluido el interior del cuarto de bombas; los interiores de los tanques se modelan conforme al proyecto ejecutivo.',
+   planos:['Planta general de la red con localización de hidrantes y válvulas','Arreglo general del cuarto de bombas y de los tanques de almacenamiento','Detalles tipo de hidrantes y válvulas']}
 ];
 var UNIT = { dron:10409.50, laser:17842.42 };
-var ALT = {
-  base:{ key:'base', flag:'Recomendada', nombre:'Fotogrametría con dron georreferenciada con GNSS RTK', sub:'Corresponde al alcance base de la propuesta.',
-    metodo:'Red de puntos de control permanentes con GNSS RTK sobre la que se georreferencian todos los vuelos. En cada visita, vuelo fotogramétrico sobre los frentes activos: ortomosaico, nube de puntos y modelo digital de superficie. Sobre esa información se identifican posición y cota de corona de las instalaciones expuestas; diámetros, materiales y especificaciones se integran del proyecto ejecutivo del contratista para alcanzar LOD 350.',
-    equipo:'Dron DJI Matrice 4 Enterprise y receptor GNSS RTK.',
-    precision:'Red de control ±2 cm en planimetría y ±3 cm en altimetría; ubicación de las instalaciones con precisión de hasta 5 cm.',
-    sitio:'Una jornada en sitio por visita, con vuelos de una a dos horas. Los tramos se liberan al término del vuelo sin detener la instalación.',
-    proceso:'Tres días hábiles de procesamiento por visita.',
-    procDias:3, altname:'Recomendada · fotogrametría con dron + GNSS RTK', unitTxt:'Visita de seguimiento con dron' },
-  combinada:{ key:'combinada', flag:'Combinada', nombre:'Fotogrametría con dron y escaneo láser terrestre', sub:'Alcance base más el alcance adicional de escaneo láser.',
-    metodo:'Integra la totalidad de la alternativa recomendada y añade, en cada visita de seguimiento, el escaneo láser terrestre de los frentes de zanja abiertos desde los bordes de la zanja. Los escaneos se registran a la red de control GNSS, de modo que nube láser y nube fotogramétrica comparten el mismo sistema de coordenadas. Diámetros, materiales y especificaciones siguen integrándose del proyecto ejecutivo.',
-    equipo:'Dron DJI Matrice 4 Enterprise, receptor GNSS RTK y escáner láser terrestre FARO Focus.',
-    precision:'Nube láser con exactitud relativa del orden de ±2 mm y absoluta, referida a la red de control, del orden de ±2 cm.',
-    sitio:'Al vuelo se suma el escaneo: tres a cuatro horas por cada 100 m de zanja, es decir, 150 a 200 m de frente por visita. Cada tramo permanece descubierto y libre de trabajos durante su captura; se prioriza en cruces y conexiones.',
-    proceso:'Cuatro días hábiles de procesamiento por visita.',
-    procDias:4, altname:'Combinada · dron + escaneo láser terrestre', unitTxt:'Visita de seguimiento con dron y escaneo láser' }
-};
-var CMP = [
-  ['Precisión de ubicación','Adecuada para LOD 350: instalaciones ubicadas con precisión de hasta 5 cm sobre una red de control de ±2 / ±3 cm.','La misma base, con mayor densidad y precisión geométrica de la nube en zanja (±2 mm relativa).'],
-  ['Captura en zanja','Registra la superficie visible desde el aire; puede limitarse en zanjas angostas o profundas.','El escaneo desde los bordes mejora la definición en zanjas angostas, profundas o zonas congestionadas.'],
-  ['Contenido del modelo','Diámetros, materiales, clases y especificaciones provienen del proyecto ejecutivo del contratista.','Igual. El láser mejora la geometría capturada, no modifica de forma sustancial la información del modelo.'],
-  ['Cobertura por visita','Totalidad de los frentes activos en cada visita.','Escaneo concentrado en los frentes de zanja abiertos, con prioridad en cruces y conexiones.'],
-  ['Interferencia con la obra','Sin permanencia en zanja; el tramo se libera al terminar el vuelo.','Cada frente debe permanecer descubierto y libre de trabajos mientras se escanea.'],
-  ['Registro de obra','Ortomosaicos georreferenciados por visita como registro cronológico de la ejecución.','Igual, más la nube láser por visita en RCP/RCS y E57.'],
-  ['Procesamiento por visita','Tres días hábiles.','Cuatro días hábiles.'],
-  ['Inversión (IVA incluido)','$870,163.64','$1,222,016.21']
-];
+
 var ZONES = [
-  {id:'acceso', n:1, nombre:'Acceso y caseta', corto:'Ingreso, caseta y glorieta', desc:'Zona de ingreso al parque sobre la vialidad principal, con la caseta de control y la glorieta de distribución. Según el programa preliminar, aquí se ejecutan instalaciones de voz y datos, hidráulica, sanitaria y agua tratada entre septiembre de 2026 y enero de 2027, además de la obra civil del acceso.'},
-  {id:'poniente', n:2, nombre:'Corredor poniente', corto:'Franja entre el predio vecino y la nave norte', desc:'Franja de vialidad y estacionamiento que corre de norte a sur entre el predio fuera del proyecto y la nave norte. Forma parte del eje de vialidades de aproximadamente 1,350 m sobre el que se estimaron las longitudes de cada red.'},
-  {id:'central', n:3, nombre:'Corredor central', corto:'Vialidad entre la nave norte y las naves sur', desc:'Vialidad entre la nave norte y las naves sur. Forma parte del trazo principal de los corredores de infraestructura; sobre este eje se aplicaron los factores por distribución a uno o ambos lados de la vialidad, acometidas a naves, cruces y ramales con que se estimaron las cantidades de referencia.'},
-  {id:'sur', n:4, nombre:'Vialidad sur', corto:'Tramo al sur del corredor central, hacia el acceso', desc:'Tramo de vialidad al sur del corredor central, hacia la zona de acceso. Completa el eje de vialidades de aproximadamente 1,350 m sobre el que se dimensionó el servicio. Las cantidades de referencia se validarán contra el proyecto ejecutivo del contratista.'}
+  {id:'acceso', n:1, nombre:'Acceso y caseta de ingreso', corto:'Ingreso, caseta y glorieta', obra:[10,29], obraTxt:'Instalaciones del acceso y de la caseta · semanas 10 a 29', scan:[18,27],
+   desc:'Zona de ingreso al parque sobre la vialidad principal, con la caseta de ingreso y la glorieta de distribución. Concentra las llegadas de los sistemas al acceso. La caseta se integra al modelo arquitectónico a partir del proyecto ejecutivo.'},
+  {id:'poniente', n:2, nombre:'Corredor poniente', corto:'Franja entre el predio vecino y la nave norte', obra:null, obraTxt:'Redes del corredor conforme al programa de cada sistema', scan:null,
+   desc:'Franja de vialidad y estacionamiento que corre de norte a sur entre el predio fuera del proyecto y la nave norte. Forma parte del eje de vialidades de aproximadamente 1,350 m sobre el que se estimaron las longitudes de cada red. Según el layout, en su extremo norte se ubican los tanques de almacenamiento y el cuarto de bombas de protección contra incendios, escaneados en la semana 34.'},
+  {id:'central', n:3, nombre:'Corredor central', corto:'Vialidad entre la nave norte y las naves sur', obra:null, obraTxt:'Trazo principal de los corredores de infraestructura', scan:[14,22],
+   desc:'Vialidad entre la nave norte y las naves sur. Es el trazo principal de los corredores de infraestructura: sobre este eje se aplicaron los factores por distribución a uno o ambos lados de la vialidad, acometidas a naves, cruces y ramales. Sus cruces entre sistemas se escanean con láser terrestre.'},
+  {id:'sur', n:4, nombre:'Vialidad sur', corto:'Tramo entre el corredor central y el acceso', obra:null, obraTxt:'Redes del corredor conforme al programa de cada sistema', scan:null,
+   desc:'Tramo de vialidad al sur del corredor central, hacia la zona de acceso, al poniente de la nave sur poniente. Completa el eje de vialidades sobre el que se dimensionó el servicio. Las cantidades de referencia se validarán contra el proyecto ejecutivo del contratista.'}
+];
+var SCANS = [
+  {id:'central', l:'Cruces del corredor central', s:'Zona 3 · cruces entre sistemas y conexiones', w:[14,22]},
+  {id:'acceso', l:'Instalaciones del acceso y de la caseta de ingreso', s:'Zona 1 · llegadas de los sistemas al acceso', w:[18,27]},
+  {id:'pci', l:'Cuarto de bombas y tanques de protección contra incendios', s:'Incluido el interior del cuarto de bombas · ubicación de referencia', w:[34]},
+  {id:'ptar', l:'Planta de tratamiento de aguas residuales', s:'Incluido el interior de su cuarto de bombas · ubicación conforme al proyecto ejecutivo', w:[40]}
 ];
 var FLOW = [
-  {i:'Paso 1', b:'Aviso de obra', s:'El responsable de obra notifica apertura y cobertura de zanjas con 48 a 72 h de anticipación.'},
-  {i:'Paso 2', b:'Visita en sitio', s:{base:'Una jornada. Vuelo fotogramétrico de 1 a 2 h sobre los frentes activos.', combinada:'Una jornada. Vuelo de 1 a 2 h más escaneo láser: 150–200 m de frente de zanja por visita.'}},
-  {i:'Paso 3', b:'Liberación del tramo', s:{base:'Al término del vuelo, sin detener los trabajos de instalación.', combinada:'Al término del escaneo de cada tramo; el frente permanece descubierto durante la captura.'}},
-  {i:'Paso 4', b:'Procesamiento', s:{base:'3 días hábiles: ortomosaico, nube de puntos y MDS referidos a la red de control.', combinada:'4 días hábiles: ortomosaico, nube fotogramétrica y nube láser registradas a la red.'}},
-  {i:'Paso 5', b:'Modelado', s:'En paralelo a las visitas: posición y cota de corona levantadas + información del proyecto ejecutivo.'},
+  {i:'Paso 1', b:'Aviso de obra', s:'El responsable de obra notifica la apertura y la cobertura de zanjas con 48 a 72 h de anticipación.'},
+  {i:'Paso 2', b:'Visita en sitio', s:'Una jornada. Vuelo fotogramétrico de 1 a 2 h sobre los frentes activos.', l:'Con escaneo láser: 3 a 4 h por cada 100 m de zanja, según profundidad, ancho y acceso.'},
+  {i:'Paso 3', b:'Liberación del tramo', s:'Al término del vuelo, sin detener los trabajos de instalación.', l:'Con escaneo: al término del escaneo; el tramo permanece descubierto y libre de trabajos durante la captura.'},
+  {i:'Paso 4', b:'Procesamiento', s:'3 días hábiles: ortomosaico, nube de puntos y MDS referidos a la red de control.', l:'Con escaneo: 4 días hábiles, con la nube láser registrada a la red.'},
+  {i:'Paso 5', b:'Modelado', s:'En paralelo a las visitas: posición y cota de corona levantadas, más la información del proyecto ejecutivo.'},
   {i:'Paso 6', b:'Entrega parcial', s:'Mensual, en los primeros cinco días hábiles: modelos RVT e IFC actualizados y reporte de avance.'}
 ];
-var OBRA = [
-  ['Acceso y caseta · instalaciones','2026-09-01','2027-01-09','Voz y datos, hidráulica, sanitaria y agua tratada del acceso'],
-  ['Red hidráulica','2026-08-10','2027-01-18'],
-  ['Red sanitaria','2026-08-03','2027-01-11'],
-  ['Agua tratada','2026-09-28','2027-01-11'],
-  ['Red pluvial','2026-08-03','2027-05-28'],
-  ['Vaso regulador','2027-01-25','2027-05-15'],
-  ['Gas natural','2026-08-03','2027-01-11'],
-  ['Media tensión','2026-07-20','2027-03-20'],
-  ['Alumbrado público','2026-08-31','2027-03-20'],
-  ['Telefonía','2026-08-31','2026-11-21'],
-  ['Sistema PCI y alarmas','2026-09-14','2027-02-13'],
-  ['Cuarto de bombas y tanques','2026-11-30','2027-02-20'],
-  ['Cuarto de bombas / PTAR · eléctrico','2027-03-01','2027-03-27'],
-  ['Infraestructura civil · pavimentos','2027-03-15','2027-05-08']
-];
-var SERV = [
-  {l:'Visita de arranque', s:'Red de control, vuelo base y registro de lo visible', a:'2026-11-16', b:'2026-11-24', cls:'serv', tip:'Una jornada en sitio y cinco días hábiles de procesamiento: red de control GNSS RTK, vuelo base del polígono, curvas de nivel y superficie 3D del terreno.'},
-  {l:'Fase de máxima actividad', s:'7 visitas semanales', a:'2026-11-23', b:'2027-01-15', cls:'serv', dots:7, gap:['2026-12-21','2027-01-03'], tip:'Noviembre de 2026 a mediados de enero de 2027. Ejecución simultánea de agua doméstica, sanitaria, agua tratada, pluvial, gas, media tensión, alumbrado, voz y datos y PCI, más el acceso y la caseta. En el periodo vacacional se suspenden las visitas ordinarias y se mantiene disponibilidad para extraordinarias.'},
-  {l:'Fase intermedia', s:'5 visitas quincenales', a:'2027-01-18', b:'2027-03-19', cls:'serv', dots:5, tip:'Mediados de enero a mediados de marzo de 2027. Conclusión de pluvial, media tensión, alumbrado y PCI; ejecución del vaso regulador, cuarto de bombas, tanques y planta de tratamiento.'},
-  {l:'Fase final', s:'5 visitas quincenales', a:'2027-03-22', b:'2027-05-28', cls:'serv', dots:5, tip:'Finales de marzo a mayo de 2027. Conclusión del sistema pluvial y del vaso regulador; pavimentos y banquetas.'},
-  {l:'Visita de cierre', s:'Vuelo completo del polígono', a:'2027-05-31', b:'2027-06-04', cls:'serv', tip:'Vuelo completo al término de pavimentos, banquetas y áreas verdes. Forma parte de las 18 visitas de seguimiento.'},
-  {l:'Modelado y documentación', s:'Entregas parciales mensuales', a:'2026-12-01', b:'2027-06-25', cls:'serv soft', marks:['2027-01-04','2027-02-01','2027-03-01','2027-04-05','2027-05-03','2027-06-01'], tip:'En paralelo a las visitas. Entregas parciales de revisión en los primeros cinco días hábiles de cada mes, con modelos RVT e IFC y reporte de avance.'},
-  {l:'Entrega final', s:'4 semanas tras la visita de cierre', a:'2027-06-21', b:'2027-06-28', cls:'serv', tip:'Modelos As-Built RVT e IFC, planos PDF, memoria del proceso de levantamiento y productos de captura por fecha de visita.'}
-];
 var STAGES = [
-  {b:'Visita de arranque', s:'Una jornada en sitio y cinco días hábiles de procesamiento, curvas de nivel e integración de la superficie del terreno.', e:'1 jornada + 5 días hábiles'},
-  {b:'Visitas de seguimiento', s:'Durante la ejecución de las instalaciones, estimada en 28 semanas conforme al programa preliminar. Una jornada en sitio por visita.', e:{base:'Procesamiento: 3 días hábiles por visita', combinada:'Procesamiento: 4 días hábiles por visita'}},
+  {b:'Visita de arranque', s:'Una jornada en sitio y cinco días hábiles para el procesamiento, la generación de curvas de nivel y la integración de la superficie del terreno natural.', e:'Semana 0 · 1 jornada + 5 días hábiles'},
+  {b:'Visitas de seguimiento', s:'De la semana 6 a la 49 a partir del inicio de obra, con una jornada en sitio por visita.', e:'Procesamiento: 3 días hábiles · 4 con escaneo'},
   {b:'Modelado y documentación', s:'En paralelo a las visitas de seguimiento, con entregas parciales mensuales de revisión.', e:'Mensual, primeros 5 días hábiles'},
-  {b:'Entrega final', s:'Modelos, planos, memoria y productos de captura, cuatro semanas después de la visita de cierre.', e:'+ 4 semanas'},
-  {b:'Duración total', s:'Ambas alternativas comparten el mismo programa; la combinada añade un día hábil de procesamiento por visita.', e:'32 semanas'}
+  {b:'Entrega final', s:'Modelos, planos, memoria y productos de captura, cuatro semanas después de la visita de cierre.', e:'Semana 53 · cierre + 4 semanas'},
+  {b:'Duración total', s:'A partir del inicio de obra, con la visita de cierre en la semana 49.', e:'53 semanas'}
 ];
+
+/* programa en semanas (programa preliminar de obra del 22 de octubre de 2026, duraciones desde el inicio de obra) */
+var OBRA = [
+  {l:'Terracerías', a:0, b:18.6, out:true, tip:'Corte y relleno del polígono. La visita de arranque registra el terreno natural antes de que inicien; no hay visitas de seguimiento hasta la semana 4.'},
+  {l:'Media tensión', a:4, b:38.7, d:'ele'},
+  {l:'Sanitaria', a:6, b:29, d:'san'},
+  {l:'Pluvial', a:6, b:48.6, d:'plu'},
+  {l:'Gas natural', a:6, b:29, d:'gas'},
+  {l:'Agua doméstica', a:7, b:30, d:'agd'},
+  {l:'Alumbrado', a:10, b:38.7, d:'alu'},
+  {l:'Voz y datos', a:10, b:21.7, d:'vdc'},
+  {l:'Acceso y caseta', s:'instalaciones', a:10, b:28.7, zone:'acceso'},
+  {l:'Protección contra incendios', a:12, b:32.7, d:'pci'},
+  {l:'Agua tratada', a:14, b:29, d:'agt'},
+  {l:'Alarmas', a:17, b:33.7, na:true, tip:'Fuera del alcance de esta propuesta; se cotiza por separado.'},
+  {l:'Cuarto de bombas y tanques', a:23, b:34.7, d:'pci'},
+  {l:'Vaso regulador', a:31, b:46.7, d:'plu'},
+  {l:'PTAR', s:'eléctrico', a:36, b:39.7, d:'agt'},
+  {l:'Pavimentos y banquetas', a:38, b:45.7, d:'arq'}
+];
+var DRON = [6,8,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,30,32,34,36,38,40,42,44,46,49];
+var LASER = {14:'central',18:'acceso',22:'central',27:'acceso',34:'pci',40:'ptar'};
+var LASER_NAME = {central:'Cruces del corredor central', acceso:'Instalaciones del acceso y de la caseta de ingreso', pci:'Cuarto de bombas y tanques de protección contra incendios, incluido el interior del cuarto de bombas', ptar:'Planta de tratamiento de aguas residuales y su cuarto de bombas'};
+var PHASES = [
+  {k:'ter', l:'Terracerías', short:'Sin visitas', sub:'sin visitas', a:0, b:4, i:'Semanas 0 a 4', t:'Movimiento de tierras del polígono. La visita de arranque de la semana 0 registra el terreno natural y deja establecida la red de control.', tags:['Visita de arranque · semana 0']},
+  {k:'ini', l:'Fase de inicio', short:'Inicio · quincenal', sub:'quincenal', a:4, b:10, i:'Semanas 4 a 10', t:'Arranque de las redes de media tensión, sanitaria, pluvial, gas natural y agua doméstica.', tags:['2 visitas quincenales','Semanas 6 y 8']},
+  {k:'max', l:'Máxima actividad', short:'Máxima actividad · semanal', sub:'semanal', a:10, b:29, i:'Semanas 10 a 29', t:'Ejecución simultánea de media tensión, sanitaria, pluvial, gas natural, agua doméstica, agua tratada, alumbrado, voz y datos y protección contra incendios, más las instalaciones de acceso y caseta, el cuarto de bombas y los tanques.', tags:['19 visitas semanales','Semanas 10 a 28','4 escaneos láser']},
+  {k:'int', l:'Fase intermedia', short:'Intermedia · quincenal', sub:'quincenal', a:29, b:40, cb:41, i:'Semanas 29 a 40', t:'Conclusión de agua doméstica, media tensión, alumbrado y protección contra incendios, del cuarto de bombas y de los tanques; ejecución del vaso regulador y de la planta de tratamiento.', tags:['6 visitas quincenales','Semanas 30 a 40','2 escaneos láser']},
+  {k:'fin', l:'Fase final', short:'Final · quincenal', sub:'quincenal', a:40, b:49, ca:41, i:'Semanas 40 a 49', t:'Conclusión del sistema pluvial y del vaso regulador, y ejecución de pavimentos y banquetas.', tags:['3 visitas quincenales','Semanas 42, 44 y 46']},
+  {k:'cie', l:'Cierre y entrega', short:'Cierre', sub:'', a:49, b:53, i:'Semanas 49 a 53', t:'Visita de cierre con vuelo completo del polígono al término de pavimentos, banquetas y áreas verdes, con los últimos tramos del pluvial. Entrega final cuatro semanas después.', tags:['Visita de cierre · semana 49','Entrega final · semana 53']}
+];
+var MARKS = [4.3,8.7,13,17.3,21.7,26,30.3,34.7,39,43.3,47.7,52];
+
 var DELIV = {
   arranque:{ t:'Visita de arranque', when:'Cinco días hábiles después de la visita.', items:[
     {t:'Plan de ejecución BIM con criterios de nomenclatura, estructura de modelos, flujo de revisión y programa de entregas.', f:['PDF']},
     {t:'Reporte de la red de puntos de control GNSS RTK: sistema de referencia, coordenadas y elevación de cada punto, precisión obtenida y croquis de localización.', f:['PDF']},
     {t:'Ortomosaico y modelo digital de superficie georreferenciados del polígono, resolución del orden de 2 cm por píxel.', f:['GeoTIFF']},
     {t:'Nube de puntos fotogramétrica del polígono de intervención.', f:['RCP','RCS','LAS']},
-    {t:'Plano topográfico con curvas de nivel principales a cada 1.00 m y secundarias a cada 0.25 m, a la fecha de la visita de arranque.', f:['PDF']},
-    {t:'Superficie 3D del terreno integrada en Autodesk Revit como base del modelo.', f:['RVT']}
+    {t:'Plano topográfico con curvas de nivel principales a cada 1.00 m y secundarias a cada 0.25 m, del terreno natural a la fecha de la visita de arranque, previo al inicio de las terracerías.', f:['PDF']},
+    {t:'Superficie 3D del terreno natural integrada en Autodesk Revit.', f:['RVT']}
   ]},
-  visita:{ t:'Por visita de seguimiento', when:{base:'Tres días hábiles después de cada visita.', combinada:'Cuatro días hábiles después de cada visita.'}, items:[
+  visita:{ t:'Por visita de seguimiento', when:'Tres días hábiles después de cada visita.', items:[
     {t:'Ortomosaico y modelo digital de superficie georreferenciados, resolución del orden de 2 cm por píxel.', f:['GeoTIFF']},
     {t:'Nube de puntos fotogramétrica referida a la red de control.', f:['RCP','RCS','LAS']},
     {t:'Reporte de visita: fecha, condiciones de captura, sistemas y frentes levantados, y tramos cubiertos o sin acceso al momento de la visita.', f:['PDF']}
   ]},
-  adicional:{ t:'Alcance adicional', when:'Con cada visita de seguimiento escaneada; cuatro días hábiles después de la visita.', items:[
-    {t:'Nube de puntos láser por visita, registrada a la red de control del proyecto.', f:['RCP','RCS','E57']},
-    {t:'Metodología y precisión del escaneo láser terrestre integradas en la memoria del proceso de levantamiento.', f:['PDF']}
+  laser:{ t:'Visitas con escaneo láser', when:'Cuatro días hábiles después de cada visita con escaneo, junto con los productos del vuelo.', items:[
+    {t:'Nube de puntos láser por visita, registrada a la red de control del proyecto.', f:['RCP','RCS','E57']}
   ]},
   parcial:{ t:'Entregas parciales de revisión', when:'Mensuales, durante los primeros cinco días hábiles de cada mes.', items:[
     {t:'Modelos por disciplina actualizados con los sistemas levantados y modelados en el periodo.', f:['RVT','IFC']},
@@ -1099,7 +1324,7 @@ var DELIV = {
     {t:'Modelos BIM As-Built LOD 350 de las diez disciplinas, georreferenciados y vinculados al modelo de sitio.', f:['RVT','IFC']},
     {t:'Planos As-Built por disciplina: plantas generales, perfiles longitudinales en sistemas por gravedad y detalles de elementos singulares.', f:['PDF']},
     {t:'Memoria del proceso de levantamiento de instalaciones As-Built.', f:['PDF']},
-    {t:'Conjunto completo de los productos de captura organizados por fecha de visita.', f:['GeoTIFF','RCP','RCS','LAS']}
+    {t:'Conjunto completo de los productos de captura organizados por fecha de visita.', f:['GeoTIFF','RCP','RCS','LAS','E57']}
   ]}
 };
 var COND = [
@@ -1112,12 +1337,14 @@ var COND = [
     'La documentación As-Built representa las instalaciones construidas y no constituye un proyecto ejecutivo de ingeniería: no incluye memorias de cálculo, especificaciones técnicas, catálogos de conceptos ni validación del diseño.'
   ]},
   {h:'Información del proyecto', items:[
-    'El LOD 350 se alcanza integrando el levantamiento en sitio con la información del proyecto ejecutivo del contratista. El cliente proporcionará dicho proyecto en formato editable, con fichas técnicas de materiales y equipos, antes del inicio del modelado de cada disciplina. Los retrasos en esta información desplazan en la misma proporción las fechas de entrega.',
+    'El LOD 350 se alcanza integrando el levantamiento en sitio con la información del proyecto ejecutivo del contratista. El cliente proporcionará dicho proyecto en formato editable, incluido el proyecto arquitectónico de la caseta de ingreso, con fichas técnicas de materiales y equipos, antes del inicio del modelado de cada disciplina. Los retrasos en esta información desplazan en la misma proporción las fechas de entrega.',
     'SOHERSA BIM no es responsable de errores, omisiones o inconsistencias en la información proporcionada por terceros. Diámetros, materiales, clases y especificaciones se integran conforme a dicha información, sin validación de ingeniería.',
     'En caso de discrepancia entre lo levantado en sitio y el proyecto ejecutivo, prevalece la ubicación levantada y la discrepancia se reporta al cliente para su aclaración con el contratista.'
   ]},
   {h:'Coordinación con obra', items:[
     'La correcta ejecución depende de la coordinación oportuna con la obra. El cliente designará un responsable que informe semanalmente a SOHERSA BIM el avance de las instalaciones y la programación de apertura y cobertura de zanjas.',
+    'La visita de arranque se realiza antes del inicio de las terracerías, para lo cual el cliente notifica la fecha de inicio de obra con una anticipación mínima de cinco días hábiles. Si las terracerías inician antes de la visita de arranque, el plano topográfico y la superficie 3D corresponden a la condición del terreno a la fecha de la visita. En zonas con vegetación, el terreno natural se registra conforme a la superficie visible desde el aire.',
+    'El número y la frecuencia de visitas consideran que cada tramo instalado permanece descubierto hasta siete días naturales, y que la liberación de los tramos para su relleno se coordina con los días de visita programados.',
     'La apertura y la cobertura de zanjas se notificarán con una anticipación mínima de 48 a 72 horas. Los tramos cubiertos sin notificación previa o antes de la visita programada se modelan conforme al proyecto ejecutivo, sin verificación en campo, y su posición no se considera verificada.',
     'Las instalaciones ejecutadas y cubiertas antes del inicio del servicio se modelan conforme al proyecto ejecutivo y a los elementos visibles en superficie, sin verificación de su posición en campo.'
   ]},
@@ -1125,8 +1352,8 @@ var COND = [
     'El levantamiento fotogramétrico con dron registra únicamente los elementos visibles al momento del vuelo. Los tramos cubiertos por agua, lodo, relleno, plásticos, maquinaria, materiales u otros objetos no podrán capturarse.',
     'La precisión de hasta 5 cm corresponde a condiciones normales de visibilidad y operación; puede verse afectada por sombras, vegetación, polvo, profundidad o anchura reducida de las zanjas.',
     'La profundidad de plantilla se obtiene a partir de la cota de corona levantada y del diámetro indicado en el proyecto ejecutivo.',
-    'Los interiores del cuarto de bombas, la planta de tratamiento y los tanques de almacenamiento se modelan conforme al proyecto ejecutivo, ya que no forman parte de la captura en sitio.',
-    'En el alcance adicional, la capacidad de escaneo es del orden de 150 a 200 m de frente de zanja por visita; cuando los frentes abiertos excedan esa capacidad, el escaneo se prioriza en cruces entre sistemas y conexiones a registros y pozos.'
+    'La caseta de ingreso y los interiores de los tanques de almacenamiento y de las unidades de proceso de la planta de tratamiento se modelan conforme al proyecto ejecutivo, sin verificación en sitio.',
+    'La capacidad de escaneo láser es del orden de 150 a 200 m de frente de zanja por visita. Cuando la longitud de frentes abiertos en la zona de escaneo exceda esta capacidad, el escaneo se prioriza en cruces entre sistemas y conexiones a registros y pozos.'
   ]},
   {h:'Vuelos con dron', items:[
     'La ejecución de los vuelos está sujeta a condiciones meteorológicas favorables. Las visitas que no puedan realizarse por lluvia, viento, baja visibilidad u otras condiciones adversas se reprograman en la fecha viable más próxima; SOHERSA BIM no es responsable de los tramos que se cubran durante la reprogramación.',
@@ -1134,18 +1361,18 @@ var COND = [
     'El cliente garantizará una zona de vuelo libre de obstáculos y de operaciones de grúas o maquinaria que impidan el vuelo seguro durante las visitas programadas.'
   ]},
   {h:'Puntos de control', items:[
-    'La ubicación de los puntos de control se acuerda con el responsable de obra, en zonas protegidas contra afectaciones durante la construcción.',
+    'La ubicación de los puntos de control se acuerda con el responsable de obra, fuera de las áreas de corte y relleno de las terracerías y en zonas protegidas contra afectaciones durante la construcción.',
     'La preservación de los puntos de control durante la obra es responsabilidad del cliente y del contratista. La reposición de puntos dañados, removidos o cubiertos por terceros se cotiza por separado.'
   ]},
   {h:'Visitas y plazo', items:[
-    'Las visitas que excedan el número base de dieciocho visitas de seguimiento, incluidas las extraordinarias, se cotizan al costo unitario establecido en la propuesta económica.',
+    'Las visitas que excedan el número base de treinta y una visitas de seguimiento con dron y de seis visitas con escaneo láser terrestre, incluidas las extraordinarias, se cotizan al costo unitario correspondiente establecido en la propuesta económica.',
     'Si el periodo de ejecución de las instalaciones se extiende más allá del programa de referencia por causas ajenas a SOHERSA BIM, el seguimiento y la coordinación del periodo adicional se cotizan por separado.',
     'En caso de suspensión de la obra por más de treinta días naturales, la reanudación del servicio se sujeta a una nueva programación acordada con el cliente y a la disponibilidad del equipo de trabajo.'
   ]},
   {h:'Acceso y seguridad', items:[
     'El cliente facilitará el acceso a obra del personal y del equipo de SOHERSA BIM en las fechas programadas. Las visitas que no puedan realizarse por falta de acceso, por instrucción del contratista o por causas imputables al cliente se consideran ejecutadas.',
     'SOHERSA BIM cumplirá con el equipo de protección personal y con las altas ante el IMSS de su personal. Los requerimientos adicionales de capacitación, certificación, exámenes médicos o equipo especial se cotizan por separado.',
-    'El personal de SOHERSA BIM no ingresa al interior de las zanjas. En el alcance adicional, el escaneo láser se realiza desde los bordes, siempre que existan condiciones seguras de acceso y estabilidad de taludes.'
+    'El personal de SOHERSA BIM no ingresa al interior de las zanjas. El escaneo láser en zanjas se realiza desde sus bordes, siempre que existan condiciones seguras de acceso y estabilidad de taludes.'
   ]},
   {h:'Revisiones y entregas', items:[
     'Las entregas parciales corresponden a los sistemas levantados y modelados en cada periodo y tienen carácter de revisión; el contenido final del modelo se valida en la entrega final.',
@@ -1157,51 +1384,41 @@ var COND = [
   ]},
   {h:'Generales', items:[
     'La plataforma de seguimiento de obra sugerida es independiente del servicio cotizado y su contratación no forma parte de los alcances.',
-    'La presente propuesta tiene una vigencia de treinta días naturales a partir de su fecha de emisión, el 30 de octubre de 2026.'
+    'La presente propuesta tiene una vigencia de treinta días naturales a partir de su fecha de emisión, el 6 de noviembre de 2026.'
   ]}
 ];
 
 /* ---------------- state ---------------- */
-var state = { alt:'base', extra:0, order:'prop', disc:'arq', zone:'central', dtab:'arranque' };
-function baseSubtotal(){ return r2(ITEMS.filter(function(i){return i.grupo!=='adicional';}).reduce(function(a,i){return a+i.monto;},0)); }
-function adicional(){ return r2(ITEMS.filter(function(i){return i.grupo==='adicional';}).reduce(function(a,i){return a+i.monto;},0)); }
-function subtotal(){ return r2(baseSubtotal() + (state.alt==='combinada' ? adicional() : 0)); }
-function unitVisit(){ return state.alt==='combinada' ? r2(UNIT.dron+UNIT.laser) : UNIT.dron; }
-function pick(v){ return (v && typeof v==='object') ? v[state.alt] : v; }
+var state = { extra:0, extraL:0, order:'prop', disc:'arq', zone:'central', dtab:'arranque', wk:14, scan:null };
+function sumBy(fn){ return r2(ITEMS.filter(fn).reduce(function(a,i){return a+i.monto;},0)); }
+function subtotal(){ return sumBy(function(){return true;}); }
+function phaseOf(w){ for(var i=0;i<PHASES.length;i++){ var p=PHASES[i], end=(p.cb!=null?p.cb:p.b), start=(p.ca!=null?p.ca:p.a); if(w>=start && (w<end || (i===PHASES.length-1 && w<=end))) return p; } return PHASES[PHASES.length-1]; }
+function phaseName(w){ var p=phaseOf(w); return p.l+(p.sub?' · visitas '+p.sub+'es':''); }
+function nextVisit(w){ for(var i=0;i<DRON.length;i++){ if(DRON[i]>w) return DRON[i]; } return null; }
+function prevVisit(w){ var p=null; if(w>0) p=0; for(var i=0;i<DRON.length;i++){ if(DRON[i]<w) p=DRON[i]; } return p; }
+function activeObra(w){ return OBRA.filter(function(o){ return o.a<=w && w<=o.b; }); }
 
 /* ---------------- renderers ---------------- */
 function renderTotals(){
-  var sub = subtotal(), iva = r2(sub*IVA), tot = r2(sub+iva);
-  document.querySelectorAll('[data-sum="total"]').forEach(function(e){ e.textContent = money(tot); });
-  document.querySelectorAll('[data-sum="subtotal"]').forEach(function(e){ e.textContent = money(sub); });
-  document.querySelectorAll('[data-sum="iva"]').forEach(function(e){ e.textContent = money(iva); });
-  document.querySelectorAll('[data-sum="base"]').forEach(function(e){ e.textContent = money(baseSubtotal()); });
-  document.querySelectorAll('[data-sum="adicional"]').forEach(function(e){ e.textContent = money(adicional()); });
-  document.querySelectorAll('[data-sum="adrow"],[data-sum="legad"]').forEach(function(e){ e.hidden = state.alt!=='combinada'; });
-  document.querySelectorAll('[data-sum="altname"]').forEach(function(e){ e.textContent = ALT[state.alt].altname; });
-  document.querySelectorAll('.seg-btn[data-alt]').forEach(function(b){ var on=b.dataset.alt===state.alt; b.classList.toggle('is-on',on); b.setAttribute('aria-checked',on?'true':'false'); });
+  var sub=subtotal(), iva=r2(sub*IVA), tot=r2(sub+iva);
+  document.querySelectorAll('[data-sum="total"]').forEach(function(e){ e.textContent=money(tot); });
+  document.querySelectorAll('[data-sum="subtotal"]').forEach(function(e){ e.textContent=money(sub); });
+  document.querySelectorAll('[data-sum="iva"]').forEach(function(e){ e.textContent=money(iva); });
+  document.querySelectorAll('[data-sum="captura"]').forEach(function(e){ e.textContent=money(sumBy(function(i){return i.grupo==='captura';})); });
+  document.querySelectorAll('[data-sum="modelado"]').forEach(function(e){ e.textContent=money(sumBy(function(i){return i.grupo==='modelado';})); });
 }
-function renderAlts(){
-  var box=document.getElementById('alts'); box.innerHTML='';
-  ['base','combinada'].forEach(function(k){
-    var a=ALT[k], sub=r2(baseSubtotal()+(k==='combinada'?adicional():0)), tot=r2(sub*(1+IVA));
-    var card=h('div',{class:'alt-card'+(state.alt===k?' is-on':''),'data-alt-card':k});
-    card.innerHTML='<span class="flag">'+a.flag+'</span><h3>'+esc(a.nombre)+'</h3><p class="sub">'+esc(a.sub)+'</p>'+
-      '<dl class="spec"><dt>Metodología</dt><dd>'+esc(a.metodo)+'</dd><dt>Equipo</dt><dd>'+esc(a.equipo)+'</dd><dt>Precisión</dt><dd>'+esc(a.precision)+'</dd><dt>En sitio</dt><dd>'+esc(a.sitio)+'</dd><dt>Procesamiento</dt><dd>'+esc(a.proceso)+'</dd></dl>'+
-      '<div class="price"><span>'+(k==='combinada'?'Alcance base + adicional · IVA incluido':'Alcance base · IVA incluido')+'</span><b>'+money(tot)+'</b><span>'+money(sub)+' + IVA 16 %</span></div>'+
-      '<button class="alt-pick" data-alt="'+k+'">'+(state.alt===k?'✓ Seleccionada':'Seleccionar esta alternativa')+'</button>';
-    box.appendChild(card);
-  });
-  var tb=document.querySelector('#cmpTable tbody'); tb.innerHTML='';
-  CMP.forEach(function(r){ var tr=h('tr'); tr.innerHTML='<td>'+esc(r[0])+'</td><td data-col="base" class="'+(state.alt==='base'?'on':'')+'">'+esc(r[1])+'</td><td data-col="combinada" class="'+(state.alt==='combinada'?'on':'')+'">'+esc(r[2])+'</td>'; tb.appendChild(tr); });
-  document.querySelectorAll('#cmpTable th[data-col]').forEach(function(th){ th.classList.toggle('on', th.dataset.col===state.alt); });
+function renderFlow(){
   var fl=document.getElementById('flow'); fl.innerHTML='';
-  FLOW.forEach(function(s){ fl.appendChild(h('div',{class:'step'},'<i>'+esc(s.i)+'</i><b>'+esc(s.b)+'</b><span>'+esc(pick(s.s))+'</span>')); });
+  FLOW.forEach(function(s){ fl.appendChild(h('div',{class:'step'},'<i>'+esc(s.i)+'</i><b>'+esc(s.b)+'</b><span>'+esc(s.s)+'</span>'+(s.l?'<em>'+esc(s.l)+'</em>':''))); });
+}
+function renderStages(){
+  var s=document.getElementById('stages'); s.innerHTML='';
+  STAGES.forEach(function(st){ s.appendChild(h('div',{class:'stage'},'<b>'+esc(st.b)+'</b><span>'+esc(st.s)+'</span><em>'+esc(st.e)+'</em>')); });
 }
 function renderDisc(){
   var grid=document.getElementById('dgrid'); grid.innerHTML='';
   ITEMS.filter(function(i){return i.grupo==='modelado';}).forEach(function(d){
-    var b=h('button',{class:'dcard'+(state.disc===d.id?' is-on':''),'data-disc':d.id,'aria-pressed':state.disc===d.id?'true':'false'});
+    var b=h('button',{class:'dcard'+(state.disc===d.id?' is-on':''),'data-disc':d.id,'aria-pressed':state.disc===d.id?'true':'false',type:'button'});
     b.innerHTML='<span class="ic">'+ICONS[d.id]+'</span><span><b>'+esc(d.corto)+'</b><span>'+money(d.monto)+'</span></span>';
     grid.appendChild(b);
   });
@@ -1214,24 +1431,23 @@ function renderDisc(){
     '<h4>Planos As-Built</h4><ul>'+d.planos.map(function(e){return '<li>'+esc(e)+'</li>';}).join('')+'</ul>'+
     '<h4>Formatos</h4><div class="tags"><span class="tag">RVT</span><span class="tag">IFC</span><span class="tag">PDF</span></div>';
 }
-function visibleItems(){ return ITEMS.filter(function(i){ return i.grupo!=='adicional' || state.alt==='combinada'; }); }
 function renderBars(){
   var box=document.getElementById('bars'); box.innerHTML='';
-  var items=visibleItems().slice(); if(state.order==='amt') items.sort(function(a,b){return b.monto-a.monto;});
+  var items=ITEMS.slice(); if(state.order==='amt') items.sort(function(a,b){return b.monto-a.monto;});
   var max=Math.max.apply(null,items.map(function(i){return i.monto;})); var sub=subtotal();
   items.forEach(function(i){
     var row=h('div',{class:'bar-row','data-tip':'<b>'+esc(i.corto)+'</b>'+money(i.monto)+' · '+(i.monto/sub*100).toFixed(1)+' % del subtotal'});
-    row.innerHTML='<div class="bar-label">'+esc(i.corto)+'</div><div class="bar-track"><div class="bar-fill '+i.grupo+'" style="width:'+(i.monto/max*100).toFixed(2)+'%"></div></div><div class="bar-val">'+money(i.monto)+'</div>';
+    row.innerHTML='<div class="bar-label">'+esc(i.corto)+'</div><div class="bar-track"><div class="bar-fill '+i.col+'" style="width:'+(i.monto/max*100).toFixed(2)+'%"></div></div><div class="bar-val">'+money(i.monto)+'</div>';
     box.appendChild(row);
   });
   document.querySelectorAll('.seg-btn[data-order]').forEach(function(b){ var on=b.dataset.order===state.order; b.classList.toggle('is-on',on); b.setAttribute('aria-checked',on?'true':'false'); });
 }
 function renderTable(){
   var tb=document.querySelector('#costTable tbody'); tb.innerHTML='';
-  var groups=[['captura','Captura en sitio','captura en sitio'],['modelado','Modelado y documentación BIM As-Built LOD 350','modelado y documentación'],['adicional','Alcance adicional · alternativa combinada','alcance adicional']];
+  var groups=[['captura','Captura en sitio','captura en sitio','var(--c-captura)'],['modelado','Modelado y documentación BIM As-Built LOD 350','modelado y documentación','var(--c-modelado)']];
   groups.forEach(function(g){
-    var rows=visibleItems().filter(function(i){return i.grupo===g[0];}); if(!rows.length) return;
-    var tr=h('tr',{class:'grp'}); tr.innerHTML='<td colspan="2"><i style="background:var(--c-'+g[0]+')"></i>'+esc(g[1])+'</td>'; tb.appendChild(tr);
+    var rows=ITEMS.filter(function(i){return i.grupo===g[0];});
+    var tr=h('tr',{class:'grp'}); tr.innerHTML='<td colspan="2"><i style="background:'+g[3]+'"></i>'+esc(g[1])+'</td>'; tb.appendChild(tr);
     rows.forEach(function(i){
       var r=h('tr',{class:'item','data-item':i.id,tabindex:'0',role:'button','aria-expanded':'false'});
       r.innerHTML='<td><div class="ttl">'+esc(i.nombre)+'</div><div class="desc">'+esc(i.desc)+'</div></td><td class="amt">'+money(i.monto)+'</td>';
@@ -1243,149 +1459,205 @@ function renderTable(){
   var sub=subtotal(), iva=r2(sub*IVA), tot=r2(sub+iva);
   var t1=h('tr',{class:'sum'}); t1.innerHTML='<td>Subtotal</td><td class="amt">'+money(sub)+'</td>'; tb.appendChild(t1);
   var t2=h('tr',{class:'sum'}); t2.innerHTML='<td>IVA (16 %)</td><td class="amt">'+money(iva)+'</td>'; tb.appendChild(t2);
-  var t3=h('tr',{class:'total'}); t3.innerHTML='<td>Costo neto · '+esc(ALT[state.alt].flag.toLowerCase()==='combinada'?'alternativa combinada':'alternativa recomendada')+'</td><td class="amt">'+money(tot)+'</td>'; tb.appendChild(t3);
+  var t3=h('tr',{class:'total'}); t3.innerHTML='<td>Costo neto</td><td class="amt">'+money(tot)+'</td>'; tb.appendChild(t3);
 }
 function renderUnit(){
-  var u=document.getElementById('unitBox');
-  var dron=UNIT.dron, laser=UNIT.laser, comb=r2(dron+laser);
-  var html='';
-  if(state.alt==='base'){
-    html+='<div class="u hl"><span>Visita de seguimiento con dron</span><b>'+money(dron)+'</b></div>'+
-          '<div class="u"><span>IVA 16 %</span><b>'+money(r2(dron*IVA))+'</b></div>'+
-          '<div class="u"><span>Costo neto por visita</span><b>'+money(r2(dron*(1+IVA)))+'</b></div>'+
-          '<p class="small muted">Con la alternativa combinada, cada visita suma el escaneo láser ('+money(laser)+') para un neto de '+money(r2(comb*(1+IVA)))+'.</p>';
-  } else {
-    html+='<div class="u"><span>Visita de seguimiento con dron</span><b>'+money(dron)+'</b></div>'+
-          '<div class="u"><span>Escaneo láser terrestre complementario</span><b>'+money(laser)+'</b></div>'+
-          '<div class="u hl"><span>Subtotal por visita combinada</span><b>'+money(comb)+'</b></div>'+
-          '<div class="u"><span>IVA 16 %</span><b>'+money(r2(comb*IVA))+'</b></div>'+
-          '<div class="u"><span>Costo neto por visita</span><b>'+money(r2(comb*(1+IVA)))+'</b></div>';
-  }
-  u.innerHTML=html;
+  var dron=UNIT.dron, laser=UNIT.laser;
+  document.getElementById('unitBox').innerHTML=
+    '<h4>Visita de seguimiento con dron</h4>'+
+    '<div class="u hl"><span>Subtotal por visita</span><b>'+money(dron)+'</b></div>'+
+    '<div class="u"><span>IVA 16 %</span><b>'+money(r2(dron*IVA))+'</b></div>'+
+    '<div class="u"><span>Costo neto por visita</span><b>'+money(r2(dron*(1+IVA)))+'</b></div>'+
+    '<h4>Escaneo láser terrestre por visita, adicional a la visita con dron</h4>'+
+    '<div class="u hl l"><span>Subtotal por visita</span><b>'+money(laser)+'</b></div>'+
+    '<div class="u"><span>IVA 16 %</span><b>'+money(r2(laser*IVA))+'</b></div>'+
+    '<div class="u"><span>Costo neto por visita</span><b>'+money(r2(laser*(1+IVA)))+'</b></div>';
 }
 function renderPay(){
   var sub=subtotal(), ant=r2(sub*0.4), antIva=r2(ant*(1+IVA));
-  var p=document.getElementById('payBox');
-  p.innerHTML='<div class="bar" aria-hidden="true"><i style="width:40%;background:var(--green)"></i><i style="width:50%;background:var(--c-captura)"></i><i style="width:10%;background:var(--c-adicional)"></i></div>'+
+  document.getElementById('payBox').innerHTML='<div class="bar" aria-hidden="true"><i style="width:40%;background:var(--green)"></i><i style="width:50%;background:var(--c-captura)"></i><i style="width:10%;background:var(--c-laser)"></i></div>'+
     '<div class="p"><i>40 %</i><div>Anticipo a la firma del pedido o contrato<b>'+money(ant)+' + IVA = '+money(antIva)+'</b></div></div>'+
-    '<div class="p"><i>Mes</i><div>Estimaciones mensuales por visitas ejecutadas y avance del modelado por disciplina, hasta 90 % acumulado, amortizando el anticipo<b>Corte al último día de cada mes</b></div></div>'+
+    '<div class="p"><i>Mes</i><div>Estimaciones mensuales por visitas ejecutadas (dron y escaneo láser, al costo unitario) y avance del modelado por disciplina hasta 90 % acumulado, amortizando el anticipo<b>Corte al último día de cada mes</b></div></div>'+
     '<div class="p"><i>10 %</i><div>Restante del modelado de cada disciplina, planos As-Built y memoria<b>A la entrega final</b></div></div>'+
-    '<p class="small muted" style="margin-top:6px">Facturas a 15 días naturales. Montos del anticipo calculados sobre el subtotal de la alternativa seleccionada.</p>';
+    '<p class="small muted" style="margin-top:6px">Facturas a 15 días naturales. Anticipo calculado sobre el subtotal de la propuesta.</p>';
 }
 function renderSim(){
-  var n=state.extra, u=unitVisit(), extra=r2(n*u), sub=subtotal(), nsub=r2(sub+extra), ntot=r2(nsub*(1+IVA));
-  document.getElementById('simN').textContent=n;
+  var n=state.extra, m=state.extraL, extra=r2(n*UNIT.dron+m*UNIT.laser), sub=subtotal(), nsub=r2(sub+extra), ntot=r2(nsub*(1+IVA));
+  document.getElementById('simN').textContent=n; document.getElementById('simLN').textContent=m;
   document.getElementById('simMinus').disabled=n<=0; document.getElementById('simPlus').disabled=n>=12;
-  var label=ALT[state.alt].unitTxt;
+  document.getElementById('simLMinus').disabled=m<=0; document.getElementById('simLPlus').disabled=m>=12;
   document.getElementById('simRes').innerHTML=
-    '<div><span>'+esc(label)+' × '+n+'</span><b>'+money(extra)+'</b></div>'+
+    '<div><span>Visitas con dron × '+n+'</span><b>'+money(r2(n*UNIT.dron))+'</b></div>'+
+    '<div><span>Escaneos láser × '+m+'</span><b>'+money(r2(m*UNIT.laser))+'</b></div>'+
     '<div><span>Subtotal de la propuesta</span><b>'+money(sub)+'</b></div>'+
     '<div><span>IVA 16 %</span><b>'+money(r2(nsub*IVA))+'</b></div>'+
     '<div class="t"><span>Total estimado con visitas adicionales</span><b>'+money(ntot)+'</b></div>';
 }
-function dateP(s){ var p=s.split('-'); return new Date(+p[0],+p[1]-1,+p[2]); }
-function fmtD(d){ return d.toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'}).replace(/\./g,''); }
-function renderGantt(){
-  var T0=new Date(2026,6,1), T1=new Date(2027,6,31); var span=T1-T0;
-  function pct(d){ return Math.max(0,Math.min(100,(d-T0)/span*100)); }
-  var g=document.getElementById('gantt'); g.innerHTML='';
-  var months=['Jul 26','Ago','Sep','Oct','Nov','Dic','Ene 27','Feb','Mar','Abr','May','Jun','Jul'];
-  var head=h('div',{class:'g-head'}); head.innerHTML='<div class="g-label muted small">Mes</div><div class="g-months" style="grid-template-columns:repeat(13,minmax(0,1fr))">'+months.map(function(m,i){return '<span class="'+(i===0||i===6?'y':'')+'">'+m+'</span>';}).join('')+'</div>';
-  g.appendChild(head);
-  var g1=h('div',{class:'g-group'},'<i class="obra"></i>Programa preliminar de obra · 22 oct 2026'); g.appendChild(g1);
-  OBRA.forEach(function(o){
-    var a=dateP(o[1]), b=dateP(o[2]);
-    var row=h('div',{class:'g-row'}); row.innerHTML='<div class="g-label">'+esc(o[0])+'</div><div class="g-track"></div>';
-    var bar=h('div',{class:'g-bar obra','data-tip':'<b>'+esc(o[0])+'</b>'+fmtD(a)+' → '+fmtD(b)+(o[3]?'<br>'+esc(o[3]):'')});
-    bar.style.left=pct(a)+'%'; bar.style.width=Math.max(0.4,pct(b)-pct(a))+'%';
-    row.querySelector('.g-track').appendChild(bar); g.appendChild(row);
-  });
-  var g2=h('div',{class:'g-group'},'<i class="serv"></i>Servicio SOHERSA BIM · 32 semanas'); g.appendChild(g2);
-  SERV.forEach(function(s,idx){
-    var a=dateP(s.a), b=dateP(s.b);
-    var row=h('div',{class:'g-row serv-row'}); row.innerHTML='<div class="g-label">'+esc(s.l)+'<small>'+esc(s.s)+'</small></div><div class="g-track"></div>';
-    var tr=row.querySelector('.g-track');
-    var bar=h('div',{class:'g-bar '+s.cls,'data-tip':'<b>'+esc(s.l)+'</b>'+fmtD(a)+' → '+fmtD(b)+'<br>'+esc(s.tip)});
-    bar.style.left=pct(a)+'%'; bar.style.width=Math.max(0.6,pct(b)-pct(a))+'%'; bar.style.zIndex='1'; tr.appendChild(bar);
-    if(s.gap){ var ga=dateP(s.gap[0]), gb=dateP(s.gap[1]); var gp=h('div',{class:'g-bar gap','data-tip':'<b>Periodo vacacional</b>Se suspenden las visitas ordinarias; disponibilidad para visitas extraordinarias.'}); gp.style.left=pct(ga)+'%'; gp.style.width=(pct(gb)-pct(ga))+'%'; gp.style.zIndex='2'; tr.appendChild(gp); }
-    if(s.dots){ var n=s.dots, A=pct(a), B=pct(b); var inner=(B-A)*0.92, off=A+(B-A)*0.04;
-      for(var i=0;i<n;i++){ var d=h('div',{class:'g-dot d','data-tip':'<b>Visita de seguimiento</b>'+esc(s.s)+' · fecha conforme al avance de obra'}); d.style.left=(off+inner*(n===1?0.5:i/(n-1)))+'%'; d.style.zIndex='3'; tr.appendChild(d); } }
-    if(s.marks){ s.marks.forEach(function(m){ var d=h('div',{class:'g-dot','data-tip':'<b>Entrega parcial</b>Primeros cinco días hábiles de '+dateP(m).toLocaleDateString('es-MX',{month:'long',year:'numeric'})}); d.style.left=pct(dateP(m))+'%'; d.style.zIndex='3'; tr.appendChild(d); }); }
-    g.appendChild(row);
-  });
-  var ov=h('div',{class:'g-overlay'});
-  var prop=h('div',{class:'g-line','data-x':pct(new Date(2026,9,30)),'data-from':'obra','data-tip':'<b>Emisión de la propuesta</b>30 de octubre de 2026'}); ov.appendChild(prop);
-  var ln=h('div',{class:'g-line start','data-x':pct(dateP(SERV[0].a)),'data-from':'serv','data-tip':'<b>Inicio del servicio</b>Segunda quincena de noviembre de 2026'}); ov.appendChild(ln);
-  var fl=h('div',{class:'g-flag','data-x':pct(dateP(SERV[0].a)),'data-from':'serv'},'Inicio del servicio'); ov.appendChild(fl);
-  g.appendChild(ov);
-  var key=h('div',{class:'g-key'},'<span><i style="width:18px;height:10px;border-radius:3px;background:var(--navy-tint);border:1px solid var(--line-2)"></i>Ejecución en obra (programa del cliente)</span><span><i style="width:18px;height:10px;border-radius:3px;background:var(--green)"></i>Fases del servicio</span><span><i style="width:10px;height:10px;border-radius:50%;background:var(--green-deep)"></i>Visita de seguimiento</span><span><i style="width:10px;height:10px;border-radius:50%;background:var(--navy)"></i>Entrega parcial</span><span><i style="width:18px;height:10px;background:repeating-linear-gradient(135deg,var(--surface) 0 3px,var(--line-2) 3px 5px);border:1px solid var(--line-2)"></i>Periodo vacacional</span><span><i style="width:0;height:12px;border-left:2px dashed var(--c-adicional)"></i>Emisión de la propuesta · 30 oct 2026</span><span><i style="width:0;height:12px;border-left:2px dashed var(--green-deep)"></i>Inicio del servicio · 2ª quincena de nov 2026</span>');
-  g.appendChild(key);
-  layoutGanttLines();
-}
-function layoutGanttLines(){
-  var g=document.getElementById('gantt'); var ov=g.querySelector('.g-overlay'); if(!ov) return;
-  var tracks=g.querySelectorAll('.g-row .g-track'); if(!tracks.length) return;
-  var gr=g.getBoundingClientRect(), first=tracks[0].getBoundingClientRect(), last=tracks[tracks.length-1].getBoundingClientRect();
-  var sTrack=g.querySelector('.serv-row .g-track'); var sFirst=sTrack?sTrack.getBoundingClientRect():first;
-  ov.querySelectorAll('[data-x]').forEach(function(el){
-    var x=first.left-gr.left+first.width*parseFloat(el.dataset.x)/100;
-    var fromTop=(el.dataset.from==='serv'?sFirst.top:first.top)-gr.top;
-    el.style.left=x+'px';
-    if(el.classList.contains('g-flag')){ el.style.top=(fromTop-26)+'px'; }
-    else { el.style.top=(fromTop-6)+'px'; el.style.height=(last.bottom-gr.top-fromTop+10)+'px'; }
-  });
-}
-var rzT; window.addEventListener('resize',function(){ clearTimeout(rzT); rzT=setTimeout(layoutGanttLines,120); });
-if(document.fonts && document.fonts.ready){ document.fonts.ready.then(function(){ layoutGanttLines(); }); }
-function renderStages(){
-  var s=document.getElementById('stages'); s.innerHTML='';
-  STAGES.forEach(function(st){ s.appendChild(h('div',{class:'stage'},'<b>'+esc(st.b)+'</b><span>'+esc(st.s)+'</span><em>'+esc(pick(st.e))+'</em>')); });
-}
 function renderDeliv(){
   var tabs=document.getElementById('dtabs'); tabs.innerHTML='';
-  var keys=['arranque','visita','adicional','parcial','final'];
-  if(state.alt!=='combinada' && state.dtab==='adicional') state.dtab='visita';
-  keys.forEach(function(k){
-    if(k==='adicional' && state.alt!=='combinada') return;
-    var b=h('button',{class:'tab'+(state.dtab===k?' is-on':''),'data-dtab':k,role:'tab','aria-selected':state.dtab===k?'true':'false'},esc(DELIV[k].t)+'<span class="n">'+DELIV[k].items.length+'</span>');
-    tabs.appendChild(b);
+  ['arranque','visita','laser','parcial','final'].forEach(function(k){
+    tabs.appendChild(h('button',{class:'tab'+(state.dtab===k?' is-on':''),'data-dtab':k,role:'tab','aria-selected':state.dtab===k?'true':'false',type:'button'},esc(DELIV[k].t)+'<span class="n">'+DELIV[k].items.length+'</span>'));
   });
   var d=DELIV[state.dtab]; var list=document.getElementById('dlist'); list.innerHTML='';
   d.items.forEach(function(it){ list.appendChild(h('div',{class:'ditem'},'<span class="chk">✓</span><div><p>'+esc(it.t)+'</p><div class="fmts">'+it.f.map(function(f){return '<span class="tag green">'+f+'</span>';}).join('')+'</div></div>')); });
-  document.getElementById('dwhen').innerHTML='<span class="tag navy">Entrega</span><span>'+esc(pick(d.when))+'</span>';
+  document.getElementById('dwhen').innerHTML='<span class="tag navy">Entrega</span><span>'+esc(d.when)+'</span>';
 }
 function renderZones(){
   var l=document.getElementById('zoneList'); l.innerHTML='';
-  ZONES.forEach(function(z){ l.appendChild(h('button',{class:'zone-btn'+(state.zone===z.id?' is-on':''),'data-zone-btn':z.id,'aria-pressed':state.zone===z.id?'true':'false'},'<span class="n">'+z.n+'</span><span><b>'+esc(z.nombre)+'</b><span>'+esc(z.corto)+'</span></span>')); });
+  ZONES.forEach(function(z){
+    var tags=''; if(z.scan) tags+='<span class="tag laser">láser · sem '+z.scan.join(' y ')+'</span>';
+    l.appendChild(h('button',{class:'zone-btn'+(state.zone===z.id?' is-on':''),'data-zone-btn':z.id,'aria-pressed':state.zone===z.id?'true':'false',type:'button'},'<span class="n">'+z.n+'</span><span><b>'+esc(z.nombre)+'</b><span>'+esc(z.corto)+'</span></span><span class="zt">'+tags+'</span>'));
+  });
   var z=ZONES.filter(function(x){return x.id===state.zone;})[0];
-  document.getElementById('zoneDesc').innerHTML='<div class="eyebrow">Zona '+z.n+'</div><h4>'+esc(z.nombre)+'</h4><p>'+esc(z.desc)+'</p>';
+  var facts='<div class="fact"><i class="dron"></i><span>Vuelo con dron en cada una de las 31 visitas de seguimiento</span></div>'+
+    '<div class="fact"><i class="obra"></i><span>'+esc(z.obraTxt)+'</span></div>';
+  if(z.scan) facts+='<div class="fact"><i class="laser"></i><span>Escaneo láser terrestre en las semanas '+z.scan.map(function(w){return '<button type="button" data-goweek="'+w+'">'+w+'</button>';}).join(' y ')+'</span></div>';
+  document.getElementById('zoneDesc').innerHTML='<div class="eyebrow">Zona '+z.n+'</div><h4>'+esc(z.nombre)+'</h4><p>'+esc(z.desc)+'</p><div class="facts">'+facts+'</div>';
   document.querySelectorAll('.map .zone[data-zone]').forEach(function(p){ p.classList.toggle('is-on',p.dataset.zone===state.zone); });
+}
+function renderScans(){
+  var l=document.getElementById('scanList'); l.innerHTML='';
+  l.appendChild(h('div',{class:'eyebrow',style:'margin-top:4px'},'Escaneo láser terrestre · 6 visitas'));
+  SCANS.forEach(function(s){
+    var el=h('div',{class:'scan-item'+(state.scan===s.id?' is-on':''),'data-scan-btn':s.id,role:'button',tabindex:'0','aria-pressed':state.scan===s.id?'true':'false'},'<span class="lz"><i></i></span><span><b>'+esc(s.l)+'</b><span>'+esc(s.s)+'</span></span><span class="wk">'+s.w.map(function(w){return '<button type="button" class="tag laser" data-goweek="'+w+'" aria-label="Ver la semana '+w+' en el programa">sem '+w+' ↗</button>';}).join('')+'</span>');
+    l.appendChild(el);
+  });
+  document.querySelectorAll('.map .scan[data-scan]').forEach(function(p){ p.classList.toggle('is-on',p.dataset.scan===state.scan); });
 }
 function renderCond(){
   var a=document.getElementById('acc'); a.innerHTML='';
   COND.forEach(function(c,i){ var d=h('details',i===0?{open:''}:{}); d.innerHTML='<summary>'+esc(c.h)+'</summary><div class="body"><ul>'+c.items.map(function(t){return '<li>'+esc(t)+'</li>';}).join('')+'</ul></div>'; a.appendChild(d); });
 }
-function renderAll(){ renderTotals(); renderAlts(); renderBars(); renderTable(); renderUnit(); renderPay(); renderSim(); renderStages(); renderDeliv(); }
-function setAlt(k){ if(!ALT[k]) return; state.alt=k; renderAll(); toast(k==='combinada'?'Alternativa combinada seleccionada':'Alternativa recomendada seleccionada'); }
+
+/* ---------------- programa ---------------- */
+function mkRow(label,sub){ var row=h('div',{class:'g-row serv-row'}); row.innerHTML='<div class="g-label">'+esc(label)+(sub?'<small>'+esc(sub)+'</small>':'')+'</div><div class="g-track"></div>'; return row; }
+function addDot(row,w,cls,tip,clickable){ var d=h('div',{class:'g-dot '+cls,'data-tip':tip,'data-week':w}); if(clickable!==false){ d.setAttribute('role','button'); d.setAttribute('tabindex','0'); d.setAttribute('aria-label','Ir a la semana '+w); } d.style.left=wx(w)+'%'; d.style.zIndex='3'; row.querySelector('.g-track').appendChild(d); return d; }
+function renderGantt(){
+  var g=document.getElementById('gantt'); g.innerHTML='';
+  var head=h('div',{class:'g-head'}); head.innerHTML='<div class="g-label muted small">Fase del servicio</div>';
+  var ph=h('div',{class:'g-phases'});
+  PHASES.forEach(function(p){ var s=h('span',{class:p.k,'data-phase':p.k,'data-tip':'<b>'+esc(p.l)+'</b>'+esc(p.i)+(p.sub?' · visitas '+esc(p.sub)+'es':'')+'<br>'+esc(p.tags.join(' · ')),role:'button',tabindex:'0'}); s.style.left=wx(p.a)+'%'; s.style.width=(wx(p.b)-wx(p.a))+'%'; s.textContent=p.short; ph.appendChild(s); });
+  head.appendChild(ph); g.appendChild(head);
+  var head2=h('div',{class:'g-head'}); head2.innerHTML='<div class="g-label muted small">Semana de obra</div>';
+  var wk=h('div',{class:'g-weeks'});
+  [0,4,8,12,16,20,24,28,32,36,40,44,48,53].forEach(function(w){ var s=h('span'); s.style.left=wx(w)+'%'; s.textContent=w; wk.appendChild(s); });
+  head2.appendChild(wk); g.appendChild(head2);
+  g.appendChild(h('div',{class:'g-group'},'<i class="obra"></i>Programa preliminar de obra · duraciones del programa del 22 de octubre de 2026'));
+  OBRA.forEach(function(o,idx){
+    var row=h('div',{class:'g-row obra-row','data-obra':idx});
+    row.innerHTML='<div class="g-label">'+esc(o.l)+(o.s?' <small>'+esc(o.s)+'</small>':'')+(o.na?' <span class="tag">fuera del alcance</span>':'')+'</div><div class="g-track"></div>';
+    var bar=h('div',{class:'g-bar obra'+(o.out?' out':''),'data-tip':'<b>'+esc(o.l)+(o.s?' · '+esc(o.s):'')+'</b>Semanas '+o.a+' a '+o.b+(o.tip?'<br>'+esc(o.tip):'')});
+    bar.style.left=wx(o.a)+'%'; bar.style.width=Math.max(0.5,wx(o.b)-wx(o.a))+'%';
+    row.querySelector('.g-track').appendChild(bar); g.appendChild(row);
+  });
+  g.appendChild(h('div',{class:'g-group'},'<i class="serv"></i>Servicio SOHERSA BIM · 53 semanas a partir del inicio de obra'));
+  var r1=mkRow('Visita de arranque','Red de control y terreno natural · semana 0'); addDot(r1,0,'arr','<b>Visita de arranque · semana 0</b>Red de control GNSS RTK y vuelo base del terreno natural del polígono, previo al inicio de las terracerías.'); g.appendChild(r1);
+  var r2=mkRow('Visitas de seguimiento con dron','31 visitas · semanales en máxima actividad, quincenales en el resto');
+  DRON.forEach(function(w,i){ addDot(r2,w,'d','<b>Visita '+(i+1)+' de 31 · semana '+w+'</b>'+esc(phaseName(w))+(w===49?'<br>Visita de cierre: vuelo completo del polígono.':'')); });
+  g.appendChild(r2);
+  var r3=mkRow('Escaneo láser terrestre','6 visitas, coincidentes con visitas con dron');
+  Object.keys(LASER).forEach(function(k){ var w=+k; addDot(r3,w,'l','<b>Escaneo láser · semana '+w+'</b>'+esc(LASER_NAME[LASER[k]])); });
+  g.appendChild(r3);
+  var r4=mkRow('Modelado y documentación','Entregas parciales mensuales de revisión');
+  var bar=h('div',{class:'g-bar serv soft','data-tip':'<b>Modelado y documentación</b>En paralelo a las visitas de seguimiento; entregas parciales de revisión en los primeros cinco días hábiles de cada mes.'}); bar.style.left=wx(1)+'%'; bar.style.width=(wx(53)-wx(1))+'%'; r4.querySelector('.g-track').appendChild(bar);
+  MARKS.forEach(function(m,i){ addDot(r4,m,'m','<b>Entrega parcial · mes '+(i+1)+'</b>Modelos RVT e IFC actualizados y reporte de avance del periodo.',false); });
+  g.appendChild(r4);
+  var r5=mkRow('Entrega final','Cuatro semanas después de la visita de cierre'); addDot(r5,53,'fin','<b>Entrega final · semana 53</b>Modelos As-Built RVT e IFC, planos PDF, memoria del proceso de levantamiento y productos de captura por fecha de visita.'); g.appendChild(r5);
+  var ov=h('div',{class:'g-overlay'}); var cur=h('div',{class:'g-cursor',id:'gCursor'}); cur.innerHTML='<span class="lab" id="gCursorLab">Semana 0</span>'; ov.appendChild(cur); g.appendChild(ov);
+  g.appendChild(h('div',{class:'g-key'},'<span><i style="width:18px;height:10px;border-radius:3px;background:var(--navy-tint);border:1px solid var(--line-2)"></i>Ejecución en obra (programa del cliente)</span><span><i style="width:18px;height:10px;border-radius:3px;background:var(--c-captura)"></i>Frente activo en la semana seleccionada</span><span><i style="width:10px;height:10px;border-radius:50%;background:var(--green-deep)"></i>Visita de seguimiento con dron</span><span><i style="width:9px;height:9px;background:var(--c-laser);transform:rotate(45deg)"></i>Escaneo láser terrestre</span><span><i style="width:10px;height:10px;border-radius:50%;background:var(--navy)"></i>Visita de arranque / entrega final</span><span><i style="width:8px;height:8px;border-radius:50%;background:var(--surface);border:2px solid var(--c-captura)"></i>Entrega parcial mensual</span><span><i style="width:18px;height:10px;background:color-mix(in srgb,var(--green) 20%,transparent)"></i>Fase de máxima actividad</span>'));
+  layoutCursor();
+}
+function layoutCursor(){
+  var g=document.getElementById('gantt'); var cur=document.getElementById('gCursor'); if(!cur) return;
+  var tracks=g.querySelectorAll('.g-row .g-track'); if(!tracks.length) return;
+  var gr=g.getBoundingClientRect(), first=g.querySelector('.g-weeks').getBoundingClientRect(), last=tracks[tracks.length-1].getBoundingClientRect(), t0=tracks[0].getBoundingClientRect();
+  var x=t0.left-gr.left+t0.width*wx(state.wk)/100;
+  cur.style.left=x+'px'; cur.style.top=(first.top-gr.top-1)+'px'; cur.style.height=(last.bottom-gr.top-(first.top-gr.top)+5)+'px';
+  var lab=document.getElementById('gCursorLab'); lab.textContent='Semana '+state.wk;
+  var half=lab.offsetWidth/2, maxL=t0.right-gr.left; lab.style.left=(x-half<t0.left-gr.left? (t0.left-gr.left-x+half) : (x+half>maxL ? (maxL-x-half) : 0))+'px';
+}
+function renderPhases(){
+  var box=document.getElementById('phases'); box.innerHTML='';
+  var cur=phaseOf(state.wk);
+  PHASES.forEach(function(p){
+    box.appendChild(h('button',{class:'phase'+(cur.k===p.k?' is-on':''),'data-phase-btn':p.k,type:'button','aria-pressed':cur.k===p.k?'true':'false'},'<i>'+esc(p.i)+'</i><b>'+esc(p.l)+(p.sub?' · '+p.sub:'')+'</b><span>'+esc(p.t)+'</span><em>'+p.tags.map(function(t){return '<span class="tag'+(/escaneo/i.test(t)?' laser':' green')+'">'+esc(t)+'</span>';}).join('')+'</em>'));
+  });
+}
+var PHASE_START={ter:0,ini:6,max:10,int:30,fin:42,cie:49};
+function setWeek(w, opts){
+  w=Math.max(0,Math.min(W_END,Math.round(w))); state.wk=w; opts=opts||{};
+  var sl=document.getElementById('wk'); if(+sl.value!==w) sl.value=w;
+  document.getElementById('wkNum').textContent=w;
+  var p=phaseOf(w); document.getElementById('wkPhase').innerHTML=esc(p.l)+'<small>'+esc(p.i)+(p.sub?' · visitas '+esc(p.sub)+'es':'')+'</small>';
+  var v=document.getElementById('wkVisit'), idx=DRON.indexOf(w), nx=nextVisit(w), html='', cls='wk-visit';
+  if(w===0){ cls+=' on'; html='<b>Visita de arranque y red de control</b><span>Red de control GNSS RTK en puntos acordados con la obra y vuelo base del terreno natural del polígono, antes de las terracerías. Curvas de nivel y superficie 3D en Revit a cinco días hábiles.</span><div class="badges"><span class="tag green">Dron</span><span class="tag green">GNSS RTK</span><span class="tag">Entrega a 5 días hábiles</span></div>'; }
+  else if(idx>=0){
+    cls+=LASER[w]?' laser':' on';
+    html='<b>'+(w===49?'Visita de cierre · 31 de 31':'Visita de seguimiento '+(idx+1)+' de 31')+'</b><span>'+(w===49?'Vuelo completo del polígono al término de pavimentos, banquetas y áreas verdes, con los últimos tramos del sistema pluvial.':'Vuelo fotogramétrico sobre los frentes activos: ortomosaico, nube de puntos y MDS referidos a la red de control; los tramos se liberan al término del vuelo.')+'</span>';
+    if(LASER[w]) html+='<span><b style="font-size:14px">+ Escaneo láser terrestre:</b> '+esc(LASER_NAME[LASER[w]])+'. El tramo permanece descubierto y libre de trabajos durante el escaneo. <button type="button" class="golink" data-goscan="'+LASER[w]+'">Ver la zona en el mapa ↗</button></span>';
+    html+='<div class="badges"><span class="tag green">Dron</span>'+(LASER[w]?'<span class="tag laser">Láser FARO Focus</span><span class="tag">Entrega a 4 días hábiles</span>':'<span class="tag">Entrega a 3 días hábiles</span>')+'</div>';
+  }
+  else if(w===53){ cls+=' on'; html='<b>Entrega final</b><span>Modelos BIM As-Built en RVT e IFC, planos As-Built en PDF, memoria del proceso de levantamiento y conjunto completo de los productos de captura por fecha de visita.</span><div class="badges"><span class="tag green">RVT</span><span class="tag green">IFC</span><span class="tag green">PDF</span></div>'; }
+  else if(w>49){ html='<b>Modelado y documentación final</b><span>Integración de los últimos tramos levantados y preparación de la entrega final en la semana 53.</span>'; }
+  else { html='<b>Sin visita programada</b><span>Siguiente visita: semana '+nx+' · '+esc(phaseName(nx))+'. Las visitas extraordinarias para tramos críticos se atienden con 48 a 72 h de aviso, dentro del número base.</span>'; }
+  v.className=cls; v.innerHTML=html;
+  var act=activeObra(w), fr=document.getElementById('wkFronts'); fr.innerHTML='';
+  if(!act.length){ fr.innerHTML='<span class="none">'+(w>48.6?'Obra concluida: modelado, documentación y entrega final.':'Sin frentes activos.')+'</span>'; }
+  act.forEach(function(o){ fr.appendChild(h('span',{class:(o.na||o.out)?'off':''},esc(o.l)+(o.s?' · '+esc(o.s):'')+(o.na?' · fuera del alcance':''))); });
+  var inScope=act.filter(function(o){return !o.na && !o.out;}).map(function(o){return o.l.toLowerCase();});
+  var cap='';
+  if(w===0) cap='Terreno natural de todo el polígono antes de las terracerías: ortomosaico, nube de puntos, modelo digital de superficie, curvas de nivel y superficie 3D integrada en Revit.';
+  else if(w===49) cap='Pavimentos, banquetas y áreas verdes terminados en todo el polígono, con los últimos tramos del sistema pluvial.';
+  else if(idx>=0) cap='Posición y cota de corona de las instalaciones expuestas en los frentes activos'+(inScope.length?' ('+inScope.join(', ')+')':'')+'; cada tramo se libera para su relleno al término del vuelo.'+(LASER[w]?' Escaneo láser de '+LASER_NAME[LASER[w]].toLowerCase()+', registrado a la red de control.':'');
+  else if(w>49) cap='Sin captura en sitio: el equipo integra la información al modelo y prepara la entrega final.';
+  else cap='Entre visitas, la obra coordina la liberación de tramos con los días de visita: cada tramo permanece descubierto hasta siete días naturales.';
+  document.getElementById('wkCapture').textContent=cap;
+  var g=document.getElementById('gantt');
+  g.querySelectorAll('.obra-row').forEach(function(row){ var o=OBRA[+row.dataset.obra]; var on=o.a<=w && w<=o.b; row.classList.toggle('active',on && !o.na && !o.out); row.querySelector('.g-bar').classList.toggle('is-on',on && !o.out && !o.na); });
+  g.querySelectorAll('.g-dot[data-week]').forEach(function(d){ d.classList.toggle('is-on',+d.dataset.week===w && !d.classList.contains('m')); });
+  g.querySelectorAll('.g-phases span').forEach(function(s){ s.classList.toggle('is-on', s.dataset.phase===p.k); });
+  document.querySelectorAll('[data-phase-btn]').forEach(function(b){ var on=b.dataset.phaseBtn===p.k; b.classList.toggle('is-on',on); b.setAttribute('aria-pressed',on?'true':'false'); });
+  layoutCursor();
+  if(opts.scroll){ var sec=document.getElementById('programa'); sec.scrollIntoView({behavior:'smooth',block:'start'}); }
+}
+var playT=null;
+function stopPlay(){ if(playT){ clearInterval(playT); playT=null; } document.getElementById('wkPlay').textContent='▶ Recorrer el programa'; }
+function play(){ if(playT){ stopPlay(); return; } var w=state.wk>=W_END?0:state.wk; setWeek(w); document.getElementById('wkPlay').textContent='■ Detener'; playT=setInterval(function(){ if(state.wk>=W_END){ stopPlay(); return; } setWeek(state.wk+1); },420); }
 
 /* ---------------- interactions ---------------- */
 var toastT;
 function toast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(function(){t.classList.remove('show');},1800); }
 document.addEventListener('click',function(e){
-  var b=e.target.closest('[data-alt]'); if(b){ setAlt(b.dataset.alt); return; }
   var o=e.target.closest('[data-order]'); if(o){ state.order=o.dataset.order; renderBars(); return; }
-  var d=e.target.closest('[data-disc]'); if(d){ state.disc=d.dataset.disc; renderDisc(); return; }
+  var d=e.target.closest('[data-disc]'); if(d){ state.disc=d.dataset.disc; renderDisc(); if(window.innerWidth<=900){ document.getElementById('detail').scrollIntoView({behavior:'smooth',block:'start'}); } return; }
+  var gw=e.target.closest('[data-goweek]'); if(gw){ stopPlay(); setWeek(+gw.dataset.goweek,{scroll:true}); return; }
+  var gs=e.target.closest('[data-goscan]'); if(gs){ state.scan=gs.dataset.goscan; if(state.scan==='acceso'||state.scan==='central') state.zone=state.scan; if(state.scan==='pci') state.zone='poniente'; renderZones(); renderScans(); document.getElementById('sitio').scrollIntoView({behavior:'smooth',block:'start'}); return; }
   var z=e.target.closest('[data-zone-btn]'); if(z){ state.zone=z.dataset.zoneBtn; renderZones(); return; }
   var zp=e.target.closest('.map .zone[data-zone]'); if(zp){ state.zone=zp.dataset.zone; renderZones(); return; }
+  var sp=e.target.closest('.map .scan[data-scan]'); if(sp){ state.scan=(state.scan===sp.dataset.scan?null:sp.dataset.scan); renderScans(); return; }
+  var sb=e.target.closest('[data-scan-btn]'); if(sb){ state.scan=(state.scan===sb.dataset.scanBtn?null:sb.dataset.scanBtn); renderScans(); return; }
+  var ly=e.target.closest('.layer[data-layer]'); if(ly){ var on=ly.getAttribute('aria-pressed')!=='true'; ly.setAttribute('aria-pressed',on?'true':'false'); document.getElementById('map').classList.toggle('off-'+ly.dataset.layer,!on); return; }
   var t=e.target.closest('[data-dtab]'); if(t){ state.dtab=t.dataset.dtab; renderDeliv(); return; }
+  var dot=e.target.closest('.g-dot[data-week][role="button"]'); if(dot){ stopPlay(); setWeek(+dot.dataset.week); return; }
+  var ps=e.target.closest('.g-phases span[data-phase]'); if(ps){ stopPlay(); setWeek(PHASE_START[ps.dataset.phase]); return; }
+  var pb=e.target.closest('[data-phase-btn]'); if(pb){ stopPlay(); setWeek(PHASE_START[pb.dataset.phaseBtn]); return; }
   var row=e.target.closest('tr.item'); if(row){ row.classList.toggle('open'); row.setAttribute('aria-expanded',row.classList.contains('open')?'true':'false'); return; }
   var c=e.target.closest('.copy'); if(c){ var txt=c.dataset.copy; var done=function(){ c.textContent='copiado'; c.classList.add('done'); setTimeout(function(){c.textContent='copiar';c.classList.remove('done');},1600); };
     try{ navigator.clipboard.writeText(txt).then(done,function(){ fallbackCopy(txt); done(); }); }catch(err){ fallbackCopy(txt); done(); } return; }
 });
 function fallbackCopy(t){ var ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(e){} document.body.removeChild(ta); }
-document.addEventListener('keydown',function(e){ if((e.key==='Enter'||e.key===' ') && e.target.matches('tr.item')){ e.preventDefault(); e.target.click(); } });
+document.addEventListener('keydown',function(e){ if((e.key==='Enter'||e.key===' ') && (e.target.matches('tr.item') || e.target.matches('.g-dot[role="button"]') || e.target.matches('.g-phases span[data-phase]') || e.target.matches('.scan-item[role="button"]'))){ e.preventDefault(); e.target.click(); } });
 document.getElementById('simPlus').addEventListener('click',function(){ if(state.extra<12){state.extra++; renderSim();} });
 document.getElementById('simMinus').addEventListener('click',function(){ if(state.extra>0){state.extra--; renderSim();} });
+document.getElementById('simLPlus').addEventListener('click',function(){ if(state.extraL<12){state.extraL++; renderSim();} });
+document.getElementById('simLMinus').addEventListener('click',function(){ if(state.extraL>0){state.extraL--; renderSim();} });
+document.getElementById('wk').addEventListener('input',function(){ stopPlay(); setWeek(+this.value); });
+document.getElementById('wkNext').addEventListener('click',function(){ stopPlay(); var n=nextVisit(state.wk); if(n!==null) setWeek(n); else setWeek(W_END); });
+document.getElementById('wkPrev').addEventListener('click',function(){ stopPlay(); var p=prevVisit(state.wk); if(p!==null) setWeek(p); });
+document.getElementById('wkPlay').addEventListener('click',play);
+var rzT; window.addEventListener('resize',function(){ clearTimeout(rzT); rzT=setTimeout(layoutCursor,120); });
+document.querySelector('.gantt-scroll').addEventListener('scroll',function(){ /* cursor is positioned inside the scrolled element; nothing to do */ });
+if(document.fonts && document.fonts.ready){ document.fonts.ready.then(function(){ layoutCursor(); }); }
 
 /* tooltip */
 var tip=document.getElementById('tip');
@@ -1404,7 +1676,7 @@ if('IntersectionObserver' in window){
 }
 
 /* boot */
-renderZones(); renderDisc(); renderGantt(); renderCond(); renderAll();
+renderTotals(); renderZones(); renderScans(); renderDisc(); renderFlow(); renderStages(); renderBars(); renderTable(); renderUnit(); renderPay(); renderSim(); renderDeliv(); renderCond(); renderGantt(); renderPhases(); setWeek(state.wk);
 if(location.hash){ var target=document.getElementById(location.hash.slice(1)); if(target) setTimeout(function(){ target.scrollIntoView(); },50); }
 })();
 </script>
