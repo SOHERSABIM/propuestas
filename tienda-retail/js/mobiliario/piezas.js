@@ -321,6 +321,15 @@ export class Constructor {
         const zc = atras === '+z' ? zf + it.d / 2 : zf - it.d / 2;
         it.dib(this, ix, y, zc, fz);
       }
+      if (o.profundo) { // vista desde arriba: filas de artículos individuales en todo el fondo (sin bloque liso)
+        const paso = dMax + 0.004;
+        for (let r = 1; r < (o.filas ?? 5); r++) {
+          const zr = atras === '+z' ? zf + dMax / 2 + r * paso : zf - dMax / 2 - r * paso;
+          if (atras === '-z' ? zr - dMax / 2 < z0 - 0.001 : zr + dMax / 2 > z1 + 0.001) break;
+          for (const { it: it0, x: ix } of items) { const it2 = itemMerc(tipo, rng, esc, hmax * rng.rango(0.82, 1), col, rng.r() < 0.5 ? col2 : contra(col, rng), cap, seg, rng.rango(0.94, 1.05)); it2.dib(this, ix, y, zr, fz); }
+        }
+        x = gx + rng.rango(0.004, 0.03) * dens; g++; continue;
+      }
       // relleno detrás del frente (producto en profundidad)
       const zr0 = atras === '+z' ? zf + dMax : (atras === '-z' ? z0 : zf - dMax - 0.0);
       const zr1 = atras === '+z' ? z1 : (atras === '-z' ? zf - dMax : zf - dMax);

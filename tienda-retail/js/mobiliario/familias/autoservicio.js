@@ -64,9 +64,9 @@ export function gondola_central(b, c) {
   for (const x of xp) if (x === xp[0] || x === xp[xp.length - 1]) b.caja(x, H - 0.05, 0, 0.034, 0.03, D - 0.02, acento);
   b.pieza('remate superior', 3, 'cae', { caida: 0.35 });
   for (let l = 0; l < nL; l++) {
-    const y = y1 + l * paso + 0.022, hm = l === nL - 1 ? Math.min(0.25, H - 0.17 - y) : paso - 0.05, mix = mixDe(l, nL), esc = 1 + Math.max(0, nL * t - 12) * 0.045;
-    b.mercV(-W / 2 + 0.05, W / 2 - 0.05, y, 0.05, zb - 0.02, hm, c, { atras: '-z', mix, esc });
-    b.mercV(-W / 2 + 0.05, W / 2 - 0.05, y, -(zb - 0.02), -0.05, hm, c, { atras: '+z', mix, esc });
+    const y = y1 + l * paso + 0.022, hm = l === nL - 1 ? Math.min(0.25, H - 0.17 - y) : paso - 0.05, mix = mixDe(l, nL), esc = 1 + Math.max(0, nL * t - 12) * 0.05;
+    b.mercV(-W / 2 + 0.05, W / 2 - 0.05, y, 0.05, zb - 0.02, hm, c, { atras: '-z', mix, esc, profundo: l === nL - 1, filas: 3 });
+    b.mercV(-W / 2 + 0.05, W / 2 - 0.05, y, -(zb - 0.02), -0.05, hm, c, { atras: '+z', mix, esc, profundo: l === nL - 1, filas: 3 });
     b.pieza(`mercancía ${l + 1}`, 4, 'crece', { aristas: false });
   }
 }
@@ -108,7 +108,7 @@ export function cabecera_gondola(b, c) {
         const col = PROMO[(i + k * 2) % 4], x = -W / 2 + 0.06 + 0.1 + i * 0.2, yy = y + k * 0.095, zc = (zf - 0.02 + (-D / 2 + 0.06)) / 2;
         b.caja(x, yy, zc, 0.19, 0.09, dd, col, { sin: '-y' }); b.lamZ(x, yy + 0.02, zf - 0.0195, 0.15, 0.05, P.blanco, 1); b.lamZ(x, yy + 0.077, zf - 0.0195, 0.19, 0.013, oscuro(col), 1);
       }
-    } else b.mercV(-W / 2 + 0.05, W / 2 - 0.05, y, -D / 2 + 0.05, zf - 0.01, l === nL - 1 ? Math.min(0.3, H - 0.24 - y) : paso - 0.05, c, { atras: '-z', mix: mixDe(l, nL) });
+    } else b.mercV(-W / 2 + 0.05, W / 2 - 0.05, y, -D / 2 + 0.05, zf - 0.01, l === nL - 1 ? Math.min(0.3, H - 0.24 - y) : paso - 0.05, c, { atras: '-z', mix: mixDe(l, nL), profundo: l >= nL - 2 });
     b.pieza(`mercancía ${l + 1}`, 4, 'crece', { aristas: false });
   }
 }
@@ -150,7 +150,7 @@ export function estanteria_mural(b, c) {
   b.pieza('cornisa', 3, 'cae', { caida: 0.35 });
   for (let l = 0; l < nL; l++) {
     const y = y1 + l * paso + 0.022;
-    b.mercV(-W / 2 + 0.05, W / 2 - 0.05, y, zw + 0.015, zf - 0.015, l === nL - 1 ? H - 0.12 - y : paso - 0.05, c, { atras: '-z', mix: mixDe(l, nL), dens: 1.1 });
+    b.mercV(-W / 2 + 0.05, W / 2 - 0.05, y, zw + 0.015, zf - 0.015, l === nL - 1 ? H - 0.12 - y : paso - 0.05, c, { atras: '-z', mix: mixDe(l, nL), dens: 1.1, profundo: l === nL - 1 });
     b.pieza(`mercancía ${l + 1}`, 4, 'crece', { aristas: false });
   }
 }
