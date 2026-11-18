@@ -11,7 +11,7 @@ const OPAC = 0.34;
 const hex = (n) => '#' + n.toString(16).padStart(6, '0');
 
 /** @param {{escena:any, anim:any}} ctx */
-export function crearZonas({ escena, anim }) {
+export function crearZonas({ escena, anim, reloj, camara, dom }) {
   const raiz = new THREE.Group(); raiz.name = 'zonas'; escena.add(raiz);
   const gPiso = new THREE.Group(); const gTin = new THREE.Group(); const gFus = new THREE.Group(); gPiso.add(gTin, gFus); raiz.add(gPiso);
   const mats = Object.fromEntries(ZONAS.map((z) => [z, mate(PALETA.zona[z], 'arq', { transparent: true, opacity: OPAC, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })]));
@@ -25,11 +25,42 @@ export function crearZonas({ escena, anim }) {
   const elCont = document.createElement('div'); elCont.className = 'rotulo-alternativa'; elCont.style.opacity = '0';
   const cont = new CSS2DObject(elCont); raiz.add(cont);
 
+  // Rótulos: contenedor (lo posiciona CSS2D) + etiqueta interior (la desplaza el anti-encimado).
+  const PRIORIDAD = ['autoservicio', 'refrigerados', 'ropa_hogar', 'mostrador', 'cajas', 'acceso', 'trastienda'];
   for (const z of ZONAS) {
-    const el = document.createElement('div'); el.className = 'rotulo-zona'; el.style.setProperty('--zona', hex(PALETA.zona[z]));
-    el.textContent = NOMBRE_ZONA[z]; el.style.opacity = '0';
-    const o = new CSS2DObject(el); o.visible = false; raiz.add(o); rotulos[z] = o;
+    const el = document.createElement('div'); el.className = 'rotulo-zona-caja'; el.style.opacity = '0';
+    const et = document.createElement('div'); et.className = 'rotulo-zona'; et.style.setProperty('--zona', hex(PALETA.zona[z])); et.textContent = NOMBRE_ZONA[z];
+    el.appendChild(et);
+    const o = new CSS2DObject(el); o.visible = false; o.userData = { fade: 0, vis: 1, dy: 0, et, w: 0, h: 0, op: -1, ty: null }; raiz.add(o); rotulos[z] = o;
   }
+  // Anti-encimado en pantalla: por prioridad, si un rótulo choca con otro ya colocado se sube o baja un renglón;
+  // si aún choca, se desvanece. Todo sobre el reloj (sin saltos).
+  const pv = new THREE.Vector3(); let anchoPrevio = 0;
+  reloj?.onTick((dt) => {
+    const W = dom.clientWidth, H = dom.clientHeight; if (!W) return;
+    if (W !== anchoPrevio) { anchoPrevio = W; for (const z of ZONAS) rotulos[z].userData.w = 0; }
+    const puestos = [];
+    for (const z of PRIORIDAD) {
+      const o = rotulos[z], u = o.userData;
+      let objetivo = 0, dy = 0;
+      if (o.visible && u.fade > 0.01) {
+        if (!u.w) { u.w = u.et.offsetWidth; u.h = u.et.offsetHeight; }
+        pv.copy(o.position).project(camara);
+        const x = (pv.x * 0.5 + 0.5) * W, y = (-pv.y * 0.5 + 0.5) * H;
+        const caja = (d) => ({ x0: x - u.w / 2 - 6, x1: x + u.w / 2 + 6, y0: y - u.h / 2 + d - 4, y1: y + u.h / 2 + d + 4 });
+        const choca = (r) => puestos.some((q) => r.x0 < q.x1 && q.x0 < r.x1 && r.y0 < q.y1 && q.y0 < r.y1);
+        let ok = null;
+        for (const d of [0, -(u.h + 8), u.h + 8, -2 * (u.h + 8)]) { if (!choca(caja(d))) { ok = d; break; } }
+        if (ok != null && pv.z < 1) { objetivo = 1; dy = ok; puestos.push(caja(ok)); }
+      }
+      const k = Math.min(1, dt / 140);
+      u.vis += (objetivo - u.vis) * k; u.dy += (dy - u.dy) * k;
+      const op = Math.round(u.fade * u.vis * 100) / 100;
+      if (op !== u.op) { u.op = op; o.element.style.opacity = String(op); }
+      const ty = Math.round(u.dy);
+      if (ty !== u.ty) { u.ty = ty; u.et.style.transform = `translateY(${ty}px)`; }
+    }
+  }, 90);
 
   function poner(it, r) {
     it.r = r; const w = r.x1 - r.x0, d = r.z1 - r.z0;
@@ -79,7 +110,7 @@ export function crearZonas({ escena, anim }) {
       // rótulo: al centro del rectángulo mayor
       const o = rotulos[z];
       if (dest.length) {
-        const r = mayor(dest), p0 = o.position.clone(), p1 = new THREE.Vector3((r.x0 + r.x1) / 2, 2.6 + (ZONAS.indexOf(z) % 2) * 0.9, (r.z0 + r.z1) / 2);
+        const r = mayor(dest), p0 = o.position.clone(), p1 = new THREE.Vector3((r.x0 + r.x1) / 2, 3.0, (r.z0 + r.z1) / 2);
         if (!o.visible) p0.copy(p1);
         o.visible = true;
         hs.push(anim.tween({ delay, dur, ease, onUpdate: (k) => o.position.lerpVectors(p0, p1, k) }));
@@ -94,7 +125,7 @@ export function crearZonas({ escena, anim }) {
     /** Coloca (sin animar) los tintes del layout, invisibles hasta mostrar(). */
     preparar(layout) {
       enCurso?.finish(); desfusionar();
-      for (const z of ZONAS) { for (const it of pool[z]) gTin.remove(it.obj); pool[z] = []; rotulos[z].visible = false; }
+      for (const z of ZONAS) { for (const it of pool[z]) gTin.remove(it.obj); pool[z] = []; rotulos[z].visible = false; rotulos[z].userData.fade = 0; }
       anim.instantaneamente(() => morfear(layout.zonas || [], { dur: 0 }));
       opacidad(0);
     },
@@ -109,7 +140,7 @@ export function crearZonas({ escena, anim }) {
     rotulos(ver, { cada = 140, delay = 0 } = {}) {
       verRotulos = ver;
       const lista = ZONAS.map((z) => rotulos[z]).filter((o) => o.visible);
-      return anim.all(lista.map((o, i) => { const a = +o.element.style.opacity || 0; return anim.tween({ delay: delay + (ver ? i * cada : 0), dur: 450, ease: 'out', aplicarInicio: false, onUpdate: (e) => { o.element.style.opacity = String(a + ((ver ? 1 : 0) - a) * e); } }); }));
+      return anim.all(lista.map((o, i) => { const a = o.userData.fade; return anim.tween({ delay: delay + (ver ? i * cada : 0), dur: 450, ease: 'out', aplicarInicio: false, onUpdate: (e) => { o.userData.fade = a + ((ver ? 1 : 0) - a) * e; } }); }));
     },
     get visibles() { return verRotulos; },
     /**

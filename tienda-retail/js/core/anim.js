@@ -66,7 +66,7 @@ export function crearAnim(reloj) {
       o.onUpdate?.(k >= 1 ? ease(1) : ease(k), k);
       return k >= 1;
     };
-    h._paso = paso;
+    h._paso = paso; h._info = { dur, delay, t0, pila: (globalThis.__depurarAnim ? new Error().stack : '') };
     h._alCerrar = (completo) => {
       activos.delete(h);
       if (completo) {
@@ -143,6 +143,8 @@ export function crearAnim(reloj) {
   return {
     EASE, tween, wait, all, stagger, seq, instantaneamente, terminarTodo,
     get activos() { return activos.size; },
+    /** Diagnóstico: interpolaciones activas (dur, delay, inicio). */
+    depurar: () => [...activos].map((h) => h._info),
     get instantaneo() { return instantaneo > 0; },
     /** Interpolación lineal y utilidades de mezcla */
     lerp: (a, b, t) => a + (b - a) * t,

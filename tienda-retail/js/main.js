@@ -22,19 +22,37 @@ const esc = crearEscenario(document.getElementById('escena'), { reloj });
 const camara = crearCamara({ camara: esc.camara, dom: esc.renderer.domElement, anim, reloj });
 const cascaron = crearCascaron({ escena: esc.escena, anim });
 const muebles = crearMuebles({ escena: esc.escena, anim });
-const zonas = crearZonas({ escena: esc.escena, anim });
+const zonas = crearZonas({ escena: esc.escena, anim, reloj, camara: esc.camara, dom: esc.renderer.domElement });
 const mep = crearInstalaciones({ escena: esc.escena, anim, reloj });
-const app = crearApp({ params, anim, reloj, cascaron, muebles, zonas, mep, camara, pasos: PASOS, esc });
+/**
+ * Márgenes que ocupa la interfaz visible (px), leídos del DOM: panel lateral izquierdo, barra inferior, rótulo superior.
+ * Solo lectura; si la interfaz cambia de forma, el encuadre se adapta solo.
+ */
+function margenesUI() {
+  const W = window.innerWidth, H = window.innerHeight, m = { arriba: 0, abajo: 0, izq: 0, der: 0 };
+  const capa = document.querySelector('#ui .ui-capa') || document.getElementById('ui');
+  for (const el of capa.querySelectorAll(':scope > *')) {
+    if (el.hidden || getComputedStyle(el).display === 'none' || getComputedStyle(el).visibility === 'hidden') continue;
+    const r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2) continue;
+    if (r.left < W * 0.1 && r.width < W * 0.45 && r.height > H * 0.25) m.izq = Math.max(m.izq, r.right + 16);
+    else if (r.right > W * 0.9 && r.width < W * 0.45 && r.height > H * 0.25) m.der = Math.max(m.der, W - r.left + 16);
+    else if (r.top > H * 0.6 && r.height < H * 0.35) m.abajo = Math.max(m.abajo, H - r.top + 12);
+    else if (r.bottom < H * 0.2 && r.height < H * 0.2) m.arriba = Math.max(m.arriba, r.bottom + 12);
+  }
+  return m;
+}
+const app = crearApp({ params, anim, reloj, cascaron, muebles, zonas, mep, camara, pasos: PASOS, esc, margenesUI });
 crearInterfaz(document.getElementById('ui'), app);
 
 // Encuadre y sol iniciales sobre el local de arranque
 const bb0 = caja(LOCALES[params.local].poligono);
 esc.ajustarSol(bb0);
-anim.instantaneamente(() => camara.encuadrar(bb0, { dur: 0, forzar: true }));
+anim.instantaneamente(() => camara.encuadrar(bb0, { dur: 0, forzar: true, azimut: 36, polar: 52, llenado: 0.9 }));
 app.on('layout', (s) => esc.ajustarSol(caja(LOCALES[s.local].poligono)));
 reloj.iniciar(esc.dibujar);
 
 async function arrancar() {
+  app.precalcularTodo();
   if (params.paso != null) await app.acciones.irAPaso(params.paso, { instantaneo: true });
   if (params.auto) app.acciones.reproducir(true);
   reloj.pedirCuadro();
@@ -57,6 +75,7 @@ window.__tienda = {
   /** Avanza el reloj manual ms milisegundos (?reloj=manual). Devuelve el tiempo de reloj. */
   advance: (ms) => reloj.advance(ms),
   ahora: () => reloj.ahora,
+  animActivas: () => anim.depurar(),
   stats() {
     const r = esc.renderer.info;
     const L = app.layout;

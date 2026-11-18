@@ -1,8 +1,8 @@
 // Mapa de teclas y protecciones del modo de grabación. Frente: interfaz.
 // Todo se resuelve con app.acciones.*; aquí no hay lógica de secuencia ni temporizadores.
 
-/** @param {{app:any, ayuda:any, vista:{ocultar:Function, completa:Function, solo:Function}}} c */
-export function montarTeclado({ app, ayuda, vista }) {
+/** @param {{app:any, ayuda:any, vista:{ocultar:Function, completa:Function, solo:Function}, escalar?:(d:number)=>void}} c */
+export function montarTeclado({ app, ayuda, vista, escalar = () => {} }) {
   const A = app.acciones, E = app.estado;
   const pantallaCompleta = () => {
     const r = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
@@ -20,13 +20,14 @@ export function montarTeclado({ app, ayuda, vista }) {
 
   function manejar(e) {
     if (e.ctrlKey || e.metaKey || e.altKey) {
-      // evita el zoom accidental del navegador (+, −, 0) durante la grabación
+      // Ctrl/Cmd + (+, −, 0) = zoom del navegador: se anula durante la grabación (la escala propia es + y − sin Ctrl)
       if (['+', '-', '=', '_', '0'].includes(e.key)) e.preventDefault();
       return;
     }
     if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName)) return;
     const k = e.key;
     if (k === 'Escape') { if (ayuda.abierta()) { e.preventDefault(); ayuda.cerrar(); } return; }
+    if (k === '+' || k === '=' || k === '-' || k === '_') { e.preventDefault(); escalar(k === '+' || k === '=' ? 0.1 : -0.1); return; } // escala de la interfaz (no zoom del navegador)
     if (k === '?') { e.preventDefault(); if (!e.repeat) ayuda.alternar(); return; }
     if (ayuda.abierta()) { if (k === ' ' || k.startsWith('Arrow')) e.preventDefault(); return; }
     const espacio = k === ' ';

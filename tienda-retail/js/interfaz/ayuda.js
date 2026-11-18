@@ -8,7 +8,7 @@ export const MAPA = [
     ['I  ·  A  ·  R', 'Capas: iluminación · aire · refrigeración']]],
   ['Pantalla', [
     ['H', 'Ocultar toda la interfaz'], ['M', 'Mostrar la interfaz completa'], ['J', 'Solo indicadores y rótulo'],
-    ['T', 'Rótulos sí / no'], ['O', 'Órbita automática'], ['F', 'Pantalla completa'], ['?', 'Esta ayuda'], ['Esc', 'Cerrar la ayuda']]],
+    ['T', 'Rótulos sí / no'], ['+  ·  −', 'Agrandar / reducir la interfaz'], ['O', 'Órbita automática'], ['F', 'Pantalla completa'], ['?', 'Esta ayuda'], ['Esc', 'Cerrar la ayuda']]],
 ];
 
 export function crearAyuda(raiz) {
@@ -17,7 +17,7 @@ export function crearAyuda(raiz) {
   el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'ayuda-t');
   el.innerHTML = `<div class="ayuda-caja"><div class="ayuda-cab"><h2 id="ayuda-t">Mapa de teclas</h2>
     <button class="btn icono" type="button" data-cerrar aria-label="Cerrar ayuda"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13"/></svg></button></div>
-    <div class="ayuda-cols">${MAPA.map(([t, fs]) => `<section><h3>${t}</h3><dl>${fs.map(([k, d]) => `<dt>${k.split('  ·  ').map((x) => `<kbd>${x}</kbd>`).join('')}</dt><dd>${d}</dd>`).join('')}</dl></section>`).join('')}</div></div>`;
+    <div class="ayuda-cols">${MAPA.map(([t, fs]) => `<section><h3>${t}</h3><dl>${fs.map(([k, d]) => `<dt>${k.split('  ·  ').map((x) => `<kbd>${x}</kbd>`).join('')}</dt><dd>${d}</dd>`).join('')}</dl></section>`).join('')}</div><p class="ayuda-pie">Escala inicial por URL: <b>?escala=1.2</b> (base 1080 px de alto). Parámetros: ui=0 · ui=solo · auto=1 · semilla=N · local=A|B|C · paso=N.</p></div>`;
   raiz.appendChild(el);
   let previo = null;
   const abierta = () => !el.hidden;

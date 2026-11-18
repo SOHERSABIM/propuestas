@@ -38,7 +38,6 @@ export function crearInterfaz(raiz, app) {
     <aside class="panel-ind" aria-label="Indicadores" hidden>
       <div class="rejilla-ind"></div>
       <p class="gen-linea"></p>
-      <p class="leyenda">Indicadores y trazos conceptuales</p>
     </aside>
     <nav class="controles" aria-label="Controles de la demo">
       <div class="g-pasos">
@@ -58,6 +57,17 @@ export function crearInterfaz(raiz, app) {
     </nav>
   </div>`;
   const capa = raiz.querySelector('.ui-capa');
+  // ---------- Escala para video: base 1080 px de alto (y 1920 de ancho); "+" "-" y ?escala=1.2 ----------
+  const ESC_MIN = 0.5, ESC_MAX = 2.5;
+  const pe = parseFloat(new URLSearchParams(location.search).get('escala'));
+  let escala = Number.isFinite(pe) && pe > 0 ? Math.min(ESC_MAX, Math.max(ESC_MIN, pe)) : 1;
+  function aplicarEscala() {
+    const base = Math.max(0.45, Math.min(innerHeight / 1080, innerWidth / 1920));
+    raiz.style.setProperty('--s', (base * escala).toFixed(4));
+  }
+  const escalar = (d) => { escala = Math.min(ESC_MAX, Math.max(ESC_MIN, Math.round((escala + d) * 100) / 100)); aplicarEscala(); };
+  window.addEventListener('resize', aplicarEscala);
+  aplicarEscala();
   const $ = (s) => raiz.querySelector(s);
   const btn = (a) => $(`[data-a="${a}"]`);
   const ayuda = crearAyuda(raiz);
@@ -86,9 +96,18 @@ export function crearInterfaz(raiz, app) {
 
   // ---------- Pintado ----------
   let indRef = null, visPrev = false, modoPrev = null;
+  // Calificación del layout vigente y del anterior. Usa estado.calificacionAnterior / esMejor si el núcleo ya los expone;
+  // si no, guarda aquí el total del layout previo (se reinicia al volver al paso 0).
+  let calUlt = null, mejorUlt = false, calId = null, calAct = null, calPrev = null;
+  const total = (c) => (c && typeof c === 'object' ? c.total : c);
+  function seguirCalificacion(s) {
+    if (s.layoutId == null) { calId = calAct = calPrev = null; return; }
+    if (s.layoutId !== calId) { calId = s.layoutId; calPrev = calAct; calAct = total(s.calificacion) ?? null; }
+  }
   const tx = (el, v) => { if (el.textContent !== v) el.textContent = v; };
   function pintar(s) {
     const m = modo();
+    seguirCalificacion(s);
     if (m !== modoPrev) { modoPrev = m; capa.dataset.modo = m; capa.inert = m === 'oculta'; actividadRaton(); }
     raiz.classList.toggle('ocupada', s.ocupado);
     // pasos
@@ -121,9 +140,12 @@ export function crearInterfaz(raiz, app) {
     // indicadores
     const vis = s.paso >= 2 && !!s.indicadores;
     $('.panel-ind').hidden = !vis;
-    if (vis && (!visPrev || s.indicadores !== indRef)) {
+    const cal = { total: total(s.calificacion) ?? calAct, previo: total(s.calificacionAnterior) ?? calPrev,
+      mejor: s.esMejor === true, n: s.candidatos?.evaluados };
+    if (vis && (!visPrev || s.indicadores !== indRef || cal.total !== calUlt || cal.mejor !== mejorUlt)) {
       const animar = /^(siguiente|generar|local)/.test(s.accion || '') && s.ocupado;
-      ind.fijar(s.indicadores, s.indicadoresPrevios, { animar, desdeCero: !visPrev && s.paso === 2 });
+      ind.fijar(s.indicadores, s.indicadoresPrevios, { animar, desdeCero: !visPrev && s.paso === 2, cal });
+      calUlt = cal.total; mejorUlt = cal.mejor;
     }
     visPrev = vis; indRef = s.indicadores;
     const c = s.candidatos, g = $('.gen-linea');
@@ -151,6 +173,6 @@ export function crearInterfaz(raiz, app) {
     else if (d.a === 'pantalla') { const r = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.(); r?.catch?.(() => {}); }
   });
   app.on('estado', pintar);
-  montarTeclado({ app, ayuda, vista });
+  montarTeclado({ app, ayuda, vista, escalar });
   pintar(app.estado);
 }

@@ -10,6 +10,11 @@ import { ZONAS } from '../datos/catalogo.js';
 import { MAT } from '../core/estilo.js';
 import { DEG } from '../core/geom.js';
 import { EASE } from '../core/anim.js';
+import { regionDePoligono } from '../gen/regiones.js';
+import { caja as cajaPoly } from '../core/geom.js';
+
+/** Tiempos del cambio de local (ms): subir en formación, vuelo sobre el local nuevo, bajada. */
+export const TIEMPOS_LOCAL = { subida: 1650, vuelo: 2600, bajada: 1300 };
 
 /** ¿El segmento p→q cruza algún muro interior del layout? */
 function cruzaMuro(p, q, muros) {
@@ -43,23 +48,28 @@ export function crearMuebles({ escena, anim }) {
     for (const o of gFus.children.slice()) { o.geometry.dispose(); gFus.remove(o); }
     for (const o of ocultos) o.visible = true; ocultos = [];
   }
-  /** Fusiona todo lo horneado (MAT.mobVC / MAT.aristaMob) en una malla y unas líneas. */
+  /**
+   * Fusiona en reposo lo horneado de todos los muebles: una malla por material (mobVC, vidrio, …) y unas líneas
+   * por material de aristas. Solo toma mallas de muebles en estado 'horneado' (las piezas sueltas no).
+   */
   function fusionar() {
     desfusionar();
-    const gs = [], ls = [];
+    const mallas = new Map(), lineas = new Map();
     raiz.updateMatrixWorld(true);
     for (const { fx } of porId.values()) {
+      if (fx.estado !== 'horneado') continue;
       fx.grupo.traverse((o) => {
-        if (!o.visible || o === fx.grupo) return;
-        let vis = true; for (let p = o.parent; p && p !== raiz; p = p.parent) if (!p.visible) vis = false;
-        if (!vis) return;
-        if (o.isMesh && o.material === MAT.mobVC) { gs.push(o.geometry.clone().applyMatrix4(o.matrixWorld)); ocultos.push(o); }
-        else if (o.isLineSegments && o.material === MAT.aristaMob && fx.estado === 'horneado') { ls.push(o.geometry.clone().applyMatrix4(o.matrixWorld)); ocultos.push(o); }
+        if (o === fx.grupo || !(o.isMesh || o.isLineSegments)) return;
+        for (let p = o; p && p !== fx.grupo; p = p.parent) if (!p.visible) return;
+        const g = o.geometry, clave = o.material.uuid + '|' + Object.keys(g.attributes).sort().join(',') + '|' + (g.index ? 'i' : 'n');
+        const dest = o.isLineSegments ? lineas : mallas;
+        if (!dest.has(clave)) dest.set(clave, { mat: o.material, gs: [], ro: o.renderOrder });
+        dest.get(clave).gs.push(g.clone().applyMatrix4(o.matrixWorld)); ocultos.push(o);
       });
     }
     for (const o of ocultos) o.visible = false;
-    if (gs.length) { const m = new THREE.Mesh(mergeGeometries(gs), MAT.mobVC); m.castShadow = true; m.receiveShadow = true; gFus.add(m); gs.forEach((g) => g.dispose()); }
-    if (ls.length) { const l = new THREE.LineSegments(mergeGeometries(ls), MAT.aristaMob); l.raycast = () => {}; gFus.add(l); ls.forEach((g) => g.dispose()); }
+    for (const { mat, gs, ro } of mallas.values()) { const m = new THREE.Mesh(mergeGeometries(gs), mat); m.renderOrder = ro; m.castShadow = !mat.transparent; m.receiveShadow = true; gFus.add(m); gs.forEach((g) => g.dispose()); }
+    for (const { mat, gs } of lineas.values()) { const l = new THREE.LineSegments(mergeGeometries(gs), mat); l.raycast = () => {}; gFus.add(l); gs.forEach((g) => g.dispose()); }
   }
   const alTerminar = (h) => h.onDone(() => fusionar());
 
@@ -77,12 +87,13 @@ export function crearMuebles({ escena, anim }) {
      * Arma todos en oleadas por zona (paso 2). Orden de ZONAS; dentro de cada zona, de la fachada al fondo.
      * @param {{oleada?:number, cada?:number, max?:number}} op
      */
-    armar({ oleada = 1250, cada = 55, max = 1100 } = {}) {
+    armar({ oleada = 1250, cada = 55, max = 1100, heroe = null, ritmoHeroe = 2, retardoHeroe = 600, inicio = 0 } = {}) {
       desfusionar();
       const hs = [];
+      if (heroe && porId.has(heroe)) hs.push(porId.get(heroe).fx.armar({ delay: retardoHeroe, ritmo: ritmoHeroe }));
       ZONAS.forEach((z, iz) => {
-        const lista = layout.muebles.filter((m) => m.zona === z).sort((a, b) => b.z - a.z || a.x - b.x);
-        lista.forEach((m, i) => hs.push(porId.get(m.id).fx.armar({ delay: iz * oleada + Math.min(max, i * cada) })));
+        const lista = layout.muebles.filter((m) => m.zona === z && m.id !== heroe).sort((a, b) => b.z - a.z || a.x - b.x);
+        lista.forEach((m, i) => hs.push(porId.get(m.id).fx.armar({ delay: inicio + iz * oleada + Math.min(max, i * cada) })));
       });
       return alTerminar(anim.all(hs));
     },
@@ -95,7 +106,8 @@ export function crearMuebles({ escena, anim }) {
      * @param {{modo?:'layout'|'local', pausa?:number, cada?:number}} op  modo 'local': todos se elevan por encima del
      *   pretil (5.8 m) y esperan `pausa` ms en el aire mientras el cascarón se transforma.
      */
-    transitar(lay, { modo = 'layout', pausa = 0, cada = 28 } = {}) {
+    transitar(lay, op = {}) {
+      const { modo = 'layout', pausa = 0, cada = 28 } = op;
       desfusionar();
       const prev = layout; layout = lay;
       const c = lay.cambios || { movidos: [], quietos: [], nuevos: lay.muebles.map((m) => m.id), retirados: [...porId.keys()] };
@@ -107,8 +119,43 @@ export function crearMuebles({ escena, anim }) {
       const mov = c.movidos.filter((id) => porId.has(id)).sort((a, b) => porId.get(a).spec.x - porId.get(b).spec.x || (a < b ? -1 : 1));
       const t0 = 250;
       let finMov = t0;
+      const TL = TIEMPOS_LOCAL;
+      let formacion = null;
+      if (modo === 'local' && op.localAnterior && op.localNuevo) {
+        const ob = cajaPoly(op.localAnterior.poligono), nb = cajaPoly(op.localNuevo.poligono), reg = regionDePoligono(op.localNuevo.poligono);
+        formacion = (a) => {
+          let x = nb.x0 + ((a.x - ob.x0) / ob.ancho) * nb.ancho, z = nb.z0 + ((a.z - ob.z0) / ob.fondo) * nb.fondo;
+          if (!reg.some((r) => x > r.x0 + 0.5 && x < r.x1 - 0.5 && z > r.z0 + 0.5 && z < r.z1 - 0.5)) {
+            let mejor = [x, z], dMin = Infinity;
+            for (const r of reg) { const px = Math.min(r.x1 - 0.6, Math.max(r.x0 + 0.6, x)), pz = Math.min(r.z1 - 0.6, Math.max(r.z0 + 0.6, z)), d = Math.hypot(px - x, pz - z); if (d < dMin) { dMin = d; mejor = [px, pz]; } }
+            [x, z] = mejor;
+          }
+          return [x, z];
+        };
+      }
       mov.forEach((id, i) => {
         const r = porId.get(id), a = r.spec, b = specs.get(id), fx = r.fx, g = fx.grupo;
+        if (formacion) {
+          // cambio de local: suben escalonados, vuelan en formación (posición relativa conservada) y bajan a su sitio
+          const H = 5.8, f = formacion(a), ini = 150 + Math.min(700, i * cada * 0.8);
+          const iniBaja = TL.subida + TL.vuelo + Math.min(450, i * 6);
+          const q0 = a.rot, q1 = giroCorto(a.rot, b.rot);
+          hs.push(anim.seq([
+            () => anim.wait(ini),
+            () => anim.tween({ dur: 150, ease: 'lin', onUpdate: (k) => { g.position.y = -0.04 * Math.sin(Math.PI * k); g.scale.y = 1 - 0.05 * Math.sin(Math.PI * k); } }),
+            () => anim.tween({ dur: 650, ease: 'out', onUpdate: (k) => { g.position.y = H * k; g.scale.y = 1; } }),
+            () => anim.wait(Math.max(0, TL.subida - ini - 800)),
+            () => anim.tween({ dur: TL.vuelo, ease: 'io', onUpdate: (k) => { g.position.x = a.x + (f[0] - a.x) * k; g.position.z = a.z + (f[1] - a.z) * k; } }),
+            () => anim.wait(iniBaja - TL.subida - TL.vuelo),
+            () => anim.tween({ dur: TL.bajada, ease: 'lin', onUpdate: (k) => {
+              const e = EASE.io(k); g.position.x = f[0] + (b.x - f[0]) * e; g.position.z = f[1] + (b.z - f[1]) * e;
+              g.position.y = H * (1 - EASE.out(k)); g.rotation.y = (q0 + (q1 - q0) * e) * DEG;
+            } }),
+            () => anim.tween({ dur: 220, ease: 'lin', onUpdate: (k) => { g.scale.y = 1 - 0.06 * Math.sin(Math.PI * k); g.scale.x = g.scale.z = 1 + 0.02 * Math.sin(Math.PI * k); } }),
+          ]).onDone(() => { colocar(fx, b); g.scale.set(1, 1, 1); r.spec = b; }));
+          finMov = Math.max(finMov, iniBaja + TL.bajada);
+          return;
+        }
         const muros = [...(prev?.muros || []), ...(lay.muros || [])];
         const alto = modo === 'local' ? 5.8 : cruzaMuro([a.x, a.z], [b.x, b.z], muros) ? 3.5 : Math.min(1.1, 0.5 + Math.hypot(b.x - a.x, b.z - a.z) * 0.05);
         const d = Math.hypot(b.x - a.x, b.z - a.z);
@@ -139,9 +186,9 @@ export function crearMuebles({ escena, anim }) {
       nuevos.forEach((m, i) => { if (porId.has(m.id)) quitar(m.id); const fx = nuevo(m); hs.push(fx.armar({ delay: iniNuevos + Math.min(1200, i * 30) })); });
       return alTerminar(anim.all(hs));
     },
-    fusionar, desfusionar,
+    fusionar, desfusionar, tiemposLocal: TIEMPOS_LOCAL,
     /** Caja 3D (min/max) de cada mueble para elegir con el puntero (ficha). */
-    cajas() { return [...porId.values()].map(({ spec: m }) => { const g = ((Math.round(m.rot / 90) % 4) + 4) % 4, w = g % 2 ? m.fondo : m.ancho, d = g % 2 ? m.ancho : m.fondo; return { spec: m, min: [m.x - w / 2, 0, m.z - d / 2], max: [m.x + w / 2, m.alto, m.z + d / 2] }; }); },
+    cajas() { return [...porId.values()].map(({ spec: m }) => { const g = ((Math.round(m.rot / 90) % 4) + 4) % 4, w = g % 2 ? m.fondo : m.ancho, d = g % 2 ? m.ancho : m.fondo; return { spec: m, min: [m.x - w / 2, 0, m.z - d / 2], max: [m.x + w / 2, m.familia === 'tarima_aparador' ? 2.0 : m.alto, m.z + d / 2] }; }); },
     stats() { return { muebles: porId.size, fusionado: gFus.children.length > 0 }; },
   };
   return api;
