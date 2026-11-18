@@ -34,7 +34,7 @@ export function montarTeclado({ app, ayuda, vista, escalar = () => {} }) {
     const teclaPropia = espacio || k.startsWith('Arrow') || k === 'PageDown' || k === 'PageUp' || k === 'Home' || k === 'End';
     if (teclaPropia) e.preventDefault();          // sin scroll ni activar el botón enfocado con Espacio
     if (e.repeat) return;
-    if (e.shiftKey && /^Digit[1-6]$/.test(e.code)) { e.preventDefault(); A.irAPaso(+e.code.slice(5)); return; }
+    if (e.shiftKey && /^Digit[1-7]$/.test(e.code)) { e.preventDefault(); A.irAPaso(+e.code.slice(5)); return; }
     if (k === 'ArrowRight' || espacio || k === 'PageDown') A.siguiente();
     else if (k === 'ArrowLeft' || k === 'PageUp') A.anterior();
     else if (k === '0') A.reiniciar();

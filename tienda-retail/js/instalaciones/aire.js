@@ -1,79 +1,52 @@
-// Capa de AIRE ACONDICIONADO. Unidades paquete que crecen sobre la cubierta, bajantes, ducto principal y ramales
-// que se extienden, difusores y retornos que aparecen al llegar el ducto, y pulsos de flujo sutiles.
-// 3 llamadas de dibujo: cajas (ductos, unidades, rejillas), ventiladores, pulsos.
+// Capa de AIRE ACONDICIONADO: unidades paquete en azotea, bajantes, ducto principal y ramales hechos de tramos con
+// bridas, tés, codos, reducciones y compuertas; soportería de varilla y perfil; difusores con conexión flexible y
+// rejillas de retorno. Un InstancedMesh por tipo de componente (14 llamadas de dibujo). La aparición sigue la red:
+// primero la soportería, luego tramo por tramo desde la unidad hacia los extremos y al final los terminales.
 import * as THREE from 'three';
-import { EASE } from '../core/anim.js';
-import { PALETA } from '../core/estilo.js';
-import { GEO_CAJA, GEO_FAN, crearLote, poner, ocultar, colorear, marcar, liberar, crearTrayecto, escribirTrayecto, crearPulsos } from './trazo.js';
+import * as G from './geo.js';
+import { crearLote, crearPulsos } from './kit.js';
+import { ventana, alcanceRed } from './tiempos.js';
 
-const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
-const C = { principal: PALETA.capa.aire, ramal: 0x3f9fe2, bajante: 0x2477b4, unidad: 0xcfe4f5, ventilador: 0x1b5f93, difusor: 0x9fd0f2, retorno: 0x1f6fb0, pulso: 0xe3f3ff };
+const COL = { principal: 0x2b8fd6, ramal: 0x4aa3e8, bajante: 0x2477b4, unidad: 0xd4e6f4, ventilador: 0xffffff, difusor: 0xe6f1fa, flex: 0xffffff, retorno: 0x9cc9ee, soporte: 0xffffff, pulso: 0xe3f3ff };
+const GEO = { tramo: G.geoTramo, codo: G.geoCodo, teeR: G.geoTeeR, teeP: G.geoTeeP, reduccion: G.geoReduccion, compuerta: G.geoCompuerta, soporte: G.geoSoporte, difusor: G.geoDifusor, flex: G.geoFlex, retorno: G.geoRetorno, bajante: G.geoBajante, unidad: G.geoUnidad, ventilador: G.geoVentilador };
+const ORDEN = ['soporte', 'tramo', 'teeR', 'teeP', 'codo', 'reduccion', 'compuerta', 'bajante', 'flex', 'difusor', 'retorno', 'unidad', 'ventilador'];
+
+function colorDe(p) {
+  if (p.c != null) return p.c;
+  if (p.t === 'tramo') return p.rol === 'ramal' ? COL.ramal : COL.principal;
+  if (p.t === 'teeR' || p.t === 'teeP') return COL.principal;
+  if (p.t === 'codo' || p.t === 'reduccion' || p.t === 'compuerta') return COL.ramal;
+  return COL[p.t] ?? 0xffffff;
+}
 
 export function crearCapaAire() {
   const grupo = new THREE.Group(); grupo.name = 'capa-aire'; grupo.visible = false;
-  const matLam = new THREE.MeshLambertMaterial({ color: 0xffffff });
+  const matLam = new THREE.MeshLambertMaterial({ color: 0xffffff, vertexColors: true });
   const matBas = new THREE.MeshBasicMaterial({ color: 0xffffff });
-  let cajas = null, fans = null, pulsos = null, plan = null, ultimoP = -1;
-  let tr = [], U = [], R = [], base = {}, nEsp = 0;
+  let lotes = [], pulsos = null, plan = null, pAct = 0, dMax = 1, fan = null;
 
   function construir(p) {
-    liberar(grupo); plan = p; ultimoP = -1; const A = p.aire; nEsp = A.espinas.length;
-    // trayectos: principal (espinas, enlaces y bajantes) y ramales
-    tr = [];
-    A.principal.forEach((t, i) => tr.push({ t: crearTrayecto(t.puntos, t.ancho, t.alto), tipo: t.bajante ? 'bajante' : 'principal', i, v0: 0, v1: 0 }));
-    A.ramales.forEach((t, j) => tr.push({ t: crearTrayecto(t.puntos, t.ancho, t.alto), tipo: 'ramal', j, id: t.id, largo: t.largo }));
-    // ventanas de tiempo (fracción del avance de la capa)
-    const nB = A.ramales.length;
-    for (const o of tr) {
-      if (o.tipo === 'bajante') [o.a, o.b] = [0.08, 0.26];
-      else if (o.tipo === 'principal') [o.a, o.b] = o.i < nEsp ? [0.2, 0.55] : [0.45, 0.62];
-      else [o.a, o.b] = [0.45 + (0.35 * o.j) / Math.max(1, nB - 1), 0.65 + (0.35 * o.j) / Math.max(1, nB - 1)];
+    liberar(); plan = p; const A = p.aire; dMax = A.dMax; pAct = 0;
+    for (const q of A.piezas) {
+      const [t0, dur] = ventana('aire', q.ph, (q.d ?? 0) / dMax, q.k ?? 0); q.t0 = t0; q.dur = dur;
+      q.c = colorDe(q); if (q.t === 'ventilador') q.gira = true;
     }
-    let n = 0; for (const o of tr) { o.base = n; n += o.t.segs.length; }
-    base.unid = n; n += A.unidades.length; base.rej = n; n += A.difusores.length + A.retornos.length;
-    cajas = crearLote(n, GEO_CAJA, matLam);
-    for (const o of tr) for (let s = 0; s < o.t.segs.length; s++) colorear(cajas, o.base + s, C[o.tipo]);
-    A.unidades.forEach((u, i) => colorear(cajas, base.unid + i, C.unidad));
-    A.difusores.forEach((d, i) => colorear(cajas, base.rej + i, C.difusor));
-    A.retornos.forEach((d, i) => colorear(cajas, base.rej + A.difusores.length + i, C.retorno));
-    fans = crearLote(A.unidades.length * 2, GEO_FAN, matLam);
-    for (let i = 0; i < fans.count; i++) colorear(fans, i, C.ventilador);
-    pulsos = crearPulsos(tr.map((o) => ({ t: o.t, dir: 1, color: C.pulso })), { cada: 2.6, tam: 0.15, vel: 1.4, dy: 0.26 }, matBas);
-    U = A.unidades; R = A.ramales;
-    grupo.add(cajas, fans, pulsos.mesh); actualizar(0, true);
+    for (const t of ORDEN) {
+      const pz = A.piezas.filter((q) => q.t === t); if (!pz.length) continue;
+      const lote = crearLote(GEO[t](), matLam, pz); lotes.push(lote); grupo.add(lote.mesh); if (t === 'ventilador') fan = lote;
+    }
+    pulsos = crearPulsos(A.rutas.map((r) => ({ ...r, dir: 1, color: COL.pulso })), { cada: 2.6, tam: 0.15, vel: 1.4, dy: 0.27 }, matBas);
+    grupo.add(pulsos.mesh); actualizar(0, true);
   }
-
-  const avance = (o, p) => EASE.out(clamp((p - o.a) / (o.b - o.a)));
-
-  function actualizar(p, forzar = false) {
-    if (!cajas || (p === ultimoP && !forzar)) return; ultimoP = p;
-    const A = plan.aire;
-    for (const o of tr) escribirTrayecto(cajas, o.base, o.t, avance(o, p));
-    // unidades: crecen desde la cubierta con rebote; sus ventiladores aparecen al final
-    U.forEach((u, i) => {
-      const q = clamp((p - 0.02 * i) / 0.22), e = EASE.back(q) * (q > 0 ? 1 : 0), h = u.alto * e;
-      poner(cajas, base.unid + i, u.p[0], u.p[1] + h / 2, u.p[2], u.ancho, h, u.fondo);
-      const qf = clamp((q - 0.7) / 0.3), ef = EASE.out(qf);
-      for (let k = 0; k < 2; k++) {
-        const o = (k ? 1 : -1) * 0.55, ex = u.eje === 'x' ? o : 0, ez = u.eje === 'x' ? 0 : o;
-        poner(fans, 2 * i + k, u.p[0] + ex, u.p[1] + u.alto + 0.03, u.p[2] + ez, ef, 0.06 * ef, ef);
-      }
-    });
-    // difusores: aparecen cuando el ramal llega a su posición; retornos: cuando llega la espina
-    const nd = A.difusores.length;
-    A.difusores.forEach((d, i) => {
-      const o = tr[A.principal.length + R.findIndex((r) => r.id === d.ramal)], f = clamp((o.t.r * o.t.total - d.d) / 0.5), e = EASE.back(f) * (f > 0 ? 1 : 0);
-      poner(cajas, base.rej + i, d.p[0], d.p[1] - 0.05, d.p[2], 0.6 * e, 0.08 * e, 0.6 * e);
-    });
-    A.retornos.forEach((d, i) => {
-      const o = tr[A.principal.findIndex((t) => t.id === d.espina)], f = clamp((o.t.r * o.t.total - d.d) / 0.5), e = EASE.back(f) * (f > 0 ? 1 : 0);
-      poner(cajas, base.rej + nd + i, d.p[0], d.p[1], d.p[2], (d.eje === 'x' ? 0.9 : 0.5) * e, 0.1 * e, (d.eje === 'x' ? 0.5 : 0.9) * e);
-    });
-    marcar(cajas); marcar(fans);
-  }
+  function liberar() { for (const c of [...grupo.children]) { grupo.remove(c); c.dispose?.(); } lotes = []; pulsos = null; fan = null; }
+  function actualizar(p, forzar = false) { pAct = p; for (const l of lotes) l.actualizar(p, forzar); }
   return {
     grupo, get plan() { return plan; }, construir, actualizar,
-    flujo(ahora) { if (pulsos && grupo.visible) pulsos.actualizar(ahora); },
+    flujo(ahora) {
+      if (!grupo.visible || !plan) return;
+      fan?.girar(ahora * 0.012);
+      pulsos?.actualizar(ahora, alcanceRed('aire', pAct) * dMax);
+    },
     llamadas: () => grupo.children.length,
   };
 }

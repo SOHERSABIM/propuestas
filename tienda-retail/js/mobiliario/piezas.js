@@ -4,6 +4,7 @@
 // Las caras que nadie ve (la inferior, la que da al respaldo) se omiten para ahorrar triángulos.
 import * as THREE from 'three';
 
+
 const _c = new THREE.Color();
 const cacheCol = new Map();
 /** hex sRGB → [r,g,b] lineales (igual que new THREE.Color(hex)). */
@@ -18,6 +19,7 @@ export function mezcla(a, b, t) {
   return ca.lerp(cb, t).getHex();
 }
 
+const claro = (hex, t = 0.5) => mezcla(hex, 0xffffff, t);
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const cruz = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 const norm = (v) => { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; };
@@ -29,6 +31,47 @@ function geoDe(P, N, C) {
   if (C) g.setAttribute('color', new THREE.Float32BufferAttribute(C, 3));
   g.computeBoundingBox();
   return g;
+}
+
+
+/** Un frente de mercancía: devuelve su huella y la función de dibujo (b, x, y base, z centro, fz = lado del frente). */
+function itemMerc(tipo, rng, esc, hmax, col, col2, cap, seg, v) {
+  const lim = (h) => Math.min(hmax, h);
+  if (tipo === 'lata') {
+    const r = 0.033 * esc * rng.rango(0.95, 1.1), h = lim(0.12 * esc * rng.rango(0.9, 1.25));
+    return { w: 2 * r + 0.003, d: 2 * r, h, dib: (b, x, y, z) => { b.pilar(x, y, z, r, h * 0.94, col, seg, { v }); b.cono(x, y + h * 0.94, z, r * 0.9, r * 0.74, h * 0.06, 0xcfd3d7, seg, { sinTapa: false }); } };
+  }
+  if (tipo === 'botella') {
+    const r = 0.03 * esc * rng.rango(0.95, 1.15), h = lim(0.27 * esc * rng.rango(0.8, 1.2)), hb = h * 0.56, hs = h * 0.2, hn = h - hb - hs;
+    const tapa = cap[Math.floor(rng.r() * cap.length)];
+    return { w: 2 * r + 0.004, d: 2 * r, h, dib: (b, x, y, z) => {
+      b.pilar(x, y, z, r, hb, col, seg, { v, sinTapas: true }); b.cono(x, y + hb, z, r, r * 0.4, hs, col, seg, { v, sinTapa: true });
+      b.pilar(x, y + hb + hs, z, r * 0.4, hn, tapa, seg);
+    } };
+  }
+  if (tipo === 'frasco') {
+    const r = 0.04 * esc * rng.rango(0.9, 1.25), h = lim(0.1 * esc * rng.rango(0.9, 1.3));
+    return { w: 2 * r + 0.004, d: 2 * r, h, dib: (b, x, y, z) => { b.pilar(x, y, z, r, h * 0.8, col, seg, { v }); b.pilar(x, y + h * 0.8, z, r * 1.04, h * 0.2, col2, seg); } };
+  }
+  if (tipo === 'bolsa') {
+    const w = 0.13 * esc * rng.rango(0.8, 1.2), h = lim(0.2 * esc * rng.rango(0.8, 1.15)), d = 0.05 * esc;
+    return { w: w + 0.004, d, h, dib: (b, x, y, z, fz) => {
+      b.tronco(x, y, z, w * 0.96, d, w, d * 0.8, h * 0.93, col, { sin: '-y', v }); b.caja(x, y + h * 0.93, z, w * 1.02, h * 0.07, d * 0.5, claro(col), { sin: '-y' });
+      b.lamZ(x, y + h * 0.3, z + fz * (d * 0.5 + 0.001), w * 0.7, h * 0.3, col2, fz);
+    } };
+  }
+  if (tipo === 'carton') {
+    const w = 0.075 * esc, h = lim(0.19 * esc * rng.rango(0.8, 1.1));
+    return { w: w + 0.003, d: w, h, dib: (b, x, y, z, fz) => {
+      b.caja(x, y, z, w, h * 0.8, w, col, { sin: '-y+y', v }); b.tronco(x, y + h * 0.8, z, w, w, w, w * 0.25, h * 0.2, claro(col, 0.35), { sin: '-y' });
+      b.lamZ(x, y + h * 0.25, z + fz * (w / 2 + 0.001), w * 0.8, h * 0.25, col2, fz);
+    } };
+  }
+  // caja (cereal, galletas, detergente)
+  const w = 0.11 * esc * rng.rango(0.7, 1.5), h = lim(0.2 * esc * rng.rango(0.75, 1.2)), d = 0.065 * esc;
+  return { w: w + 0.003, d, h, dib: (b, x, y, z, fz) => {
+    b.caja(x, y, z, w, h, d, col, { sin: '-y', v }); b.lamZ(x, y + h * 0.3, z + fz * (d / 2 + 0.001), w * 0.88, h * 0.32, col2, fz);
+  } };
 }
 
 export class Constructor {
@@ -145,6 +188,34 @@ export class Constructor {
     }
   }
 
+  /** Tronco de cono vertical (base en y0). o.base: dibuja la base; o.sinTapa: sin tapa superior. */
+  cono(cx, y0, cz, r0, r1, h, color, seg = 8, o = {}) {
+    const col = this._col(color, o), y1 = y0 + h, ny = (r0 - r1) / (h || 1), l = Math.hypot(1, ny);
+    for (let i = 0; i < seg; i++) {
+      const t0 = (i / seg) * Math.PI * 2, t1 = ((i + 1) / seg) * Math.PI * 2, c0 = Math.cos(t0), s0 = Math.sin(t0), c1 = Math.cos(t1), s1 = Math.sin(t1);
+      const a0 = [cx + r0 * c0, y0, cz + r0 * s0], a1 = [cx + r0 * c1, y0, cz + r0 * s1], b0 = [cx + r1 * c0, y1, cz + r1 * s0], b1 = [cx + r1 * c1, y1, cz + r1 * s1];
+      const n0 = [c0 / l, ny / l, s0 / l], n1 = [c1 / l, ny / l, s1 / l];
+      this._triH(a0, a1, b1, n0, n1, n1, col); this._triH(a0, b1, b0, n0, n1, n0, col);
+      if (!o.sinTapa && r1 > 0) this._triH([cx, y1, cz], b0, b1, [0, 1, 0], [0, 1, 0], [0, 1, 0], col);
+      if (o.base) this._triH([cx, y0, cz], a0, a1, [0, -1, 0], [0, -1, 0], [0, -1, 0], col);
+    }
+  }
+  /** Lámina plana (2 triángulos) vertical mirando a +z (dir 1) o -z (dir -1); base en y0. */
+  lamZ(cx, y0, cz, w, h, color, dir = 1, o) {
+    const col = this._col(color, o), a = [cx - w / 2, y0, cz], b = [cx + w / 2, y0, cz], c = [cx + w / 2, y0 + h, cz], d = [cx - w / 2, y0 + h, cz];
+    this._quad(a, b, c, d, col, dir < 0);
+  }
+  /** Lámina plana vertical mirando a +x (dir 1) o -x (dir -1); d = largo en z. */
+  lamX(cx, y0, cz, d, h, color, dir = 1, o) {
+    const col = this._col(color, o), a = [cx, y0, cz + d / 2], b = [cx, y0, cz - d / 2], c = [cx, y0 + h, cz - d / 2], e = [cx, y0 + h, cz + d / 2];
+    this._quad(a, b, c, e, col, dir < 0);
+  }
+  /** Lámina plana horizontal mirando hacia arriba (dir 1) o abajo (dir -1). */
+  lamY(cx, y, cz, w, d, color, dir = 1, o) {
+    const col = this._col(color, o), a = [cx - w / 2, y, cz + d / 2], b = [cx + w / 2, y, cz + d / 2], c = [cx + w / 2, y, cz - d / 2], e = [cx - w / 2, y, cz - d / 2];
+    this._quad(a, b, c, e, col, dir < 0);
+  }
+
   /** Paños de vidrio (un quad; el material es de doble cara). */
   vidrioZ(cx, y0, cz, w, h) { this._vq([cx - w / 2, y0, cz], [cx + w / 2, y0, cz], [cx + w / 2, y0 + h, cz], [cx - w / 2, y0 + h, cz]); }
   vidrioX(cx, y0, cz, d, h) { this._vq([cx, y0, cz + d / 2], [cx, y0, cz - d / 2], [cx, y0 + h, cz - d / 2], [cx, y0 + h, cz + d / 2]); }
@@ -191,6 +262,40 @@ export class Constructor {
       const zc = o.atras === '-z' ? z0 + d / 2 : o.atras === '+z' ? z1 - d / 2 : (z0 + z1) / 2;
       this.caja(x + w / 2, y, zc, w, h, d, cols[Math.floor(rng.r() * cols.length)], { sin, v: rng.rango(0.92, 1.05) });
       x += w + rng.rango(0.006, 0.022);
+    }
+  }
+
+  /**
+   * Mercancía variada de una hilera: botellas, latas, frascos, bolsas, cajas y cartones en grupos de frentes,
+   * con bloque de relleno detrás. Misma firma que merc(); o.mix = {tipo: peso}, o.esc = escala, o.dens = ancho extra entre frentes.
+   */
+  mercV(x0, x1, y, z0, z1, hmax, c, o = {}) {
+    const rng = c.rng, cols = rng.barajar(c.paleta.slice()).slice(0, 4), esc = o.esc ?? 1, dens = o.dens ?? 1;
+    const mix = o.mix ?? { bolsa: 3, caja: 3, lata: 3, botella: 2, frasco: 2, carton: 1 };
+    const tipos = Object.keys(mix), atras = o.atras || '', fz = atras === '-z' ? 1 : atras === '+z' ? -1 : 1;
+    const seg = o.seg ?? 6, cap = [0xefefef, 0x33373c, 0xa8aeb5, c.acento];
+    let x = x0 + rng.rango(0, 0.015), g = 0;
+    while (x < x1 - 0.05) {
+      const tipo = rng.elegirPeso(tipos, (t) => mix[t]), col = cols[Math.floor(rng.r() * cols.length)], col2 = cols[Math.floor(rng.r() * cols.length)];
+      const n = rng.entero(2, 4), v = rng.rango(0.94, 1.05); let gx = x, hmaxG = 0, dMax = 0;
+      const items = [];
+      for (let k = 0; k < n; k++) {
+        const it = itemMerc(tipo, rng, esc, hmax, col, col2, cap, seg, v);
+        if (gx + it.w > x1 + 0.005) break;
+        items.push({ it, x: gx + it.w / 2 }); gx += it.w + 0.002 * dens; hmaxG = Math.max(hmaxG, it.h); dMax = Math.max(dMax, it.d);
+      }
+      if (!items.length) break;
+      const dispo = z1 - z0, dz = Math.min(dMax, dispo);
+      const zf = atras === '-z' ? z1 - 0.012 : atras === '+z' ? z0 + 0.012 : (z0 + z1) / 2 + dz / 2;
+      for (const { it, x: ix } of items) {
+        const zc = atras === '+z' ? zf + it.d / 2 : zf - it.d / 2;
+        it.dib(this, ix, y, zc, fz);
+      }
+      // relleno detrás del frente (producto en profundidad)
+      const zr0 = atras === '+z' ? zf + dMax : (atras === '-z' ? z0 : zf - dMax - 0.0);
+      const zr1 = atras === '+z' ? z1 : (atras === '-z' ? zf - dMax : zf - dMax);
+      if (Math.abs(zr1 - zr0) > 0.03) this.cajaMM(x, y, Math.min(zr0, zr1), gx - 0.002, y + hmaxG * 0.88, Math.max(zr0, zr1), col, { sin: '-y' + (atras || ''), v: 0.9 });
+      x = gx + rng.rango(0.004, 0.03) * dens; g++;
     }
   }
 }

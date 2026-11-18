@@ -5,7 +5,7 @@
 //   solas líneas; las piezas con otros materiales se quedan como están. Antes de animar se deshace la fusión.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { crearMueble } from '../mobiliario/index.js';
+import { crearMueble, liberarPlanesSinUso } from '../mobiliario/index.js';
 import { ZONAS } from '../datos/catalogo.js';
 import { MAT } from '../core/estilo.js';
 import { DEG } from '../core/geom.js';
@@ -71,7 +71,9 @@ export function crearMuebles({ escena, anim }) {
     for (const { mat, gs, ro } of mallas.values()) { const m = new THREE.Mesh(mergeGeometries(gs), mat); m.renderOrder = ro; m.castShadow = !mat.transparent; m.receiveShadow = true; gFus.add(m); gs.forEach((g) => g.dispose()); }
     for (const { mat, gs } of lineas.values()) { const l = new THREE.LineSegments(mergeGeometries(gs), mat); l.raycast = () => {}; gFus.add(l); gs.forEach((g) => g.dispose()); }
   }
-  const alTerminar = (h) => h.onDone(() => fusionar());
+  // Al terminar cada transición se liberan en la GPU las geometrías de los planes de mobiliario que ya nadie usa
+  // (antes crecían ~350 geometrías por transición; ver mobiliario/index.js liberarPlanesSinUso).
+  const alTerminar = (h) => h.onDone(() => { liberarPlanesSinUso(); fusionar(); });
 
   const api = {
     raiz, porId,
@@ -82,19 +84,21 @@ export function crearMuebles({ escena, anim }) {
       for (const id of [...porId.keys()]) quitar(id);
       layout = lay;
       for (const m of lay.muebles || []) nuevo(m);
+      liberarPlanesSinUso(); // los planes de los muebles retirados ya no se usan: libera su GPU (ver arriba)
     },
     /**
-     * Arma todos en oleadas por zona (paso 2). Orden de ZONAS; dentro de cada zona, de la fachada al fondo.
-     * @param {{oleada?:number, cada?:number, max?:number}} op
+     * Arma todos en oleadas por zona (paso 2), en vista general. `orden` = zonas en el orden de las oleadas (por
+     * omisión ZONAS); dentro de cada zona, de la fachada al fondo, escalonado `cada` ms con tope `max`.
+     * @param {{orden?:string[], oleada?:number, cada?:number, max?:number, inicio?:number}} op
      */
-    armar({ oleada = 1250, cada = 55, max = 1100, heroe = null, ritmoHeroe = 2, retardoHeroe = 600, inicio = 0 } = {}) {
+    armar({ orden = ZONAS, oleada = 1150, cada = 55, max = 1100, inicio = 0 } = {}) {
       desfusionar();
       const hs = [];
-      if (heroe && porId.has(heroe)) hs.push(porId.get(heroe).fx.armar({ delay: retardoHeroe, ritmo: ritmoHeroe }));
-      ZONAS.forEach((z, iz) => {
-        const lista = layout.muebles.filter((m) => m.zona === z && m.id !== heroe).sort((a, b) => b.z - a.z || a.x - b.x);
-        lista.forEach((m, i) => hs.push(porId.get(m.id).fx.armar({ delay: inicio + iz * oleada + Math.min(max, i * cada) })));
-      });
+      const ola = (z) => { const i = orden.indexOf(z); return i < 0 ? orden.length : i; };
+      for (const z of ZONAS) {
+        const lista = layout.muebles.filter((m) => m.zona === z).sort((a, b) => b.z - a.z || a.x - b.x);
+        lista.forEach((m, i) => hs.push(porId.get(m.id).fx.armar({ delay: inicio + ola(z) * oleada + Math.min(max, i * cada) })));
+      }
       return alTerminar(anim.all(hs));
     },
     /** Desarma todo (en orden inverso por zona). */

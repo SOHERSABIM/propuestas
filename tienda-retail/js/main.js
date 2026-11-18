@@ -31,7 +31,13 @@ const mep = crearInstalaciones({ escena: esc.escena, anim, reloj });
 function margenesUI() {
   const W = window.innerWidth, H = window.innerHeight, m = { arriba: 0, abajo: 0, izq: 0, der: 0 };
   const capa = document.querySelector('#ui .ui-capa') || document.getElementById('ui');
-  for (const el of capa.querySelectorAll(':scope > *')) {
+  // En la vista de grabación (J: solo indicadores y rótulo) la barra de controles se oculta con una transición de
+  // visibilidad: se descarta por modo para no reservarle espacio mientras se desvanece.
+  const solo = capa.dataset?.modo === 'solo';
+  // los contenedores sin caja propia (la cabecera, con hijos absolutos) se miden por sus hijos
+  const elementos = [...capa.querySelectorAll(':scope > *')].flatMap((el) => (el.getBoundingClientRect().height < 2 ? [...el.children] : [el]));
+  for (const el of elementos) {
+    if (solo && el.matches('.controles, .marca, .herramientas')) continue;
     if (el.hidden || getComputedStyle(el).display === 'none' || getComputedStyle(el).visibility === 'hidden') continue;
     const r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2) continue;
     if (r.left < W * 0.1 && r.width < W * 0.45 && r.height > H * 0.25) m.izq = Math.max(m.izq, r.right + 16);
@@ -60,7 +66,7 @@ async function arrancar() {
 
 /** API de depuración para pruebas automáticas. Contrato: docs/design.md §6. */
 window.__tienda = {
-  version: 'fase-b',
+  version: 'fase-c-7pasos',
   ready: arrancar().then(() => true),
   estado: () => JSON.parse(JSON.stringify(app.estado)),
   layout: () => app.layout,
@@ -85,6 +91,9 @@ window.__tienda = {
       indicadores: app.estado.indicadores, calificacion: L?.calificacion ?? null, validacion: L?.validacion ?? null,
       candidatos: L ? { evaluados: L.candidatos.evaluados, validos: L.candidatos.validos } : null,
       muebles: muebles.stats(), cascaron: cascaron.stats(), zonas: zonas.stats(), instalaciones: mep.stats(),
+      // QA: posición y orientación de la cámara (para comprobar que no hay NaN); solo lectura, no afecta lo que se ve
+      encuadre: { margenes: camara.margenes },
+      camara: { pos: esc.camara.position.toArray(), rot: [esc.camara.rotation.x, esc.camara.rotation.y, esc.camara.rotation.z], fov: esc.camara.fov },
       renderer: { calls: r.render.calls, triangles: r.render.triangles, lines: r.render.lines, geometries: r.memory.geometries, textures: r.memory.textures },
     };
   },

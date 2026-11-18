@@ -2,7 +2,7 @@
 export const MAPA = [
   ['Navegación', [
     ['→  ·  Espacio  ·  Re Pág', 'Paso siguiente'], ['←  ·  Av Pág', 'Paso anterior'],
-    ['Mayús + 1 … 6', 'Ir directo al paso'], ['P', 'Reproducir / pausar toda la secuencia'], ['0', 'Reiniciar']]],
+    ['Mayús + 1 … 7', 'Ir directo al paso'], ['P', 'Reproducir / pausar toda la secuencia'], ['0', 'Reiniciar']]],
   ['Contenido', [
     ['G', 'Generar layout'], ['1  ·  2  ·  3', 'Local rectangular · angosto · en esquina'],
     ['I  ·  A  ·  R', 'Capas: iluminación · aire · refrigeración']]],

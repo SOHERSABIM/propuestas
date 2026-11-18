@@ -6,12 +6,12 @@ import { planInstalaciones } from './plan.js';
 import { crearCapaLuz } from './luz.js';
 import { crearCapaAire } from './aire.js';
 import { crearCapaFrio } from './frio.js';
+import { DURACION, SALTO } from './tiempos.js';
 
 /** @typedef {'luz'|'aire'|'frio'} CapaId */
 export const CAPAS = /** @type {const} */ (['luz', 'aire', 'frio']);
-const DUR_TRAZO = { luz: 2500, aire: 3000, frio: 3000 };   // ms por capa
-const SALTO = { luz: 2100, aire: 2600, frio: 0 };           // ms hasta que arranca la siguiente capa
-const DUR_RETRAER = 800;                                    // ms (≈3× más rápido que el trazo)
+// Tiempos (tiempos.js): encadenadas luz 4.6 s · aire 6.6 s · frío 5.6 s; re-trazo de una capa suelta ≤ 3.9 s (en
+// paralelo tras un cambio de layout o local); retraer ≤ 0.9 s en sentido inverso.
 
 /**
  * @param {{escena:any, anim:any, reloj:any}} ctx
@@ -28,12 +28,12 @@ export function crearInstalaciones({ escena, anim, reloj }) {
     est[id].prog = p; capa[id].grupo.visible = p > 0 && !!capa[id].plan; capa[id].actualizar(p); reloj.pedirCuadro();
   }
   /** Lleva el avance de la capa a 0 o 1 con un tween sobre el reloj del proyecto. */
-  function animarA(id, destino, delay = 0) {
+  function animarA(id, destino, delay = 0, rapido = false) {
     const e = est[id]; e.h?.cancel(); e.destino = destino;
     const desde = e.prog, hasta = destino ? 1 : 0;
     if (!capa[id].plan) { e.h = null; return anim.wait(0); }
     if (Math.abs(desde - hasta) < 1e-6) { aplicar(id, hasta); e.h = null; return anim.wait(0); }
-    const dur = destino ? DUR_TRAZO[id] * (1 - desde) : Math.max(250, DUR_RETRAER * desde);
+    const dur = destino ? (rapido ? DURACION.rapida : DURACION.larga)[id] * (1 - desde) : Math.max(250, DURACION.retraer * desde);
     const h = anim.tween({ dur, delay, ease: 'lin', aplicarInicio: false, onUpdate: (k) => aplicar(id, desde + (hasta - desde) * k) });
     e.h = h.activo ? h : null; h.onDone(() => { if (e.h === h) e.h = null; }); return h;
   }
@@ -57,9 +57,10 @@ export function crearInstalaciones({ escena, anim, reloj }) {
      */
     trazar(capas = [...CAPAS]) {
       const lista = CAPAS.filter((c) => capas.includes(c)); const hs = []; let delay = 0;
+      const rapido = lista.length === 1;   // una capa suelta (re-trazo en paralelo o conmutador): variante rápida
       for (const id of lista) {
         if (plan && capa[id].plan !== plan) { est[id].h?.cancel(); capa[id].construir(plan); aplicar(id, 0); }
-        hs.push(animarA(id, true, delay)); delay += SALTO[id];
+        hs.push(animarA(id, true, delay, rapido)); delay += SALTO[id];
       }
       return hs.length ? anim.all(hs) : anim.wait(0);
     },

@@ -29,6 +29,22 @@ import { CONSTRUCTORES } from './familias/index.js';
 const MAT_VIDRIO = mate(PALETA.mob.cristal, 'mob', { transparent: true, opacity: 0.3, depthWrite: false, side: THREE.DoubleSide });
 
 const planes = new Map();
+/**
+ * Planes sin ningún mueble vivo (usos 0) cuyos buffers de GPU aún no se liberan. Los planes quedan en caché (la
+ * geometría en CPU se conserva para reutilizarla), pero sus geometrías subidas a la GPU se liberan con
+ * liberarPlanesSinUso() para que renderer.info.memory.geometries no crezca con cada layout/local nuevo
+ * (cada clave nueva sube ~50 geometrías: piezas, aristas, vidrio y horneados).
+ */
+const planesHuerfanos = new Set();
+/** Libera (dispose) las geometrías de GPU de los planes que ya no usa ningún mueble. Si se vuelven a usar se re-suben solas. */
+export function liberarPlanesSinUso() {
+  for (const plan of planesHuerfanos) {
+    if (plan.usos > 0) continue;
+    for (const p of plan.piezas) { p.geoRel?.dispose(); p.edgesRel?.dispose(); p.vidrioRel?.dispose(); }
+    plan.bake.geo?.dispose(); plan.bake.edges?.dispose(); plan.bake.vidrio?.dispose();
+  }
+  planesHuerfanos.clear();
+}
 const VARIANTES = 3;
 const EASE_MODO = { crece: 'out', cae: 'back', escala: 'back', desliza: 'out', despliega: 'out' };
 
@@ -70,7 +86,7 @@ function planDe(spec, clave) {
   const bake = { geo: un(lista.filter((p) => p.geo).map((p) => p.geo)), edges: un(lista.filter((p) => p.edges).map((p) => p.edges)), vidrio: un(lista.filter((p) => p.vidrio).map((p) => p.vidrio)) };
   const box = new THREE.Box3();
   for (const g of [bake.geo, bake.vidrio]) if (g) { g.computeBoundingBox(); box.union(g.boundingBox); }
-  plan = { piezas: lista, bake, tris, trisVidrio, box, T: Math.min(1500, Math.max(950, 700 + lista.length * 22)) };
+  plan = { usos: 0, piezas: lista, bake, tris, trisVidrio, box, T: Math.min(1500, Math.max(950, 700 + lista.length * 22)) };
   planes.set(clave, plan);
   return plan;
 }
@@ -86,7 +102,7 @@ function claveDe(spec) {
  */
 export function resumenMueble(spec) {
   const clave = claveDe(spec), p = planDe(spec, clave);
-  return { clave, tris: Math.round(p.tris), trisVidrio: Math.round(p.trisVidrio), piezas: p.piezas.length, min: p.box.min.toArray(), max: p.box.max.toArray() };
+  return { clave, tris: Math.round(p.tris), trisVidrio: Math.round(p.trisVidrio), piezas: p.piezas.length, min: p.box.min.toArray(), max: p.box.max.toArray(), porPieza: p.piezas.map((z) => [z.nombre, Math.round((z.geo?.attributes.position.count ?? 0) / 3)]) };
 }
 
 /** Estado de una pieza para un avance v (0 oculta … 1 completa; con rebote puede pasar de 1). */
@@ -110,6 +126,7 @@ function aplicar(pz, v) {
  */
 export function crearMueble(spec, { anim }) {
   const clave = claveDe(spec), plan = planDe(spec, clave);
+  plan.usos++; planesHuerfanos.delete(plan);
   const grupo = new THREE.Group(); grupo.name = spec.id;
   const piezas = plan.piezas.map((p) => {
     const g = new THREE.Group(); g.name = p.nombre; g.position.set(p.pivot[0], p.pivot[1], p.pivot[2]); g.visible = false;
@@ -159,7 +176,10 @@ export function crearMueble(spec, { anim }) {
       for (const pz of piezas) aplicar(pz, 1);
       fx.estado = 'armado';
     },
-    dispose() { cancelar(); grupo.removeFromParent(); },
+    dispose() {
+      cancelar(); grupo.removeFromParent();
+      if (!fx._muerto) { fx._muerto = true; if (--plan.usos <= 0) planesHuerfanos.add(plan); } // la GPU se libera en liberarPlanesSinUso()
+    },
   };
   return fx;
 }

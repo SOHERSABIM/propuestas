@@ -20,6 +20,9 @@ export function crearZonas({ escena, anim, reloj, camara, dom }) {
   const pool = Object.fromEntries(ZONAS.map((z) => [z, []]));
   const rotulos = {};
   let verRotulos = false, nivel = 0, enCurso = null;
+  /** Factor de aparición por zona (paso 2: cada zona se tiñe al llegar su oleada). 1 = normal. */
+  const factor = Object.fromEntries(ZONAS.map((z) => [z, 1]));
+  const todasCompletas = () => ZONAS.every((z) => factor[z] >= 0.999);
 
   // contador del parpadeo (rótulo 3D sobre el local)
   const elCont = document.createElement('div'); elCont.className = 'rotulo-alternativa'; elCont.style.opacity = '0';
@@ -73,6 +76,7 @@ export function crearZonas({ escena, anim, reloj, camara, dom }) {
   function desfusionar() { for (const o of gFus.children.slice()) { o.geometry.dispose(); gFus.remove(o); } gTin.visible = true; }
   function fusionar() {
     desfusionar();
+    if (!todasCompletas()) return; // durante la aparición por zona cada tinte lleva su propia opacidad
     const gs = [];
     for (const z of ZONAS) for (const it of pool[z]) {
       if (!it.obj.visible) continue;
@@ -83,7 +87,12 @@ export function crearZonas({ escena, anim, reloj, camara, dom }) {
     }
     if (gs.length) { const m = new THREE.Mesh(mergeGeometries(gs), matFus); m.renderOrder = 1; m.receiveShadow = true; gFus.add(m); gs.forEach((g) => g.dispose()); gTin.visible = false; }
   }
-  function opacidad(k) { nivel = k; for (const m of [...Object.values(mats), matFus]) { m.userData.opacidadBase = OPAC * k; m.opacity = OPAC * k; } gPiso.visible = k > 0.001; }
+  function opacidad(k) {
+    nivel = k;
+    for (const z of ZONAS) { const m = mats[z], o = OPAC * k * factor[z]; m.userData.opacidadBase = o; m.opacity = o; }
+    matFus.userData.opacidadBase = OPAC * k; matFus.opacity = OPAC * k;
+    gPiso.visible = k > 0.001;
+  }
 
   /**
    * Interpola los tintes hacia una lista de zonas {id, rects}. Los rectángulos se emparejan por orden de tamaño.
@@ -125,7 +134,7 @@ export function crearZonas({ escena, anim, reloj, camara, dom }) {
     /** Coloca (sin animar) los tintes del layout, invisibles hasta mostrar(). */
     preparar(layout) {
       enCurso?.finish(); desfusionar();
-      for (const z of ZONAS) { for (const it of pool[z]) gTin.remove(it.obj); pool[z] = []; rotulos[z].visible = false; rotulos[z].userData.fade = 0; }
+      for (const z of ZONAS) { for (const it of pool[z]) gTin.remove(it.obj); pool[z] = []; rotulos[z].visible = false; rotulos[z].userData.fade = 0; factor[z] = 1; }
       anim.instantaneamente(() => morfear(layout.zonas || [], { dur: 0 }));
       opacidad(0);
     },
@@ -135,6 +144,26 @@ export function crearZonas({ escena, anim, reloj, camara, dom }) {
       return anim.tween({ delay, dur, ease: 'io', onUpdate: (k) => opacidad(a + (b - a) * k) });
     },
     get nivel() { return nivel; },
+    /**
+     * Paso 2: las zonas aparecen una por una, al ritmo de las oleadas de muebles: el tinte de cada zona se
+     * enciende y, poco después, su rótulo. Las zonas que no están en `orden` aparecen con la última.
+     * @param {string[]} orden  zonas en el orden de las oleadas
+     * @param {{inicio?:number, cada?:number, dur?:number, rotulos?:boolean, retardoRotulo?:number}} op
+     */
+    revelar(orden, { inicio = 0, cada = 1150, dur = 800, rotulos: conRotulos = true, retardoRotulo = 550 } = {}) {
+      enCurso?.finish(); desfusionar();
+      const pos = (z) => { const i = orden.indexOf(z); return i < 0 ? orden.length - 1 : i; };
+      for (const z of ZONAS) factor[z] = 0;
+      opacidad(1);
+      const hs = ZONAS.map((z) => anim.tween({ delay: inicio + pos(z) * cada, dur, ease: 'out', onUpdate: (k) => { factor[z] = k; opacidad(nivel); } }));
+      verRotulos = conRotulos;
+      if (conRotulos) for (const z of ZONAS) {
+        const o = rotulos[z]; if (!o.visible) continue;
+        const a = o.userData.fade;
+        hs.push(anim.tween({ delay: inicio + pos(z) * cada + retardoRotulo, dur: 450, ease: 'out', aplicarInicio: false, onUpdate: (e) => { o.userData.fade = a + (1 - a) * e; } }));
+      }
+      return anim.all(hs).onDone(() => { for (const z of ZONAS) factor[z] = 1; opacidad(nivel); fusionar(); });
+    },
     transformar(layout, op) { return morfear(layout.zonas, op); },
     /** Rótulos flotantes de zona: aparecen escalonados. */
     rotulos(ver, { cada = 140, delay = 0 } = {}) {

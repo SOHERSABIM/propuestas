@@ -12,6 +12,8 @@ export function crearCamara({ camara, dom, anim, reloj }) {
   controles.maxPolarAngle = Math.PI / 2 - 0.03;
   controles.minDistance = 4; controles.maxDistance = 220; controles.rotateSpeed = 0.7;
   let manual = false, tween = null, orbita = false, bb = null;
+  /** Centro del modelo encuadrado: la órbita gira cámara y objetivo juntos alrededor de él (el modelo no se sale del área libre). */
+  const pivote = new THREE.Vector3();
   controles.addEventListener('start', () => { manual = true; tween?.cancel(); reloj.pedirCuadro(); });
   controles.addEventListener('change', () => reloj.pedirCuadro());
 
@@ -54,10 +56,17 @@ export function crearCamara({ camara, dom, anim, reloj }) {
    * Calcula posición y objetivo para que la caja (con altura) ocupe `llenado` del área libre, vista con azimut/polar.
    * @param {{x0:number,z0:number,x1:number,z1:number}} c
    */
-  function ajustar(c, { azimut = 38, polar = 52, llenado = 0.78, alto = 5.4, holgura = 0.6 } = {}) {
+  function ajustar(c, { azimut = 38, polar = 52, llenado = 0.78, alto = 5.4, holgura = 0.6, orbital = false } = {}) {
     const W = dom.clientWidth || window.innerWidth, H = dom.clientHeight || window.innerHeight;
     camTmp.fov = camara.fov; camTmp.aspect = W / H; camTmp.near = 0.3; camTmp.far = 2000; camTmp.updateProjectionMatrix();
-    const xs = [c.x0 - holgura, c.x1 + holgura], zs = [c.z0 - holgura, c.z1 + holgura], ys = [-0.3, alto];
+    let xs = [c.x0 - holgura, c.x1 + holgura], zs = [c.z0 - holgura, c.z1 + holgura];
+    if (orbital) {
+      // órbita: se encuadra el prisma cuadrado que contiene al cilindro circunscrito (centro = pivote de la órbita),
+      // así el modelo cabe en el área libre en cualquier azimut mientras gira
+      const cx = (c.x0 + c.x1) / 2, cz = (c.z0 + c.z1) / 2, r = Math.hypot(c.x1 - c.x0, c.z1 - c.z0) / 2 + holgura;
+      xs = [cx - r, cx + r]; zs = [cz - r, cz + r];
+    }
+    const ys = [-0.3, alto];
     let k = 0; for (const x of xs) for (const y of ys) for (const z of zs) esquinas[k++].set(x, y, z);
     // área libre en NDC
     const m = margenes;
@@ -102,6 +111,7 @@ export function crearCamara({ camara, dom, anim, reloj }) {
       if (manual && !op.forzar) return anim.wait(0);
       if (op.forzar) manual = false;
       const { pos, obj } = op.llenado ? ajustar(caja, op) : plano(caja, op);
+      if (op.llenado) pivote.set((caja.x0 + caja.x1) / 2, (op.alto ?? 5.4) * 0.25, (caja.z0 + caja.z1) / 2); else pivote.fromArray(obj);
       tween?.cancel();
       tween = viajeEsferico(pos, obj, op);
       return tween;
@@ -122,15 +132,21 @@ export function crearCamara({ camara, dom, anim, reloj }) {
     /** Márgenes de la interfaz en px {arriba, abajo, izq, der}: el encuadre automático los respeta. */
     set margenes(m) { margenes = { arriba: 0, abajo: 0, izq: 0, der: 0, ...m }; },
     get margenes() { return margenes; },
+    /** Azimut actual (grados, misma convención que los encuadres) de la cámara alrededor del centro del modelo. */
+    azimutActual() { const p = camara.position; return Math.atan2(-(p.x - pivote.x), p.z - pivote.z) / DEG; },
     /** Libera la cámara para que vuelva a obedecer a la coreografía. */
     recuperar() { manual = false; },
   };
-  // Órbita lenta (paso de cierre / tecla O): 6°/s alrededor del objetivo, sobre el reloj.
+  // Órbita lenta (paso de cierre / tecla O): 6°/s, sobre el reloj. Gira cámara y objetivo juntos alrededor del centro
+  // del modelo: el desplazamiento del encuadre (que deja libre el panel de indicadores) se conserva al girar.
   reloj.onTick((dt) => {
     if (!orbita || manual || !bb) return;
-    const t = controles.target, p = camara.position, a = (6 * DEG * dt) / 1000;
-    const dx = p.x - t.x, dz = p.z - t.z, c = Math.cos(a), s = Math.sin(a);
-    p.x = t.x + dx * c - dz * s; p.z = t.z + dx * s + dz * c; camara.lookAt(t);
+    const a = (6 * DEG * dt) / 1000, c = Math.cos(a), s = Math.sin(a);
+    for (const v of [camara.position, controles.target]) {
+      const dx = v.x - pivote.x, dz = v.z - pivote.z;
+      v.x = pivote.x + dx * c - dz * s; v.z = pivote.z + dx * s + dz * c;
+    }
+    camara.lookAt(controles.target);
   }, 50);
   return api;
 }

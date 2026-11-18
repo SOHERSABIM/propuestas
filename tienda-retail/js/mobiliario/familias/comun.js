@@ -30,3 +30,22 @@ export function maniqui(b, x, z, y0, ropa, k = '') {
   b.tronco(x, y0 + 0.93, z, 0.33, 0.215, 0.425, 0.235, 0.5, ropa.top, { sin: '-y' });
   b.pieza(s('camisa'), 4, 'crece', { aristas: false });
 }
+
+/**
+ * Cremallera (columna de ranuras de ajuste de entrepaños): láminas oscuras sobre una cara plana.
+ * cara: '+z'|'-z'|'+x'|'-x'; (x, z) = posición de la columna sobre esa cara (la coordenada normal ya viene en x o z).
+ */
+export function cremallera(b, x, z, y0, y1, cara, { ancho = 0.012, paso = 0.05, alto = 0.022, color = P.metalOscuro } = {}) {
+  const dir = cara[0] === '+' ? 1 : -1;
+  for (let y = y0; y < y1 - alto; y += paso) {
+    if (cara[1] === 'z') b.lamZ(x, y, z + dir * 0.0015, ancho, alto, color, dir);
+    else b.lamX(x + dir * 0.0015, y, z, ancho, alto, color, dir);
+  }
+}
+/** Hilera de rótulos de precio (láminas pequeñas alternadas) sobre un portaprecios a lo largo de x. */
+export function etiquetas(b, x0, x1, y, z, dir, color, color2, paso = 0.14) {
+  let k = 0;
+  for (let x = x0 + paso / 2; x < x1 - 0.03; x += paso, k++) b.lamZ(x, y, z + dir * 0.0015, 0.065, 0.02, k % 3 ? color2 : color, dir);
+}
+/** Patas niveladoras (zapatas): cilindros cortos bajo la base. */
+export function zapatas(b, pts, r = 0.022, h = 0.03, color = P.negro) { for (const [x, z] of pts) b.pilar(x, 0, z, r, h, color, 6); }
