@@ -135,7 +135,6 @@ export function planAire(local, layout, ctx) {
   posU.forEach((q, k) => {
     const e = espinas[q.i], un = unidades[k]; const ry = e.eje === 'x' ? 0 : yawX(0, -1);
     add({ t: 'bancada', ph: 'bancada', k, x: un.p[0], y: Y_AZOTEA, z: un.p[2], ry, sx: 1, sy: 1, sz: 1, d: 0, fr: [0, 0], net: 'aire', caja: cajaC(un.p[0], Y_AZOTEA + H_BANC / 2, un.p[2], un.ancho, H_BANC, un.fondo), ref: un.id, nivel: Y_AZOTEA, bw: DIM_UNIDAD.ancho, bd: DIM_UNIDAD.fondo });
-    add({ t: 'cuello', ph: 'bancada', k, x: un.p[0], y: Y_AZOTEA, z: un.p[2], ry: 0, sx: 1, sy: 1, sz: 1, d: 0, fr: [0, 0], net: 'aire', caja: cajaC(un.p[0], Y_AZOTEA + 0.15, un.p[2], 1.0, 0.3, 1.0), ref: un.id });
     add({ t: 'unidad', ph: 'equipo', k, x: un.p[0], y: Y_AZOTEA + H_BANC, z: un.p[2], ry, sx: 1, sy: 1, sz: 1, d: 0, fr: [0, 0], net: 'aire', caja: cajaC(un.p[0], Y_AZOTEA + H_BANC + DIM_UNIDAD.alto / 2, un.p[2], un.ancho, DIM_UNIDAD.alto, un.fondo), ref: un.id });
     add({ t: 'bajante', ph: 'bajante', k, x: un.p[0], y: Y_AZOTEA, z: un.p[2], ry: 0, sx: 0.6, sy: DROP, sz: 0.6, d: 0, fr: [0, 0], net: 'aire', caja: cajaC(un.p[0], Y_AZOTEA - DROP / 2, un.p[2], 0.6, DROP, 0.6), ref: un.id });
     for (let f = 0; f < 2; f++) {

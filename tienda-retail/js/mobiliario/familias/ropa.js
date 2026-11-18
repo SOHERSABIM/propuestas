@@ -44,7 +44,7 @@ export function rack_cuatro_brazos(b, c) {
   b.pieza('poste', 1, 'crece', { aristas: false });
   const brazos = [[1, 0], [-1, 0], [0, 1], [0, -1]];
   brazos.forEach(([dx, dz], i) => {
-    b.cil(dx ? 'x' : 'z', dx * (0.05 + Lb) / 2, ya, dz * (0.05 + Lb) / 2, 0.011, Lb - 0.05, P.metal, 6); b.esfera(dx * Lb, ya, dz * Lb, 0.017, P.metalOscuro, 6);
+    b.cil(dx ? 'x' : 'z', dx * (0.05 + Lb) / 2, ya, dz * (0.05 + Lb) / 2, 0.011, Lb - 0.05, P.metal, 6); b.esfera(dx * Lb, ya, dz * Lb, 0.012, P.metalOscuro, 6);
     b.barra([0, ya - 0.2, 0], [dx * Lb * 0.6, ya - 0.008, dz * Lb * 0.6], 0.009, P.metal);
     b.pieza(`brazo ${i + 1}`, 2, 'escala', { aristas: false });
   });
@@ -71,7 +71,7 @@ export function rack_recto_doble(b, c) {
     b.cil('x', 0, y, z, 0.012, W - 0.06, P.metal, 6); for (const s of [-1, 1]) b.esfera(s * (W / 2 - 0.03), y, z, 0.017, P.metalOscuro, 6);
     b.pieza(`barra ${nom}`, 2, 'despliega', { aristas: false });
   }
-  const paso = 0.09;
+  const paso = 0.1;
   for (const [y, z, nom, tipos, L] of [[yT, zT, 'superior', ['camisa', 'camisa', 'abrigo', 'vestido', 'blusa'], 0.9], [yB, zB, 'inferior', ['pantalon', 'pantalon', 'blusa', 'camisa', 'vestido', 'abrigo'], 1.0]]) {
     for (let x = -W / 2 + 0.07; x < W / 2 - 0.06; x += paso) prendaVariada(new Marco(b, x, y, z, giroHacia(0, 1), (hw / SEMI) * rng.rango(0.92, 1)), rng, c.paletaRopa, { tipos, L });
     b.pieza(`percheros y ropa ${nom}`, 4, 'crece', { aristas: false, py: 'max' });
@@ -89,6 +89,7 @@ export function mesa_exhibicion(b, c) {
   b.caja(0, yt, 0, W, 0.034, D, P.madera); b.caja(0, yt + 0.034, 0, W - 0.0, 0.006, D - 0.0, claro(P.madera, 0.3), { sin: '-y' });
   b.caja(0, yt - 0.075, D / 2 - 0.07, W - 0.12, 0.075, 0.025, MAD); b.caja(0, yt - 0.075, -D / 2 + 0.07, W - 0.12, 0.075, 0.025, MAD);
   for (const s of [-1, 1]) b.caja(s * (W / 2 - 0.07), yt - 0.075, 0, 0.025, 0.075, D - 0.14, MAD);
+  b.caja(W / 2 - 0.2, yt + 0.04, D / 2 - 0.1, 0.12, 0.012, 0.05, P.oscuro); b.caja(W / 2 - 0.2, yt + 0.05, D / 2 - 0.1, 0.12, 0.1, 0.008, P.blanco, { sin: '-y' }); carta(b, W / 2 - 0.2, yt + 0.115, D / 2 - 0.095, 0.1, 0.03, 0xd9772b);
   b.pieza('cubierta', 2, 'cae');
   const dx = (W - 0.16) / 3, pw = Math.min(0.34, dx - 0.04), pd = Math.min(0.3, (D - 0.14) / 2 - 0.03), y0 = yt + 0.04, tipos = ['camisa', 'camisa', 'jean', 'jersey', 'camisa', 'toalla'];
   for (let ix = 0; ix < 3; ix++) for (let iz = 0; iz < 2; iz++) {
@@ -105,6 +106,10 @@ export function mesa_exhibicion(b, c) {
     }
     b.pieza(`pila ${ix * 2 + iz + 1}`, 4, 'crece', { aristas: false });
   }
+  const ysh = 0.2;
+  b.caja(0, ysh, 0, W - 0.14, 0.022, D - 0.14, claro(MAD, 0.15));
+  for (let k = 0; k < 3; k++) { const x = (k - 1) * ((W - 0.3) / 3); for (let n = 0; n < 4; n++) doblada(b, x + rng.rango(-0.01, 0.01), ysh + 0.022 + n * 0.034, rng.rango(-0.02, 0.02), 0.34, 0.036, 0.28, rng.elegir(c.paletaRopa), { pliegue: n === 3, v: rng.rango(0.97, 1.03) }); }
+  b.pieza('entrepaño bajo con pilas', 3, 'despliega', { aristas: false });
 }
 
 /** Maniquí abstracto de proporción humana (7.5 cabezas), sin rostro, con soporte trasero. */
@@ -115,6 +120,7 @@ function cornisa(b, c, W, D, H, acento, t = 1) {
   for (let i = 0; i < t; i++) {
     const xc = -W / 2 + ((i + 0.5) * W) / t;
     b.caja(xc, H - 0.14, D / 2 + 0.002, 0.14, 0.07, 0.006, claro(acento, 0.75), { sin: '-y' }); b.esfera(xc + 0.2 * (W / t) / 1, H - 0.105, D / 2 + 0.003, 0.012, i % 2 ? 0x7bbf8a : 0xd98f7a, 6);
+    for (let k = 0; k <= i % 4; k++) b.cil('z', xc - 0.045 + k * 0.03, H - 0.105, D / 2 + 0.006, 0.008, 0.004, P.oscuro, 8);
   }
   b.pieza('cornisa', 3, 'cae', { aristas: false });
 }
@@ -198,6 +204,7 @@ export function probador_accesible(b, c) {
   b.caja(0, 0.03, dz + 0.017, dl, 0.2, 0.006, P.metal); b.caja(0, 0.03, dz - 0.017, dl, 0.2, 0.006, P.metal);
   b.caja(0.33, 1.0, dz + 0.017, 0.05, 0.12, 0.006, P.metalOscuro); b.cil('x', 0.31, 1.03, dz + 0.027, 0.007, 0.16, P.metal, 6);
   for (const y of [0.25, 1.1, 1.95]) b.caja(-dl / 2 + 0.01, y, dz, 0.025, 0.1, 0.04, P.metalOscuro);
+  b.caja(0, 1.72, dz + 0.017, 0.14, 0.14, 0.006, 0x2f6fb0); b.cil('z', 0, 1.79, dz + 0.023, 0.034, 0.004, P.blanco, 12); b.caja(0, 1.7, dz + 0.021, 0.07, 0.07 * 0.45, 0.004, P.blanco);
   b.pieza('puerta abatible', 3, 'despliega', { px: 'min' });
   cornisa(b, c, W, D, H, acento, 1);
 }

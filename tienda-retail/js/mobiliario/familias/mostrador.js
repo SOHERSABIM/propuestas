@@ -1,5 +1,5 @@
 // Zona mostrador de servicio: vitrina de cristal, mostrador y estantería de alta densidad (nivel de detalle R1).
-import { P, claro, mezcla, carta, surtido } from './comun-b.js';
+import { P, claro, mezcla, carta, surtido, VIVA } from './comun-b.js';
 
 const LIGERO = 0xe9e3d6;
 const PLASTICO = [0x6f8fb0, 0x9aa7b0, 0xd6bc6a, 0x7a9a86];
@@ -50,7 +50,7 @@ export function vitrina_cristal(b, c) {
     if (k === 0) b.pieza('entrepaño de cristal', 3, 'despliega', { aristas: false });
     else b.pieza(`entrepaño de cristal ${k + 1}`, 3, 'despliega', { aristas: false });
   });
-  const suave = c.paleta.map((q) => mezcla(q, 0xe8e4dc, 0.35)), niveles = [0.42, ...ys.map((y) => y + 0.012)], tipos = ['botella', 'frasco', 'estuche', 'caja', 'bolsa'];
+  const suave = VIVA, niveles = [0.42, ...ys.map((y) => y + 0.012)], tipos = ['botella', 'frasco', 'estuche', 'caja', 'bolsa'];
   niveles.forEach((y, k) => {
     const tope = (k < ys.length ? ys[k] - 0.025 : H - 0.06) - y;
     surtido(b, -W / 2 + 0.06, W / 2 - 0.06, y, -D / 2 + 0.07, D / 2 - 0.1, Math.min(0.17, tope), rng, suave, { wmin: 0.06, escala: 0.85, tipos, filas: 2 });
@@ -62,20 +62,22 @@ export function vitrina_cristal(b, c) {
 /** Mostrador de servicio: zócalo, cuerpo con faldón de listones y marco, cubierta con canto, pasacables y alzada trasera, terminales con pantalla, lector, impresora y exhibidor escalonado. */
 export function mostrador_servicio(b, c) {
   const { ancho: W, fondo: D, alto: H, tramos: t, acento, rng } = c, mod = W / t;
-  b.caja(0, 0.012, -0.03, W - 0.1, 0.068, D - 0.16, P.oscuro); for (let m = 0; m <= t; m++) b.caja(Math.min(W / 2 - 0.06, Math.max(-W / 2 + 0.06, -W / 2 + m * mod)), 0, -0.03, 0.07, 0.012, D - 0.18, P.negro); b.caja(0, 0.075, D / 2 - 0.085, W - 0.1, 0.005, 0.004, P.led, { sin: '-y' });
+  b.caja(0, 0.012, -0.03, W - 0.1, 0.108, D - 0.16, 0x1f2226); for (let m = 0; m <= t; m++) b.caja(Math.min(W / 2 - 0.06, Math.max(-W / 2 + 0.06, -W / 2 + m * mod)), 0, -0.03, 0.07, 0.012, D - 0.18, P.negro); b.caja(0, 0.115, D / 2 - 0.085, W - 0.1, 0.005, 0.004, P.led, { sin: '-y' });
   b.pieza('base', 0, 'despliega');
-  b.caja(0, 0.08, -0.03, W - 0.02, 0.8, D - 0.06, LIGERO);
+  b.caja(0, 0.12, -0.03, W - 0.02, 0.76, D - 0.06, LIGERO);
   b.pieza('cuerpo', 1, 'crece');
   const zf = D / 2 - 0.04;
   for (let m = 0; m < t; m++) {
     const xm = -W / 2 + (m + 0.5) * mod, n = Math.max(10, Math.round((mod - 0.12) / 0.2)), pitch = (mod - 0.12) / n;
-    b.caja(xm, 0.15, zf - 0.016, mod - 0.04, 0.62, 0.004, mezcla(P.madera, P.oscuro, 0.55));
-    for (let k = 0; k < n; k++) b.caja(xm - (mod - 0.12) / 2 + (k + 0.5) * pitch, 0.15, zf, pitch * 0.94, 0.62, 0.03, P.madera, { v: k % 2 ? 0.97 : 1 });
-    b.caja(xm, 0.12, zf, mod - 0.02, 0.03, 0.04, claro(P.madera, 0.2)); b.caja(xm, 0.77, zf, mod - 0.02, 0.02, 0.04, claro(P.madera, 0.2));
-    for (const s of [-1, 1]) b.caja(xm + s * (mod / 2 - 0.05), 0.15, zf, 0.04, 0.62, 0.04, claro(P.madera, 0.2));
+    const MOLD = claro(P.madera, 0.3), PANEL = mezcla(LIGERO, P.madera, 0.3);
+    b.caja(xm, 0.16, zf - 0.016, mod - 0.04, 0.28, 0.004, mezcla(P.madera, P.oscuro, 0.55));
+    for (let k = 0; k < n; k++) b.caja(xm - (mod - 0.12) / 2 + (k + 0.5) * pitch, 0.16, zf, pitch * 0.94, 0.26, 0.03, P.madera, { v: k % 2 ? 0.97 : 1 });
+    b.caja(xm, 0.125, zf, mod - 0.02, 0.035, 0.04, MOLD); b.caja(xm, 0.42, zf + 0.004, mod - 0.02, 0.038, 0.05, MOLD); b.caja(xm, 0.77, zf, mod - 0.02, 0.02, 0.04, MOLD);
+    b.caja(xm, 0.458, zf - 0.005, mod - 0.04, 0.312, 0.03, PANEL); b.caja(xm, 0.5, zf + 0.011, mod - 0.3, 0.23, 0.006, claro(PANEL, 0.18)); b.caja(xm, 0.52, zf + 0.0155, mod - 0.36, 0.19, 0.004, mezcla(PANEL, P.oscuro, 0.12));
+    for (const s of [-1, 1]) b.caja(xm + s * (mod / 2 - 0.05), 0.16, zf, 0.04, 0.61, 0.04, MOLD);
     b.pieza(`faldón ${m + 1}`, 1, 'crece', { aristas: false });
   }
-  b.caja(0, 0.88, 0, W, 0.05, D, claro(P.madera, 0.25)); b.caja(0, 0.88, D / 2 - 0.006, W + 0.004, 0.05, 0.012, claro(P.madera, 0.6)); b.caja(0, 0.79, D / 2 - 0.02, W - 0.04, 0.06, 0.02, acento, { sin: '-y' });
+  b.caja(0, 0.88, 0, W, 0.05, D, 0xcfcac0); b.caja(0, 0.88, D / 2 - 0.006, W + 0.004, 0.05, 0.012, claro(P.madera, 0.6)); b.caja(0, 0.79, D / 2 - 0.02, W - 0.04, 0.06, 0.02, acento, { sin: '-y' });
   for (const s of [-1, 1]) b.caja(s * (W / 2 - 0.006), 0.88, 0, 0.012, 0.05, D, claro(P.madera, 0.6));
   b.caja(0, 0.93, -D / 2 + 0.025, W - 0.04, 0.07, 0.03, claro(P.madera, 0.05));
   for (let m = 0; m < t; m++) for (const dx of [0.3, mod - 0.3]) b.pilar(-W / 2 + m * mod + dx, 0.93, -0.16, 0.032, 0.004, P.oscuro, 10);
@@ -92,10 +94,14 @@ export function mostrador_servicio(b, c) {
   const ex = -W / 2 + 0.55;
   b.caja(ex, 0.93, 0.18, 0.7, 0.025, 0.3, P.maderaOscura); b.caja(ex, 0.955, 0.12, 0.6, 0.035, 0.18, P.maderaOscura); b.caja(ex, 0.93, 0.335, 0.7, 0.012, 0.012, claro(P.maderaOscura, 0.3));
   for (const s of [-1, 1]) b.caja(ex + s * 0.345, 0.955, 0.18, 0.01, 0.025, 0.3, claro(P.maderaOscura, 0.2));
+  const vx = W / 2 - 0.55, vz = 0.2;
+  b.caja(vx, 0.93, vz, 0.46, 0.02, 0.28, 0x1f2226); for (const sx of [-1, 1]) for (const sz of [-1, 1]) b.caja(vx + sx * 0.225, 0.95, vz + sz * 0.135, 0.012, 0.1, 0.012, P.metalOscuro);
+  b.caja(vx, 1.04, vz, 0.46, 0.01, 0.28, P.metalOscuro, { sin: '-y' }); b.vidrioZ(vx, 0.95, vz + 0.14, 0.45, 0.09); b.vidrioZ(vx, 0.95, vz - 0.14, 0.45, 0.09); for (const sx of [-1, 1]) b.vidrioX(vx + sx * 0.23, 0.95, vz, 0.27, 0.09);
   b.pieza('exhibidor frontal', 3, 'cae', { aristas: false });
+  surtido(b, vx - 0.2, vx + 0.2, 0.95, vz - 0.11, vz + 0.11, 0.085, rng, VIVA, { escala: 0.6, tipos: ['frasco', 'estuche', 'botella'], filas: 2 });
   const tp = ['frasco', 'caja', 'estuche', 'bolsa'];
-  surtido(b, ex - 0.3, ex + 0.3, 0.955, 0.03, 0.17, 0.085, rng, c.paleta, { escala: 0.8, tipos: ['frasco', 'caja', 'estuche', 'bolsa', 'botella', 'lata'], filas: 1 });
-  surtido(b, ex - 0.34, ex + 0.34, 0.955, 0.22, 0.33, 0.075, rng, c.paleta, { escala: 0.75, tipos: ['frasco', 'caja', 'estuche', 'botella', 'lata'], filas: 1 });
+  surtido(b, ex - 0.3, ex + 0.3, 0.955, 0.03, 0.17, 0.085, rng, VIVA, { escala: 0.85, tipos: ['frasco', 'caja', 'estuche', 'bolsa', 'botella', 'lata'], filas: 1 });
+  surtido(b, ex - 0.34, ex + 0.34, 0.955, 0.22, 0.33, 0.075, rng, VIVA, { escala: 0.8, tipos: ['frasco', 'caja', 'estuche', 'botella', 'lata'], filas: 1 });
   b.pieza('producto del exhibidor', 4, 'crece', { aristas: false });
 }
 
@@ -123,21 +129,15 @@ export function estanteria_alta_densidad(b, c) {
     b.pieza(`postes ${i + 1}`, 1, 'crece', { aristas: false });
   }
   const ys = Array.from({ length: N }, (_, l) => 0.12 + l * paso), CAJAS = [P.carton, 0xd6b88c, 0xb8956a, 0xe6dcc8, P.blanco];
-  ys.forEach((y, l) => {
-    for (let m = 0; m < t; m++) {
-      const xm = -W / 2 + (m + 0.5) * mod;
+  for (let m = 0; m < t; m++) {
+    const xm = -W / 2 + (m + 0.5) * mod;
+    ys.forEach((y, l) => {
       b.caja(xm, y, 0, mod - 0.06, 0.012, D - 0.06, claro(P.metal, 0.4)); b.caja(xm, y - 0.03, D / 2 - 0.036, mod - 0.06, 0.042, 0.012, claro(P.metal, 0.3)); b.caja(xm, y, -D / 2 + 0.036, mod - 0.06, 0.05, 0.012, claro(P.metal, 0.3));
-    }
-    b.pieza(`entrepaño ${l + 1}`, 3, 'despliega');
-  });
-  ys.forEach((y, l) => {
-    for (let m = 0; m < t; m++) for (const k of [1, 2]) b.caja(-W / 2 + m * mod + (k * mod) / 3, y + 0.012, 0, 0.008, 0.2, D - 0.12, P.metal);
-    b.pieza(`divisores ${l + 1}`, 3, 'crece', { aristas: false });
-  });
-  for (const [l, y] of ys.entries()) for (let m = 0; m < t; m++) {
-    const x = -W / 2 + (m + 0.5) * mod; b.caja(x, y - 0.036, D / 2 - 0.023, 0.2, 0.034, 0.006, P.blanco, { sin: '-y' }); carta(b, x, y - 0.03, D / 2 - 0.0195, 0.17, 0.02, l % 2 ? 0xd6bc6a : 0x7a9a86);
+      for (const k of [1, 2]) b.caja(-W / 2 + m * mod + (k * mod) / 3, y + 0.012, 0, 0.008, 0.2, D - 0.12, mezcla(P.metal, P.oscuro, 0.3));
+      b.caja(xm, y - 0.036, D / 2 - 0.023, 0.2, 0.034, 0.006, P.blanco, { sin: '-y' }); carta(b, xm, y - 0.03, D / 2 - 0.0195, 0.17, 0.02, l % 2 ? 0xd6bc6a : 0x7a9a86);
+    });
+    b.pieza(`entrepaños y divisores módulo ${m + 1}`, 3, 'despliega', { aristas: false });
   }
-  b.pieza('etiquetas de ubicación', 3, 'crece', { aristas: false });
   ys.forEach((y, l) => {
     const hm = Math.min(0.26, l === N - 1 ? H - y - 0.05 : paso - 0.04), yb = y + 0.012;
     for (let m = 0; m < t; m++) {

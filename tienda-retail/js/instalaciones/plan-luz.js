@@ -25,7 +25,7 @@ export function planLuz(local, layout, ctx) {
   const duros = [...ctx.aire.piezas, ...ctx.frio.piezas].filter((p) => p.caja && p.t !== 'unidad' && p.t !== 'ventilador' && p.t !== 'cond').map((p) => p.caja);
   const mueblesAlt = ctx.muebles.map((m) => ({ r: huellaMueble(m), alto: m.alto }));
   /** ¿la columna de la luminaria (huella fp, desde yBajo hasta la losa) choca con algo? */
-  function bloqueada(fp, yBajo, mg = 0.12) {
+  function bloqueada(fp, yBajo, mg = 0.32) {
     const col = { x0: fp.x0 - mg, x1: fp.x1 + mg, y0: yBajo, y1: Y_LOSA, z0: fp.z0 - mg, z1: fp.z1 + mg };
     if (duros.some((c) => cajasChocan(c, col))) return true;
     if (mueblesAlt.some((q) => q.alto > yBajo - 0.05 && solapa(q.r, fp, 0.08))) return true;
@@ -33,7 +33,7 @@ export function planLuz(local, layout, ctx) {
   }
 
   /** @type {any[]} */ const lum = [];
-  function poner(tipo, x, z, rot, zr1, largo, mg = 0.12) {
+  function poner(tipo, x, z, rot, zr1, largo, mg = 0.32) {
     const d = DIM_LUZ[tipo]; largo = largo ?? d.largo;
     const fp = rot === 0 ? rectC(x, z, largo, d.ancho) : rectC(x, z, d.ancho, largo);
     if (!cabe(zr1, fp, 0.02)) return false;
@@ -43,7 +43,7 @@ export function planLuz(local, layout, ctx) {
     if (bloqueada(fp, y - ALTO_CUERPO[tipo] / 2 - (tipo === 'riel' ? 0.2 : 0.03), mg)) return false;
     const sep = tipo === 'riel' ? 0.2 : 0.3;
     if (lum.some((l) => solapa(l.fp, fp, sep))) return false;
-    lum.push({ tipo, x, z, rot, largo, ancho: d.ancho, zona: zr1.id, y, fp });
+    lum.push({ tipo, x, z, rot, largo, ancho: d.ancho, zona: zr1.id, y, fp, mg });
     return true;
   }
 
@@ -112,7 +112,7 @@ export function planLuz(local, layout, ctx) {
       const cand = [];
       for (let x = x0 + 0.4; x <= x1 - 0.4 + 1e-9; x += 0.1) for (let z = z0 + 0.3; z <= z1 - 0.3 + 1e-9; z += 0.1) cand.push([x, z]);
       cand.sort((a, b) => Math.hypot(a[0] - cx, a[1] - cz) - Math.hypot(b[0] - cx, b[1] - cz));
-      if (!cand.some(([x, z]) => poner('panel', x, z, 0, zz) || poner('panel', x, z, 90, zz))) cand.some(([x, z]) => poner('panel', x, z, 0, zz, undefined, 0.03) || poner('panel', x, z, 90, zz, undefined, 0.03));
+      if (!cand.some(([x, z]) => poner('panel', x, z, 0, zz) || poner('panel', x, z, 90, zz))) cand.some(([x, z]) => poner('panel', x, z, 0, zz, undefined, 0.2) || poner('panel', x, z, 90, zz, undefined, 0.2)) || cand.some(([x, z]) => poner('panel', x, z, 0, zz, undefined, 0.03) || poner('panel', x, z, 90, zz, undefined, 0.03));
     }
   }
   // 4) relleno de lineales donde los pasillos no cubren (≥ 2 m a cualquier luminaria existente)
@@ -136,9 +136,22 @@ export function planLuz(local, layout, ctx) {
   // orden de encendido: desde el acceso hacia el fondo
   const [ax, az] = local.acceso.centro;
   lum.sort((a, b) => (Math.hypot(a.x - ax, a.z - az) - Math.hypot(b.x - ax, b.z - az)) || (a.z - b.z) || (a.x - b.x));
+  // densidad mínima (≥ 1 por 16 m²): si el margen de 30 cm a ductos dejó huecos, rellena con separación de 1.5 m
+  {
+    const P = local.poligono; let A = 0; for (let i = 0; i < P.length; i++) { const [x1, z1] = P[i], [x2, z2] = P[(i + 1) % P.length]; A += x1 * z2 - x2 * z1; } A = Math.abs(A) / 2;
+    for (const r of zr.filter((q) => REGLA_LUZ[q.id] && REGLA_LUZ[q.id].tipo === 'lineal')) {
+      if (lum.length >= A / 16 + 2) break;
+      const alongX = r.x1 - r.x0 >= r.z1 - r.z0;
+      for (let x = r.x0 + 0.8; x <= r.x1 - 0.8 && lum.length < A / 16 + 2; x += 0.5) for (let z = r.z0 + 0.4; z <= r.z1 - 0.4 && lum.length < A / 16 + 2; z += 0.5) {
+        if (lum.some((q) => Math.hypot(q.x - x, q.z - z) < 1.5)) continue;
+        poner('lineal', x, z, alongX ? 0 : 90, r);
+      }
+    }
+  }
   const luminarias = lum.map((l, i) => ({
     id: 'lz' + String(i + 1).padStart(3, '0'), tipo: l.tipo, p: [r3(l.x), l.y, r3(l.z)], largo: r3(l.largo), ancho: l.ancho,
     rot: l.rot, zona: l.zona, spots: l.tipo === 'riel' ? Math.max(1, Math.floor(l.largo / 1.0)) : 0,
+    ...(l.mg < 0.3 ? { respaldo: true } : {}),   // cuarto atravesado por un ducto: no cabe a 30 cm
   }));
 
   // ───────── hileras, canalización y piezas ─────────
@@ -223,12 +236,12 @@ export function planLuz(local, layout, ctx) {
         const tCuerpo = l.tipo === 'panel' ? 'carcasaPanel' : 'carcasaLineal';
         add({ t: tCuerpo, ph: 'cuelga', x: lx, y, z: lz, ry: a ? 0 : -Math.PI / 2, sx: l.largo, sy: h, sz: l.ancho, d: dl, fr: [0, 0], net: rid, c: l.tipo === 'riel' ? 0x9a6f12 : 0xe9ecee, caja: cajaC(lx, y, lz, fpW, h, fpD), lum: id, tipoL: l.tipo, yArranque: Y_CANAL - 0.06 });
         if (l.tipo !== 'riel') add({ t: 'lente', ph: 'cuelga', lit: true, x: lx, y: y - h / 2 - 0.004, z: lz, ry: a ? 0 : -Math.PI / 2, sx: l.largo - 0.05, sy: 0.012, sz: l.ancho - 0.05, d: dl, fr: [0, 0], net: rid, caja: cajaC(lx, y - h / 2 - 0.004, lz, fpW, 0.012, fpD), lum: id, yArranque: Y_CANAL - 0.06 });
+        if (l.tipo !== 'riel') add({ t: 'lente', ph: 'cuelga', lit: true, tapa: true, x: lx, y: y + (l.tipo === 'panel' ? h / 2 : h * 0.68) + 0.005, z: lz, ry: a ? 0 : -Math.PI / 2, sx: l.largo - 0.14, sy: 0.012, sz: l.ancho - 0.12, d: dl, fr: [0, 0], net: rid, caja: cajaC(lx, y + (l.tipo === 'panel' ? h / 2 : h * 0.68) + 0.005, lz, fpW, 0.012, fpD), lum: id, yArranque: Y_CANAL - 0.06 });
         for (let s = 0; s < l.spots; s++) {
           const o = ((s + 0.5) * l.largo) / l.spots - l.largo / 2;
           const sx = a ? lx + o : lx, sz = a ? lz : lz + o;
           add({ t: 'spot', ph: 'cuelga', lit: true, x: sx, y: y - h / 2 - 0.02, z: sz, ry: (s % 2 ? 1 : -1) * Math.PI / 2 + (a ? 0 : Math.PI / 2), sx: 1, sy: 1, sz: 1, d: dl, fr: [0, 0], net: rid, caja: cajaC(sx, y - h / 2 - 0.09, sz, 0.12, 0.2, 0.12), lum: id, yArranque: Y_CANAL - 0.06 });
         }
-        add({ t: 'charco', ph: 'luz', lit: true, x: lx, y: 0.03, z: lz, ry: 0, sx: a ? (l.tipo === 'panel' ? 4.4 : l.largo + 3.4) : (l.tipo === 'panel' ? 4.2 : 3.9), sy: 1, sz: a ? (l.tipo === 'panel' ? 4.2 : 3.9) : (l.tipo === 'panel' ? 4.4 : l.largo + 3.4), d: dl, fr: [0, 0], net: rid, lum: id });
       }
     });
   }
@@ -236,10 +249,18 @@ export function planLuz(local, layout, ctx) {
   const canales = piezas.filter((q) => q.run && q.caja);
   for (const cb of piezas.filter((q) => q.cable)) {
     const l = luminarias.find((q) => q.id === cb.lum), a = l.rot === 0;
-    for (let n = 0; n < 12 && canales.some((q) => cajasChocan(q.caja, inflarCaja(cb.caja, 0.02))); n++) {
+    for (let n = 0; n < 40 && canales.some((q) => cajasChocan(q.caja, inflarCaja(cb.caja, 0.02))); n++) {
       const sg = Math.sign((a ? l.p[0] - cb.x : l.p[2] - cb.z)) || 1;
       if (a) cb.x += sg * 0.05; else cb.z += sg * 0.05;
       cb.caja = cajaC(cb.x, (Y_LOSA + (l.p[1] + ALTO_CUERPO[l.tipo] / 2)) / 2, cb.z, 0.03, cb.caja.y1 - cb.caja.y0, 0.03);
+    }
+    // si sigue sobre una canalización paralela: se pasa al otro lado del eje (dentro del ancho de la luminaria)
+    if (canales.some((q) => cajasChocan(q.caja, inflarCaja(cb.caja, 0.02)))) {
+      const eje = a ? l.p[2] : l.p[0], cur = a ? cb.z : cb.x, lat = Math.min(0.12, l.ancho / 2 - 0.02);
+      for (const v of [2 * eje - cur, eje + lat, eje - lat, eje]) {
+        const x = a ? cb.x : v, z = a ? v : cb.z, c = cajaC(x, (cb.caja.y0 + cb.caja.y1) / 2, z, 0.03, cb.caja.y1 - cb.caja.y0, 0.03);
+        if (!canales.some((q) => cajasChocan(q.caja, inflarCaja(c, 0.02)))) { cb.x = x; cb.z = z; cb.caja = c; break; }
+      }
     }
   }
   // fila → circuitos válidos solo con 2 puntos distintos (compatibilidad con el contrato anterior)

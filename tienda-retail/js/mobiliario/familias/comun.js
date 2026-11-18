@@ -65,3 +65,23 @@ export function cesta(b, x, y0, z, w, d, h, { rod = 0.07, color = 0xc3c8cd, rim 
   for (let i = 1; i < nz; i++) for (const s of [-1, 1]) b.caja(x + s * w / 2, y0, z - d / 2 + (i / nz) * d, t, h - 0.008, t, color, { sin: '-y+y' });
   if (fondo) for (let i = 1; i < nx; i++) b.caja(x - w / 2 + (i / nx) * w, y0, z, t, 0.006, d - 0.01, color, { sin: '-y' });
 }
+
+/** Cesta troncocónica de varilla fina: aro superior (mayor), aro inferior (menor), varillas inclinadas y fondo. */
+export function cestaCono(b, x, y0, z, wb, db, wt, dt, h, { rod = 0.09, color = 0xaab0b6, rim = 0xe9edf0, t = 0.007 } = {}) {
+  const rect = (y, ww, dd, tt, col) => {
+    b.caja(x, y, z - dd / 2, ww, tt, tt, col); b.caja(x, y, z + dd / 2, ww, tt, tt, col);
+    b.caja(x - ww / 2, y, z, tt, tt, dd - tt, col); b.caja(x + ww / 2, y, z, tt, tt, dd - tt, col);
+  };
+  rect(y0 + h - 0.006, wt, dt, 0.012, rim); rect(y0, wb, db, 0.008, color);
+  const nx = Math.max(2, Math.round(wt / rod)), nz = Math.max(2, Math.round(dt / rod));
+  for (let i = 0; i <= nx; i++) for (const s of [-1, 1]) { const u = i / nx - 0.5; b.barra([x + u * wb, y0, z + s * db / 2], [x + u * wt, y0 + h - 0.006, z + s * dt / 2], t, color); }
+  for (let i = 1; i < nz; i++) for (const s of [-1, 1]) { const u = i / nz - 0.5; b.barra([x + s * wb / 2, y0, z + u * db], [x + s * wt / 2, y0 + h - 0.006, z + u * dt], t, color); }
+}
+/** Asa en arco (varilla) entre dos puntos a la misma altura, levantándose hasta `alto` sobre ellos, en el plano x (largo en z). */
+export function asaArco(b, x, y, z0, z1, alto, color, t = 0.008, n = 4) {
+  let p = [x, y, z0];
+  for (let i = 1; i <= n; i++) {
+    const u = i / n, q = [x, y + alto * Math.sin(u * Math.PI), z0 + (z1 - z0) * u];
+    b.barra(p, q, t, color); p = q;
+  }
+}

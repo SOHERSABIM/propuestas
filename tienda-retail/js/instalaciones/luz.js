@@ -32,7 +32,7 @@ export function crearCapaLuz() {
     liberar(); plan = p; const L = p.luz; dMax = L.dMax;
     for (const q of L.piezas) {
       const [t0, dur] = ventana('luz', q.ph, (q.d ?? 0) / dMax); q.t0 = t0; q.dur = dur;
-      if (q.lit) { const [l0, ld] = ventana('luz', 'luz', (q.d ?? 0) / dMax); q.lit0 = l0; q.litd = ld; q.colOn = q.t === 'lente' ? 0xfff3cf : 0xffe3a0; q.colOff = q.t === 'lente' ? 0x7b8188 : 0xb4b8bd; q.c = q.colOff; }
+      if (q.lit) { const [l0, ld] = ventana('luz', 'luz', (q.d ?? 0) / dMax); q.lit0 = l0; q.litd = ld; q.colOn = q.tapa ? 0xffc95c : q.t === 'lente' ? 0xfff3cf : 0xffe3a0; q.colOff = q.tapa ? 0xc9ccd0 : q.t === 'lente' ? 0x7b8188 : 0xb4b8bd; q.c = q.colOff; }
       if ((q.t === 'carcasaLineal' && q.tipoL !== 'riel') || q.t === 'carcasaPanel') { const [l0, ld] = ventana('luz', 'luz', (q.d ?? 0) / dMax); q.lit = true; q.lit0 = l0; q.litd = ld; q.colOff = 0xe9ecee; q.colOn = 0xffe2a0; q.c = q.colOff; }  // la carcasa se tiñe cálida al encender: legible desde arriba
       if (q.t === 'charco') q.c = 0xffffff;
       else if (q.t === 'carcasaLineal' && q.tipoL === 'riel') q.c = 0xb98a22;

@@ -91,7 +91,11 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
     // planes de piezas de mobiliario de los layouts del guion (base y mejor de cada local): crear un mueble por
     // primera vez cuesta hasta ~30 ms; así ningún cuadro de la demo carga ese trabajo
     const specs = [];
-    for (const loc of IDS_LOCALES) for (const modo of ['base', 'mejor']) specs.push(...componerLayout(evaluacion(loc, params.semilla), { modo, anterior: null, vistos: [] }).muebles);
+    for (const loc of IDS_LOCALES) for (const modo of ['base', 'mejor']) {
+      const l = componerLayout(evaluacion(loc, params.semilla), { modo, anterior: null, vistos: [] });
+      specs.push(...l.muebles);
+      if (modo === 'mejor' && loc !== params.local) planInstalaciones(LOCALES[loc], l); // primera llamada por local (la más lenta)
+    }
     muebles.precalentar(specs);
   }
   let layoutInicial = null;
@@ -150,11 +154,16 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
     const q = ps.slice().sort((a, b) => lar(b) - lar(a) || (a.id < b.id ? -1 : 1))[0];
     let [a, b] = q.puntos; if (a[1] < b[1]) [a, b] = [b, a]; // de la calle hacia el fondo
     const L = lar(q), u = [(b[0] - a[0]) / L, (b[1] - a[1]) / L];
+    // la trayectoria va 0.4 m hacia la góndola izquierda: así la cara izquierda del pasillo se ve más al centro y
+    // sale de debajo del panel de indicadores (a la izquierda); la derecha tiene pantalla libre
+    const lat = [u[1] * 0.4, -u[0] * 0.4];
+    a = [a[0] + lat[0], a[1] + lat[1]];
     const p0 = [a[0] - u[0] * 2.6, 2.15, a[1] - u[1] * 2.6], p1 = [a[0] + u[0] * L * 0.5, 2.0, a[1] + u[1] * L * 0.5];
     // punto de entrada y salida: afuera del local sobre el eje del pasillo (se entra y se sale por la fachada o por
     // un muro cortado, nunca atravesando la cubierta)
     const bb = cajaLocal(), dBorde = u[1] < -0.5 ? bb.z1 - a[1] : u[1] > 0.5 ? a[1] - bb.z0 : u[0] > 0.5 ? a[0] - bb.x0 : bb.x1 - a[0];
-    const fuera = dBorde + 6, pm = [a[0] - u[0] * fuera, 4.2, a[1] - u[1] * fuera], pm2 = [a[0] - u[0] * (fuera + 2), 6.5, a[1] - u[1] * (fuera + 2)];
+    // entrada y salida a la altura del recorrido: la fachada se corta por completo mientras la cámara pasa
+    const fuera = dBorde + 6, pm = [a[0] - u[0] * fuera, 2.4, a[1] - u[1] * fuera], pm2 = [a[0] - u[0] * (fuera + 3), 2.6, a[1] - u[1] * (fuera + 3)];
     return { p0, t0: [p0[0] + u[0] * 7, 1.05, p0[2] + u[1] * 7], p1, t1: [p1[0] + u[0] * 7, 1.0, p1[2] + u[1] * 7], pm, pm2, tm: [a[0] + u[0] * 4, 1.2, a[1] + u[1] * 4] };
   }
   /** Tras un cambio de layout o de local: cubierta y capas que estaban visibles vuelven (re-trazo en paralelo). */
@@ -304,13 +313,13 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
         const pasos = [() => anim.all([zonas.rotulos(false), ops.atenuar({ arq: 1, mob: 1 }, 700), zonas.mostrar(true, { nivel: 0.35, dur: 700 })])];
         if (r) pasos.push(
           // se acerca por fuera hasta el eje del pasillo, entra por la fachada, recorre y sale por donde entró
-          () => anim.all([camara.viajar(r.pm, r.tm, { dur: 3000, ease: 'io' }), camara.desplazar(1, { dur: 2400, delay: 600 })]),
+          () => anim.all([camara.viajar(r.pm, r.tm, { dur: 3000, ease: 'io' }), camara.desplazar(1, { dur: 2400, delay: 600 }), cascaron.cortarTodo(true, { dur: 700, delay: 1200 })]),
           () => camara.mirar(r.p0, r.t0, { dur: 2200, ease: 'io' }),
           () => camara.mirar(r.p1, r.t1, { dur: 4200, ease: 'sine' }),
           () => camara.mirar(r.pm2, r.t1, { dur: 2600, ease: 'io' }),
         );
         pasos.push(
-          () => anim.all([ops.camara('cierre', { dur: 3200 }), camara.desplazar(0, { dur: 2000 }),
+          () => anim.all([ops.camara('cierre', { dur: 3200 }), camara.desplazar(0, { dur: 2000 }), cascaron.cortarTodo(false, { dur: 900, delay: 1400 }),
             ops.atenuar(capas ? { arq: 0.7, mob: 1 } : { arq: 1, mob: 1 }, 1200, ['arq', 'mob']), zonas.mostrar(true, { nivel: capas ? 0.5 : 1, dur: 1200 })]),
           () => { ops.orbita(true); return anim.wait(0); },
         );

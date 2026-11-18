@@ -20,6 +20,8 @@ const MAT_PUERTA = mate(PALETA.arq.puerta, 'arq');
 const MAT_CORTE = mate(PALETA.arq.muroExt, 'arq', { transparent: true, opacity: 1, depthWrite: false });
 const OPAC_CORTE = 0.16;
 const CORTABLES = new Set(['muro', 'dintel', 'puerta']);
+/** Corte total (recorrido del cierre): también la fachada, y sin aristas, para que nada cruce la lente. */
+const CORTABLES_TOTAL = new Set(['muro', 'dintel', 'puerta', 'cristal', 'parteluz', 'trav', 'peto', 'zocalo', 'marco']);
 
 /** Desplaza un polígono hacia afuera una distancia d. */
 function desplazar(poly, d) {
@@ -127,24 +129,25 @@ export function crearCascaron({ escena, anim, reloj, camara }) {
   const rehacer = (lista = lotes.items) => { firma = NaN; lotes.reconstruir(lista); };
 
   // ---------- Corte dinámico de muros ----------
-  let corte = 0, firma = NaN, tCorte = null;
+  let corte = 0, firma = NaN, tCorte = null, total = 0, tTotal = null;
   function nivelArq() { const b = MAT.muroExt.userData.opacidadBase || 1; return MAT.muroExt.opacity / b; }
   function opacidadCorte() {
-    const base = 1 - (1 - OPAC_CORTE) * corte;
+    const base = (1 - (1 - OPAC_CORTE) * corte) * (1 - total);
     MAT_CORTE.userData.opacidadBase = base; MAT_CORTE.opacity = base * nivelArq();
   }
   /** Revisa qué muros quedan entre la cámara y el interior; si cambió el conjunto, reasigna materiales. */
   function revisarCorte() {
     const lista = lotes.items; if (!lista.length || !camara) return;
     const px = camara.position.x, pz = camara.position.z;
-    let h = 7;
+    const tipos = total > 0 ? CORTABLES_TOTAL : CORTABLES;
+    let h = total > 0 ? 11 : 7;
     for (const v of lista) {
       const n = v.e.n;
-      const c = corte > 0 && n && CORTABLES.has(v.e.tipo) && n[0] * (px - v.s.x) + n[1] * (pz - v.s.z) > 0.5;
+      const c = (corte > 0 || total > 0) && n && tipos.has(v.e.tipo) && n[0] * (px - v.s.x) + n[1] * (pz - v.s.z) > 0.5;
       v.corte = c; h = (h * 31 + (c ? 1 : 0)) | 0;
     }
     if (h === firma) return;
-    for (const v of lista) { v.mat = v.corte ? MAT_CORTE : v.e.mat; v.arista = v.corte ? MAT.aristaSuave : v.e.arista; }
+    for (const v of lista) { v.mat = v.corte ? MAT_CORTE : v.e.mat; v.arista = v.corte ? (total > 0 ? null : MAT.aristaSuave) : v.e.arista; }
     lotes.reconstruir(lista); firma = h;
   }
   reloj?.onTick(revisarCorte, 55);
@@ -154,7 +157,7 @@ export function crearCascaron({ escena, anim, reloj, camara }) {
     get local() { return local; },
     caja: () => caja(local.poligono),
     /** Deja la escena sin local (paso 0). */
-    vaciar() { enCurso?.cancel(); enCurso = null; vivos = []; rehacer([]); local = null; layout = null; api.cortar(false, { dur: 0 }); },
+    vaciar() { enCurso?.cancel(); enCurso = null; vivos = []; rehacer([]); local = null; layout = null; api.cortar(false, { dur: 0 }); api.cortarTodo(false, { dur: 0 }); },
     /**
      * Corte dinámico de muros (paso 2 en adelante): los muros exteriores entre la cámara y el interior se vuelven
      * translúcidos con un fundido. @returns {any} Handle
@@ -164,6 +167,16 @@ export function crearCascaron({ escena, anim, reloj, camara }) {
       const a = corte, b = ver ? 1 : 0;
       tCorte = anim.tween({ delay, dur, ease: 'io', onUpdate: (k) => { corte = a + (b - a) * k; opacidadCorte(); if (k === 0 || k === 1) firma = NaN; } });
       return tCorte;
+    },
+    /**
+     * Corte total (recorrido del cierre): fachada y muros del lado de la cámara se desvanecen por completo y sin
+     * aristas, para entrar y salir del local sin que nada cruce la lente. @returns {any} Handle
+     */
+    cortarTodo(ver, { dur = 500, delay = 0 } = {}) {
+      tTotal?.cancel();
+      const a = total, b = ver ? 1 : 0;
+      tTotal = anim.tween({ delay, dur, ease: 'io', onUpdate: (k) => { total = a + (b - a) * k; opacidadCorte(); firma = NaN; } });
+      return tTotal;
     },
     /** Reaplica la opacidad del corte tras un atenuado de la arquitectura. */
     refrescar: opacidadCorte,

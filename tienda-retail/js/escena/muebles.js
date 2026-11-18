@@ -49,7 +49,7 @@ export function crearMuebles({ escena, anim }) {
   // arreglos y se copian (transformados) unos cuantos miles de vértices por cuadro; al terminar se cambia de golpe a
   // la malla fusionada (lo visible es idéntico). Si empieza otra transición, se cancela.
   let fusion = null;
-  const VERT_CUADRO = 90000;
+  const VERT_CUADRO = 60000;
   function desfusionar() {
     fusion?.cancel(); fusion = null;
     for (const o of gFus.children.slice()) { o.geometry.dispose(); gFus.remove(o); }
@@ -77,15 +77,14 @@ export function crearMuebles({ escena, anim }) {
       });
     }
     if (!cola.length) return anim.wait(0);
+    // esfera envolvente de todo lo fusionado: de las posiciones de los muebles (sin recorrer vértices)
+    const cajaM = new THREE.Box3();
+    for (const { fx } of porId.values()) { const p = fx.grupo.position, h = fx.huella; const r = Math.hypot(h.ancho, h.fondo) / 2 + 0.5; cajaM.expandByPoint(new THREE.Vector3(p.x - r, -0.5, p.z - r)).expandByPoint(new THREE.Vector3(p.x + r, Math.max(2.5, h.alto) + 1.5, p.z + r)); }
+    const esfera = cajaM.getBoundingSphere(new THREE.Sphere());
     let k = 0;
     const tmp = new THREE.Vector3();
     function copiar(gr, o, mw) {
       const g = o.geometry, n = g.attributes.position.count, e = mw.elements, base = gr.v;
-      if (!gr.attrs) {
-        gr.attrs = {};
-        for (const nm of gr.nombres) { const a = g.attributes[nm]; gr.attrs[nm] = { tam: a.itemSize, arr: new Float32Array(gr.nv * a.itemSize), norm: a.normalized }; }
-        if (gr.indexado) gr.idx = new Uint32Array(gr.ni);
-      }
       for (const nm of gr.nombres) {
         const src = g.attributes[nm], dst = gr.attrs[nm], t = dst.tam, d = dst.arr, o0 = base * t;
         if (nm === 'position') {
@@ -101,15 +100,27 @@ export function crearMuebles({ escena, anim }) {
       if (gr.indexado) { const ix = g.index; for (let i = 0; i < ix.count; i++) gr.idx[gr.i + i] = ix.getX(i) + base; gr.i += ix.count; }
       gr.v += n;
     }
+    /** Reserva los arreglos de un grupo de a uno por cuadro (reservar decenas de MB de golpe también da tirón). */
+    function reservar(gr, g) {
+      gr.attrs = gr.attrs || {};
+      const nm = gr.nombres.find((x) => !gr.attrs[x]);
+      if (nm) { const a = g.attributes[nm]; gr.attrs[nm] = { tam: a.itemSize, arr: new Float32Array(gr.nv * a.itemSize), norm: a.normalized }; return false; }
+      if (gr.indexado && !gr.idx) { gr.idx = new Uint32Array(gr.ni); return false; }
+      return true;
+    }
     fusion = anim.tarea(() => {
       let presup = VERT_CUADRO;
-      while (k < cola.length && presup > 0) { const [gr, o, mw] = cola[k++]; copiar(gr, o, mw); presup -= o.geometry.attributes.position.count; }
+      while (k < cola.length && presup > 0) {
+        const [gr, o, mw] = cola[k];
+        if (!reservar(gr, o.geometry)) return false;
+        k++; copiar(gr, o, mw); presup -= o.geometry.attributes.position.count;
+      }
       if (k < cola.length) return false;
       for (const gr of grupos.values()) {
         const geo = new THREE.BufferGeometry();
         for (const nm of gr.nombres) geo.setAttribute(nm, new THREE.BufferAttribute(gr.attrs[nm].arr, gr.attrs[nm].tam, gr.attrs[nm].norm));
         if (gr.idx) geo.setIndex(new THREE.BufferAttribute(gr.idx, 1));
-        geo.computeBoundingSphere();
+        geo.boundingSphere = esfera.clone(); // recorrer un millón de vértices para calcularla también da tirón
         if (gr.linea) { const l = new THREE.LineSegments(geo, gr.mat); l.raycast = () => {}; gFus.add(l); }
         else { const m = new THREE.Mesh(geo, gr.mat); m.renderOrder = gr.ro; m.castShadow = !gr.mat.transparent; m.receiveShadow = true; gFus.add(m); }
         for (const o of gr.fuentes) { o.visible = false; ocultos.push(o); }

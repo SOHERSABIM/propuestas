@@ -39,6 +39,7 @@ export function rack_selectivo(b, c) {
     for (const y of puntos) b.caja(x, y, 0, 0.03, 0.03, D - 0.18, P.rackAzul);
     for (let k = 0; k < puntos.length - 1; k++) { const a = puntos[k] + 0.02, e = puntos[k + 1] + 0.01; b.barra([x, a, k % 2 ? -zf : zf], [x, e, k % 2 ? zf : -zf], 0.028, P.rackAzul); }
     for (let y = 0.45; y < H - 0.15; y += 0.1) { if (Math.abs(y - 0.4) < 0.0) continue; for (const dx of [-0.018, 0.018]) carta(b, x + dx, y, zf + up / 2 + 0.0007, 0.014, 0.04, 0x1f3b57); }
+    if (i === 0 || i === t) { b.caja(x, 1.5, zf + up / 2 + 0.004, 0.11, 0.22, 0.006, P.blanco); carta(b, x, 1.6, zf + up / 2 + 0.0075, 0.09, 0.05, AMARILLO); carta(b, x, 1.53, zf + up / 2 + 0.0075, 0.07, 0.03, 0x2f6fb0); }
     b.pieza(`bastidor ${i + 1}`, 1, 'crece', { aristas: false });
   });
   nivs.forEach((y, k) => {

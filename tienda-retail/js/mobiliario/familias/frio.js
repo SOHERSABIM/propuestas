@@ -17,7 +17,8 @@ function puertaVidrio(b, xc, y0, zf, w, h, ladoJal = 1) {
   b.vidrioZ(xc, y0 + f, zf - 0.004, w - 2 * f, h - 2 * f);
   // jaladera vertical con dos soportes
   const xj = xc + ladoJal * (w / 2 - 0.075), hj = Math.min(0.62, h * 0.38), yj = y0 + h * 0.5 - hj / 2;
-  b.caja(xj, yj, zf + 0.003, 0.022, hj, 0.02, ACERO); b.caja(xj, yj + 0.03, zf - 0.008, 0.012, 0.016, 0.02, P.metalOscuro); b.caja(xj, yj + hj - 0.046, zf - 0.008, 0.012, 0.016, 0.02, P.metalOscuro);
+  b.caja(xj, yj, zf + 0.003, 0.03, hj, 0.024, 0xf1f3f5); b.caja(xj, yj + 0.01, zf + 0.0155, 0.012, hj - 0.02, 0.002, P.negro, { sin: '-y' }); b.caja(xj, yj + 0.03, zf - 0.008, 0.012, 0.016, 0.02, P.metalOscuro); b.caja(xj, yj + hj - 0.046, zf - 0.008, 0.012, 0.016, 0.02, P.metalOscuro);
+  b.caja(xc - ladoJal * (w / 2 - f - 0.004), y0 + f + 0.02, zf - 0.006, 0.007, h - 2 * f - 0.04, 0.008, P.led); // LED en el poste
   // bisagras en el lado opuesto
   for (const k of [0.12, 0.5, 0.88]) b.caja(xc - ladoJal * (w / 2 - 0.012), y0 + k * (h - 0.06), zf + 0.004, 0.02, 0.06, 0.012, ACERO);
 }
@@ -52,7 +53,7 @@ export function refrigerador_vertical(b, c) {
   for (let m = 0; m < t; m++) { const xm = -W / 2 + (m + 0.5) * mod; for (let k = 0; k < 6; k++) b.lamZ(xm, hCab - 0.12 - k * 0.025, -D / 2 + 0.0415, mod - 0.5, 0.012, 0xc7c1a7, 1); }
   b.pieza('fondo interior', 1, 'crece', { aristas: false });
   b.caja(0, H - 0.26, 0, W, 0.26, D, claro(acento, 0.45)); b.caja(0, H - 0.3, D / 2 - 0.02, W - 0.1, 0.05, 0.02, P.led); b.caja(0, H - 0.06, D / 2 - 0.004, W - 0.02, 0.025, 0.008, acento);
-  b.lamZ(0, H - 0.2, D / 2 + 0.002, W - 0.2, 0.12, claro(acento, 0.7), 1); b.caja(0, H - 0.015, 0, W - 0.1, 0.012, D - 0.1, claro(acento, 0.3), { sin: '-y' });
+  b.lamZ(0, H - 0.2, D / 2 + 0.002, W - 0.2, 0.12, claro(acento, 0.7), 1); for (let k = 0; k < 5; k++) b.lamZ(0, H - 0.18 + k * 0.02, D / 2 + 0.0035, W - 0.3, 0.008, claro(acento, 0.1), 1); b.caja(0, H - 0.015, 0, W - 0.1, 0.012, D - 0.1, claro(acento, 0.3), { sin: '-y' });
   b.pieza('cabecera', 1, 'cae');
   for (let i = 1; i < t; i++) {
     b.caja(-W / 2 + i * mod, 0.12, 0, 0.02, hCab, D - 0.1, P.blanco); b.caja(-W / 2 + i * mod, 0.12, D / 2 - 0.05, 0.034, hCab, 0.016, P.metalOscuro);
@@ -71,7 +72,7 @@ export function refrigerador_vertical(b, c) {
   }
   const ys = [0.12, ...niv.map((y) => y + 0.014)], mixR = { carton: 3, botella: 3, lata: 2, caja: 2, frasco: 1 };
   ys.forEach((y, k) => {
-    b.mercV(-W / 2 + 0.08, W / 2 - 0.08, y, -D / 2 + 0.06, 0.2, 0.22, c, { atras: '-z', mix: mixR, dens: 1.5, esc: 1 + Math.max(0, t - 2) * 0.12 });
+    b.mercV(-W / 2 + 0.08, W / 2 - 0.08, y, -D / 2 + 0.06, 0.2, 0.22, c, { atras: '-z', mix: mixR, dens: 1.5, esc: 1 + Math.max(0, t - 1) * 0.1 });
     b.pieza(`producto ${k + 1}`, 4, 'crece', { aristas: false });
   });
 }
@@ -126,6 +127,7 @@ export function camara_fria(b, c) {
     puertaVidrio(b, xd, 0.22, D / 2 - 0.0, dw, 1.96, k % 2 ? 1 : -1);
     b.pieza(`puerta de cristal ${k + 1}`, 3, 'crece', { aristas: false });
   }
+  for (let m = 0; m < t; m++) b.agrupar((p) => { const k = +(p.nombre.match(/^puerta de cristal (\d+)$/)?.[1] ?? -1) - 1; return k >= 4 * m && k < 4 * m + 4; }, `puertas de cristal ${m + 1}`, 3, 'crece');
   // puerta de servicio con marco, ventanilla, placa de impacto, manija con cerradura y bisagras
   const xs = W / 2 - 0.9, zd = -D / 2;
   b.caja(xs, 0.06, zd + 0.01, 1.0, 2.1, 0.02, 0xb7bec5); b.caja(xs, 0.06, zd + 0.022, 0.96, 0.25, 0.004, 0x9aa1a8);
@@ -141,7 +143,7 @@ export function camara_fria(b, c) {
     for (let k = 0; k < n; k++) { b.caja(x, 0.06 + k * 0.27, z, 0.42, 0.26, 0.4, cols[(k + (z > 0 ? 1 : 0)) % cols.length], { sin: '-y' }); b.lamZ(x, 0.12 + k * 0.27, z + 0.2005, 0.3, 0.1, 0xf0efe9, 1); }
   }
   [0.06, 0.55, 1.03, 1.51].forEach((y, k) => {
-    b.mercV(-W / 2 + 0.3, W / 2 - 0.3, y + (k ? 0.02 : 0), -D / 2 + 0.2, -D / 2 + 0.68, k === 3 ? 0.4 : 0.38, c, { atras: '-z', mix: mixC, esc: 1.7 + Math.max(0, t - 2) * 0.12, dens: 1.3 });
+    b.mercV(-W / 2 + 0.3, W / 2 - 0.3, y + (k ? 0.02 : 0), -D / 2 + 0.2, -D / 2 + 0.68, k === 3 ? 0.4 : 0.38, c, { atras: '-z', mix: mixC, esc: 1.7 + Math.max(0, t - 1) * 0.15, dens: 1.3 });
     b.pieza(`producto ${k + 1}`, 4, 'crece', { aristas: false });
   });
 }
@@ -170,13 +172,15 @@ export function congelador_isla(b, c) {
     b.caja(0, 0.76, s * (D / 2 + 0.003), W - 0.1, 0.03, 0.006, P.blanco); etiquetas(b, -W / 2 + 0.1, W / 2 - 0.1, 0.765, s * (D / 2 + 0.007), s, claro(acento, 0.6), P.blanco, 0.22);
   }
   b.pieza('borde', 1, 'despliega', { aristas: false });
-  // canastillas de alambre: marco, esquinas y ganchos de apoyo
+  // canastillas de varilla con marco claro: un marco divisor cada medio módulo, con travesaños y varillas
+  const MARCO = 0xe9edf0, dd = D - 0.3;
   for (let m = 0; m < t; m++) for (let k = 0; k < 2; k++) {
-    const xc = -W / 2 + m * mod + (k + 0.5) * mod / 2, w = mod / 2 - 0.08, d = D - 0.3;
-    b.caja(xc, 0.62, -d / 2, w, 0.012, 0.014, CANAST); b.caja(xc, 0.62, d / 2, w, 0.012, 0.014, CANAST);
-    for (const s of [-1, 1]) { b.caja(xc + s * w / 2, 0.62, 0, 0.014, 0.012, d, CANAST); b.caja(xc + s * (w / 2 - 0.0), 0.5, -d / 2, 0.012, 0.13, 0.012, CANAST); b.caja(xc + s * w / 2, 0.5, d / 2, 0.012, 0.13, 0.012, CANAST); b.caja(xc + s * (w / 2 - 0.02), 0.72, 0, 0.012, 0.012, D - 0.2, CANAST); }
-    for (let z = -d / 2 + 0.1; z < d / 2 - 0.05; z += 0.12) b.lamX(xc + w / 2 + 0.0075, 0.52, z, 0.005, 0.1, 0x7c838b, 1);
+    const x = -W / 2 + m * mod + k * mod / 2 + mod / 2 / 2 * 0 + (k ? 0 : mod / 2);
+    b.caja(x, 0.5, 0, 0.016, 0.016, dd, MARCO); b.caja(x, 0.775, 0, 0.016, 0.016, dd, MARCO);
+    for (const s of [-1, 1]) b.caja(x, 0.5, s * dd / 2, 0.016, 0.29, 0.016, MARCO);
+    for (let z = -dd / 2 + 0.12; z < dd / 2 - 0.05; z += 0.12) b.caja(x, 0.5, z, 0.008, 0.28, 0.008, CANAST, { sin: '-y+y' });
   }
+  for (const s of [-1, 1]) { b.caja(0, 0.5, s * dd / 2, W - 0.2, 0.012, 0.012, MARCO); b.caja(0, 0.775, s * dd / 2, W - 0.2, 0.012, 0.012, MARCO); }
   b.pieza('canastillas', 2, 'crece', { aristas: false });
   for (let m = 0; m < t; m++) for (const k of [0, 1]) {
     const xc = -W / 2 + m * mod + (k + 0.5) * mod / 2, w = mod / 2 - 0.04;
@@ -187,7 +191,9 @@ export function congelador_isla(b, c) {
     b.pieza(`tapa de cristal ${m * 2 + k + 1}`, 3, 'desliza', { aristas: false });
   }
   const mixI = { bolsa: 4, caja: 3, frasco: 3, carton: 1 }, pal = SATURADA;
-  b.mercV(-W / 2 + 0.1, W / 2 - 0.1, 0.5, -D / 2 + 0.12, -0.01, 0.28, c, { atras: '+z', mix: mixI, dens: 1.2, paleta: pal });
-  b.mercV(-W / 2 + 0.1, W / 2 - 0.1, 0.5, 0.01, D / 2 - 0.12, 0.28, c, { atras: '-z', mix: mixI, dens: 1.2, paleta: pal });
+  for (const [y, hm] of [[0.5, 0.14], [0.64, 0.14]]) {
+    b.mercV(-W / 2 + 0.1, W / 2 - 0.1, y, -D / 2 + 0.12, -0.01, hm, c, { atras: '+z', mix: mixI, dens: 1.1 });
+    b.mercV(-W / 2 + 0.1, W / 2 - 0.1, y, 0.01, D / 2 - 0.12, hm, c, { atras: '-z', mix: mixI, dens: 1.1 });
+  }
   b.pieza('producto', 4, 'crece', { aristas: false });
 }

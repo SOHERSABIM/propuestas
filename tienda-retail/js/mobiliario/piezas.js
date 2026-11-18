@@ -35,43 +35,54 @@ function geoDe(P, N, C) {
 }
 
 
+/** Paleta de mercancía saturada y sin marcas (varios tonos por producto: cuerpo, etiqueta lisa y tapa). */
+const SAT = [0xd2452f, 0x2f6fb5, 0xe8a526, 0x3f9a5a, 0x8a4fa8, 0xe9e5da, 0x2a3d57, 0xd97a35, 0x1f7f86, 0xc23a66];
+const lum = (hex) => { const c = rgb(hex); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+const contra = (hex, rng) => (lum(hex) > 0.35 ? [0x22303d, 0x2f6fb5, 0xd2452f][Math.floor(rng.r() * 3)] : [0xf3efe4, 0xf2cf4a, 0xffffff][Math.floor(rng.r() * 3)]);
+const oscuro = (hex, t = 0.35) => mezcla(hex, 0x000000, t);
+
 /** Un frente de mercancía: devuelve su huella y la función de dibujo (b, x, y base, z centro, fz = lado del frente). */
 function itemMerc(tipo, rng, esc, hmax, col, col2, cap, seg, v) {
-  const lim = (h) => Math.min(hmax, h);
+  const lim = (h) => Math.min(hmax, h), tapa = contra(col, rng);
   if (tipo === 'lata') {
     const r = 0.033 * esc * rng.rango(0.95, 1.1), h = lim(0.12 * esc * rng.rango(0.9, 1.25));
-    return { w: 2 * r + 0.003, d: 2 * r, h, dib: (b, x, y, z) => { b.pilar(x, y, z, r, h, col, seg, { v }); } };
+    return { w: 2 * r + 0.003, d: 2 * r, h, dib: (b, x, y, z, fz) => {
+      b.pilar(x, y, z, r, h, col, seg, { v }); b.lamZ(x, y + h * 0.28, z + fz * (r + 0.0012), r * 1.5, h * 0.44, col2, fz);
+    } };
   }
   if (tipo === 'botella') {
-    const r = 0.03 * esc * rng.rango(0.95, 1.15), h = lim(0.27 * esc * rng.rango(0.8, 1.2)), hb = h * 0.56, hs = h * 0.2, hn = h - hb - hs;
-    const tapa = cap[Math.floor(rng.r() * cap.length)], sg = Math.max(seg, 10);
-    return { w: 2 * r + 0.004, d: 2 * r, h, dib: (b, x, y, z) => {
-      b.pilar(x, y, z, r, hb, col, sg, { v, sinTapas: true }); b.cono(x, y + hb, z, r, r * 0.4, hs, col, sg, { v, sinTapa: true });
-      b.pilar(x, y + hb + hs, z, r * 0.4, hn, tapa, sg);
+    const r = 0.03 * esc * rng.rango(0.95, 1.15), h = lim(0.27 * esc * rng.rango(0.8, 1.2)), hb = h * 0.56, hs = h * 0.2, hn = h - hb - hs, sg = Math.max(seg, 10);
+    return { w: 2 * r + 0.004, d: 2 * r, h, dib: (b, x, y, z, fz) => {
+      b.pilar(x, y, z, r, hb, col, sg, { v, sinTapas: true }); b.lamZ(x, y + hb * 0.25, z + fz * (r + 0.0012), r * 1.5, hb * 0.5, col2, fz);
+      b.cono(x, y + hb, z, r, r * 0.4, hs, col, sg, { v, sinTapa: true });
+      b.pilar(x, y + hb + hs, z, r * 0.4, hn, tapa, 6);
     } };
   }
   if (tipo === 'frasco') {
     const r = 0.04 * esc * rng.rango(0.9, 1.25), h = lim(0.1 * esc * rng.rango(0.9, 1.3));
-    return { w: 2 * r + 0.004, d: 2 * r, h, dib: (b, x, y, z) => { b.pilar(x, y, z, r, h * 0.8, col, seg, { v }); b.pilar(x, y + h * 0.8, z, r * 1.04, h * 0.2, col2, seg); } };
+    return { w: 2 * r + 0.004, d: 2 * r, h, dib: (b, x, y, z, fz) => {
+      b.pilar(x, y, z, r, h * 0.8, col, seg, { v }); b.lamZ(x, y + h * 0.25, z + fz * (r + 0.0012), r * 1.5, h * 0.35, col2, fz); b.pilar(x, y + h * 0.8, z, r * 1.04, h * 0.2, tapa, seg);
+    } };
   }
   if (tipo === 'bolsa') {
     const w = 0.13 * esc * rng.rango(0.8, 1.2), h = lim(0.2 * esc * rng.rango(0.8, 1.15)), d = 0.05 * esc;
     return { w: w + 0.004, d, h, dib: (b, x, y, z, fz) => {
-      b.tronco(x, y, z, w * 0.96, d, w, d * 0.8, h * 0.93, col, { sin: '-y', v }); b.caja(x, y + h * 0.93, z, w * 1.02, h * 0.07, d * 0.5, claro(col), { sin: '-y' });
-      b.lamZ(x, y + h * 0.3, z + fz * (d * 0.5 + 0.001), w * 0.7, h * 0.3, col2, fz);
+      b.tronco(x, y, z, w * 0.96, d, w, d * 0.8, h * 0.93, col, { sin: '-y', v }); b.caja(x, y + h * 0.93, z, w * 1.02, h * 0.07, d * 0.5, tapa, { sin: '-y' });
+      b.lamZ(x, y + h * 0.3, z + fz * (d * 0.5 + 0.001), w * 0.7, h * 0.34, col2, fz); b.lamZ(x, y + h * 0.04, z + fz * (d * 0.5 + 0.001), w * 0.9, h * 0.06, oscuro(col), fz);
     } };
   }
   if (tipo === 'carton') {
     const w = 0.075 * esc, h = lim(0.19 * esc * rng.rango(0.8, 1.1));
     return { w: w + 0.003, d: w, h, dib: (b, x, y, z, fz) => {
-      b.caja(x, y, z, w, h * 0.8, w, col, { sin: '-y+y', v }); b.tronco(x, y + h * 0.8, z, w, w, w, w * 0.25, h * 0.2, claro(col, 0.35), { sin: '-y' });
-      b.lamZ(x, y + h * 0.25, z + fz * (w / 2 + 0.001), w * 0.8, h * 0.25, col2, fz);
+      b.caja(x, y, z, w, h * 0.8, w, col, { sin: '-y+y', v }); b.tronco(x, y + h * 0.8, z, w, w, w, w * 0.25, h * 0.2, tapa, { sin: '-y' });
+      b.lamZ(x, y + h * 0.25, z + fz * (w / 2 + 0.001), w * 0.8, h * 0.3, col2, fz);
     } };
   }
-  // caja (cereal, galletas, detergente)
+  // caja (cereal, galletas, detergente): cuerpo, etiqueta lisa, solapa contrastada y base oscura
   const w = 0.1 * esc * rng.rango(0.65, 1.25), h = lim(0.2 * esc * rng.rango(0.7, 1.15)), d = 0.06 * esc;
   return { w: w + 0.003, d, h, dib: (b, x, y, z, fz) => {
-    b.caja(x, y, z, w, h, d, col, { sin: '-y', v }); b.lamZ(x, y + h * 0.3, z + fz * (d / 2 + 0.001), w * 0.88, h * 0.32, col2, fz); b.lamZ(x, y + h * 0.88, z + fz * (d / 2 + 0.001), w * 0.94, h * 0.05, claro(col, 0.5), fz);
+    const zf = z + fz * (d / 2 + 0.001);
+    b.caja(x, y, z, w, h, d, col, { sin: '-y', v }); b.lamZ(x, y + h * 0.3, zf, w * 0.88, h * 0.36, col2, fz); b.lamZ(x, y + h * 0.88, zf, w, h * 0.12, tapa, fz); b.lamZ(x, y, zf, w, h * 0.05, oscuro(col, 0.5), fz);
   } };
 }
 
@@ -289,13 +300,13 @@ export class Constructor {
    * con bloque de relleno detrás. Misma firma que merc(); o.mix = {tipo: peso}, o.esc = escala, o.dens = ancho extra entre frentes.
    */
   mercV(x0, x1, y, z0, z1, hmax, c, o = {}) {
-    const rng = c.rng, cols = rng.barajar((o.paleta ?? c.paleta).slice()).slice(0, 4), esc = o.esc ?? 1, dens = o.dens ?? 1;
+    const rng = c.rng, cols = rng.barajar((o.paleta ?? SAT).slice()).slice(0, 4), esc = o.esc ?? 1, dens = o.dens ?? 1;
     const mix = o.mix ?? { bolsa: 3, caja: 3, lata: 3, botella: 2, frasco: 2, carton: 1 };
     const tipos = Object.keys(mix), atras = o.atras || '', fz = atras === '-z' ? 1 : atras === '+z' ? -1 : 1;
     const seg = o.seg ?? 8, cap = [0xefefef, 0x33373c, 0xa8aeb5, c.acento];
     let x = x0 + rng.rango(0, 0.015), g = 0;
     while (x < x1 - 0.05) {
-      const tipo = rng.elegirPeso(tipos, (t) => mix[t]), col = cols[Math.floor(rng.r() * cols.length)], col2 = cols[Math.floor(rng.r() * cols.length)];
+      const tipo = rng.elegirPeso(tipos, (t) => mix[t]), col = cols[Math.floor(rng.r() * cols.length)], col2 = contra(col, rng);
       const n = rng.entero(2, 4), v = rng.rango(0.94, 1.05); let gx = x, hmaxG = 0, dMax = 0;
       const items = [];
       for (let k = 0; k < n; k++) {
@@ -313,7 +324,7 @@ export class Constructor {
       // relleno detrás del frente (producto en profundidad)
       const zr0 = atras === '+z' ? zf + dMax : (atras === '-z' ? z0 : zf - dMax - 0.0);
       const zr1 = atras === '+z' ? z1 : (atras === '-z' ? zf - dMax : zf - dMax);
-      if (Math.abs(zr1 - zr0) > 0.03) this.cajaMM(x, y, Math.min(zr0, zr1), gx - 0.002, y + hmaxG * 0.7, Math.max(zr0, zr1), col, { sin: '-y' + (atras || ''), v: 0.8 });
+      if (Math.abs(zr1 - zr0) > 0.03) this.cajaMM(x, y, Math.min(zr0, zr1), gx - 0.002, y + hmaxG * 0.7, Math.max(zr0, zr1), oscuro(col, 0.3), { sin: '-y' + (atras || ''), v: 1 });
       x = gx + rng.rango(0.004, 0.03) * dens; g++;
     }
   }

@@ -24,22 +24,22 @@ export function ventana(capa, ph, dn = 0, k = 0) {
   dn = clamp(dn);
   if (capa === 'aire') {
     switch (ph) {
-      case 'bancada': return [0.02 * k, 0.06];
-      case 'equipo': return [0.06 + 0.02 * k, 0.10];
-      case 'fan': return [0.16 + 0.02 * k, 0.05];
-      case 'bajante': return [0.08 + 0.02 * k, 0.07];
-      case 'soporte': return [0.05 + 0.42 * dn, 0.07];
-      case 'red': return [0.17 + 0.58 * dn, 0.09];
-      case 'flex': return [0.26 + 0.58 * dn, 0.06];
-      case 'retorno': return [0.26 + 0.58 * dn, 0.06];
+      case 'bancada': return [0.052 * k, 0.05];
+      case 'equipo': return [0.05 + 0.052 * k, 0.09];
+      case 'fan': return [0.15 + 0.052 * k, 0.05];
+      case 'bajante': return [0.10 + 0.05 * k, 0.07];
+      case 'soporte': return [0.10 + 0.40 * dn, 0.07];
+      case 'red': return [0.30 + 0.52 * dn, 0.09];
+      case 'flex': return [0.34 + 0.56 * dn, 0.06];
+      case 'retorno': return [0.34 + 0.56 * dn, 0.06];
     }
   } else if (capa === 'frio') {
     switch (ph) {
-      case 'bancada': return [0.03 * k, 0.06];
-      case 'equipo': return [0.07 + 0.03 * k, 0.10];
-      case 'fan': return [0.17 + 0.03 * k, 0.05];
-      case 'soporte': return [0.07 + 0.45 * dn, 0.07];
-      case 'red': return [0.14 + 0.72 * dn, 0.10];
+      case 'bancada': return [0.07 * k, 0.05];
+      case 'equipo': return [0.05 + 0.07 * k, 0.09];
+      case 'fan': return [0.15 + 0.07 * k, 0.05];
+      case 'soporte': return [0.15 + 0.50 * dn, 0.07];
+      case 'red': return [0.26 + 0.62 * dn, 0.10];
     }
   } else {
     switch (ph) {

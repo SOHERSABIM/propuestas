@@ -9,8 +9,8 @@ import { H_BANC } from './util.js';
 import { ventana, alcanceRed } from './tiempos.js';
 
 const COL = { principal: 0x4d8dbd, ramal: 0x68a0c9, bajante: 0x3d77a3, unidad: 0xffffff, ventilador: 0xffffff, difusor: 0xe6f1fa, flex: 0xffffff, retorno: 0xa5c3da, soporte: 0xffffff, pulso: 0xe3f3ff };
-const GEO = { tramo: G.geoTramo, codo: G.geoCodo, teeR: G.geoTeeR, teeP: G.geoTeeP, reduccion: G.geoReduccion, compuerta: G.geoCompuerta, soporte: G.geoSoporte, difusor: G.geoDifusor, flex: G.geoFlex, retorno: G.geoRetorno, bajante: G.geoBajante, unidad: G.geoUnidad, bancada: () => G.geoBancada(2.4, 1.6, H_BANC), cuello: G.geoCuelloAire, ventilador: G.geoVentilador };
-const ORDEN = ['soporte', 'tramo', 'teeR', 'teeP', 'codo', 'reduccion', 'compuerta', 'bajante', 'flex', 'difusor', 'retorno', 'bancada', 'cuello', 'unidad', 'ventilador'];
+const GEO = { tramo: G.geoTramo, codo: G.geoCodo, teeR: G.geoTeeR, teeP: G.geoTeeP, reduccion: G.geoReduccion, compuerta: G.geoCompuerta, soporte: G.geoSoporte, difusor: G.geoDifusor, flex: G.geoFlex, retorno: G.geoRetorno, bajante: G.geoBajante, unidad: G.geoUnidad, bancada: () => G.geoBancada(2.4, 1.6, H_BANC, true), ventilador: G.geoVentilador };
+const ORDEN = ['soporte', 'tramo', 'teeR', 'teeP', 'codo', 'reduccion', 'compuerta', 'bajante', 'flex', 'difusor', 'retorno', 'bancada', 'unidad', 'ventilador'];
 
 function colorDe(p) {
   if (p.c != null) return p.c;

@@ -10,12 +10,12 @@ import { crearLotes } from './lotes.js';
 
 /** Cara superior de la cubierta (m): la misma que usa instalaciones para sus bancadas (respaldo 4.8). */
 export const NIVEL = INST.NIVEL_AZOTEA ?? 4.8;
-const LAM = 0.04, LARG = { b: 0.08, h: 0.14 }, TRABE = { b: 0.22, h: 0.42 }, PASO_LARG = 2.0;
-const OPAC_LAM = 0.07;
-const MAT_TRABE = mate(0x7f8891, 'fx');
+const LAM = 0.04, LARG = { b: 0.05, h: 0.10 }, TRABE = { b: 0.20, h: 0.40 }, PASO_LARG = 2.5;
+const OPAC_LAM = 0.16; // separa azotea e interior vista desde dentro, sin tapar la vista aérea
+const MAT_TRABE = mate(0xd3d8dc, 'fx'); // gris claro: no compite con las capas en la vista general
 const MAT_LARG = MAT_TRABE; // mismo material: una llamada menos
-const MAT_LAM = mate(0xe3e8eb, 'fx', { transparent: true, opacity: OPAC_LAM, depthWrite: false, side: THREE.DoubleSide });
-const AR_CUB = new THREE.LineBasicMaterial({ color: PALETA.aristaSuave, transparent: true, opacity: 0.55 });
+const MAT_LAM = mate(0xdfe7ec, 'fx', { transparent: true, opacity: OPAC_LAM, depthWrite: false, side: THREE.DoubleSide });
+const AR_CUB = new THREE.LineBasicMaterial({ color: PALETA.aristaClara, transparent: true, opacity: 0.6 });
 
 /** Elementos (cajas) de la cubierta de un local. Pura salvo materiales. */
 export function elementosCubierta(loc) {

@@ -37,7 +37,7 @@ export function crearZonas({ escena, anim, reloj, camara, dom }) {
     if (!contTam) contTam = { w: elCont.offsetWidth, h: elCont.offsetHeight };
     const m = contMargenes || {}, L = m.izq || 0, R = W - (m.der || 0), T = m.arriba || 0, B = H - (m.abajo || 0);
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-    for (const x of [contCaja.x0, contCaja.x1]) for (const z of [contCaja.z0, contCaja.z1]) {
+    for (const x of [contCaja.x0 - 0.8, contCaja.x1 + 0.8]) for (const z of [contCaja.z0 - 0.8, contCaja.z1 + 0.8]) { // con muro y losa
       pTmp.set(x, 0.3, z).project(camara); const sx = (pTmp.x * 0.5 + 0.5) * W, sy = (-pTmp.y * 0.5 + 0.5) * H;
       x0 = Math.min(x0, sx); x1 = Math.max(x1, sx); y0 = Math.min(y0, sy); y1 = Math.max(y1, sy);
     }

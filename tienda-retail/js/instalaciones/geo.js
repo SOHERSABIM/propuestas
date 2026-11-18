@@ -230,7 +230,7 @@ export const geoVentilador = () => unica('ventilador', () => {
 });
 
 /** Bancada metálica: marco de perfiles (largueros y travesaños) sobre patas con placas y aisladores antivibratorios. Base en y=0, cara superior en H. */
-export const geoBancada = (ancho, fondo, H) => unica(`bancada_${ancho}_${fondo}_${H}`, () => {
+export const geoBancada = (ancho, fondo, H, cuello = false) => unica(`bancada_${ancho}_${fondo}_${H}_${cuello}`, () => {
   const p = new Partes(), ax = ancho / 2 - 0.16, az = fondo / 2 - 0.14, PER = 0x7d8790, PAT = 0x6a737c;
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
     p.caja(sx * ax, 0.01, sz * az, 0.24, 0.02, 0.24, 0x4b535b);                     // placa de apoyo
@@ -240,18 +240,17 @@ export const geoBancada = (ancho, fondo, H) => unica(`bancada_${ancho}_${fondo}_
   for (const sz of [-1, 1]) p.caja(0, H - 0.04, sz * az, ancho - 0.1, 0.08, 0.1, PER);   // largueros (canal)
   for (const sx of [-1, 0, 1]) p.caja(sx * ax, H - 0.04, 0, 0.1, 0.08, fondo - 0.1, PER);   // travesaños
   p.caja(0, 0.16, az, ancho - 0.5, 0.04, 0.04, PAT); p.caja(0, 0.16, -az, ancho - 0.5, 0.04, 0.04, PAT);     // arriostres
+  if (cuello) cuelloAire(p);
   return p.geo();
 });
 /** Cuello de azotea de un ducto: brida, base elevada (curb) con remate y conexión flexible hasta el equipo. Base en y=0 (losa). */
-export const geoCuelloAire = () => unica('cuelloAire', () => {
-  const p = new Partes();
+function cuelloAire(p) {
   p.caja(0, 0.01, 0, 1.0, 0.02, 1.0, 0x555d65);
   for (const s of [-1, 1]) { p.caja(s * 0.38, 0.11, 0, 0.06, 0.2, 0.82, 0x8a949d); p.caja(0, 0.11, s * 0.38, 0.82, 0.2, 0.06, 0x8a949d); }
   p.caja(0, 0.215, 0, 0.9, 0.03, 0.9, 0x666f78);
   p.caja(0, 0.26, 0, 0.62, 0.1, 0.62, 0x4c7fa8);                                      // conexión flexible (lona)
   for (const y of [0.235, 0.285]) p.caja(0, y, 0, 0.66, 0.015, 0.66, 0x2e3a45);
-  return p.geo();
-});
+}
 
 // ───────────── FRÍO ─────────────
 /** Tubo unitario (diámetro 1, largo 1 a lo largo de x). */
