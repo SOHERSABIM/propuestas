@@ -3,6 +3,7 @@
 // agrupa en PIEZAS: cada pieza es una geometría fusionada (colores por vértice) con su orden y modo de aparición.
 // Las caras que nadie ve (la inferior, la que da al respaldo) se omiten para ahorrar triángulos.
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 
 const _c = new THREE.Color();
@@ -39,14 +40,14 @@ function itemMerc(tipo, rng, esc, hmax, col, col2, cap, seg, v) {
   const lim = (h) => Math.min(hmax, h);
   if (tipo === 'lata') {
     const r = 0.033 * esc * rng.rango(0.95, 1.1), h = lim(0.12 * esc * rng.rango(0.9, 1.25));
-    return { w: 2 * r + 0.003, d: 2 * r, h, dib: (b, x, y, z) => { b.pilar(x, y, z, r, h * 0.94, col, seg, { v }); b.cono(x, y + h * 0.94, z, r * 0.9, r * 0.74, h * 0.06, 0xcfd3d7, seg, { sinTapa: false }); } };
+    return { w: 2 * r + 0.003, d: 2 * r, h, dib: (b, x, y, z) => { b.pilar(x, y, z, r, h, col, seg, { v }); } };
   }
   if (tipo === 'botella') {
     const r = 0.03 * esc * rng.rango(0.95, 1.15), h = lim(0.27 * esc * rng.rango(0.8, 1.2)), hb = h * 0.56, hs = h * 0.2, hn = h - hb - hs;
-    const tapa = cap[Math.floor(rng.r() * cap.length)];
+    const tapa = cap[Math.floor(rng.r() * cap.length)], sg = Math.max(seg, 10);
     return { w: 2 * r + 0.004, d: 2 * r, h, dib: (b, x, y, z) => {
-      b.pilar(x, y, z, r, hb, col, seg, { v, sinTapas: true }); b.cono(x, y + hb, z, r, r * 0.4, hs, col, seg, { v, sinTapa: true });
-      b.pilar(x, y + hb + hs, z, r * 0.4, hn, tapa, seg);
+      b.pilar(x, y, z, r, hb, col, sg, { v, sinTapas: true }); b.cono(x, y + hb, z, r, r * 0.4, hs, col, sg, { v, sinTapa: true });
+      b.pilar(x, y + hb + hs, z, r * 0.4, hn, tapa, sg);
     } };
   }
   if (tipo === 'frasco') {
@@ -68,9 +69,9 @@ function itemMerc(tipo, rng, esc, hmax, col, col2, cap, seg, v) {
     } };
   }
   // caja (cereal, galletas, detergente)
-  const w = 0.11 * esc * rng.rango(0.7, 1.5), h = lim(0.2 * esc * rng.rango(0.75, 1.2)), d = 0.065 * esc;
+  const w = 0.1 * esc * rng.rango(0.65, 1.25), h = lim(0.2 * esc * rng.rango(0.7, 1.15)), d = 0.06 * esc;
   return { w: w + 0.003, d, h, dib: (b, x, y, z, fz) => {
-    b.caja(x, y, z, w, h, d, col, { sin: '-y', v }); b.lamZ(x, y + h * 0.3, z + fz * (d / 2 + 0.001), w * 0.88, h * 0.32, col2, fz);
+    b.caja(x, y, z, w, h, d, col, { sin: '-y', v }); b.lamZ(x, y + h * 0.3, z + fz * (d / 2 + 0.001), w * 0.88, h * 0.32, col2, fz); b.lamZ(x, y + h * 0.88, z + fz * (d / 2 + 0.001), w * 0.94, h * 0.05, claro(col, 0.5), fz);
   } };
 }
 
@@ -241,7 +242,7 @@ export class Constructor {
     if (geo) box.union(geo.boundingBox); if (vid) box.union(vid.boundingBox);
     const f = (v, mn, mx, def) => { const k = v ?? def; return typeof k === 'number' ? k : k === 'min' ? mn : k === 'max' ? mx : (mn + mx) / 2; };
     const pivot = [f(o.px, box.min.x, box.max.x, 'c'), f(o.py, box.min.y, box.max.y, 'min'), f(o.pz, box.min.z, box.max.z, 'c')];
-    this.lista.push({ nombre, orden, modo, pivot, geo, vidrio: vid, aristas: o.aristas !== false && !!geo });
+    this.lista.push({ nombre, orden, modo, pivot, geo, vidrio: vid, aristas: o.aristas !== false && !!geo, caida: o.caida });
     this._n();
   }
 
@@ -266,14 +267,32 @@ export class Constructor {
   }
 
   /**
+   * Fusiona en UNA pieza varias piezas ya cerradas (por nombre exacto o con un predicado) para bajar el número de piezas animadas.
+   * La pieza resultante ocupa el lugar de la primera. Las geometrías ya están en coordenadas del mueble.
+   * @param {(p:any)=>boolean} sel @param {string} nombre @param {number} orden @param {string} modo @param {object} o igual que pieza()
+   */
+  agrupar(sel, nombre, orden, modo, o = {}) {
+    const ps = this.lista.filter(sel);
+    if (!ps.length) return;
+    const geos = ps.map((p) => p.geo).filter(Boolean), vids = ps.map((p) => p.vidrio).filter(Boolean);
+    const geo = geos.length ? mergeGeometries(geos) : null, vid = vids.length ? mergeGeometries(vids) : null;
+    const box = new THREE.Box3(); if (geo) { geo.computeBoundingBox(); box.union(geo.boundingBox); } if (vid) { vid.computeBoundingBox(); box.union(vid.boundingBox); }
+    const f = (v, mn, mx, def) => { const k = v ?? def; return typeof k === 'number' ? k : k === 'min' ? mn : k === 'max' ? mx : (mn + mx) / 2; };
+    const pivot = [f(o.px, box.min.x, box.max.x, 'c'), f(o.py, box.min.y, box.max.y, 'min'), f(o.pz, box.min.z, box.max.z, 'c')];
+    const i0 = this.lista.indexOf(ps[0]);
+    for (const p of ps) { this.lista.splice(this.lista.indexOf(p), 1); p.geo?.dispose(); p.vidrio?.dispose(); }
+    this.lista.splice(Math.min(i0, this.lista.length), 0, { nombre, orden, modo, pivot, geo, vidrio: vid, aristas: o.aristas === true && !!geo, caida: o.caida });
+  }
+
+  /**
    * Mercancía variada de una hilera: botellas, latas, frascos, bolsas, cajas y cartones en grupos de frentes,
    * con bloque de relleno detrás. Misma firma que merc(); o.mix = {tipo: peso}, o.esc = escala, o.dens = ancho extra entre frentes.
    */
   mercV(x0, x1, y, z0, z1, hmax, c, o = {}) {
-    const rng = c.rng, cols = rng.barajar(c.paleta.slice()).slice(0, 4), esc = o.esc ?? 1, dens = o.dens ?? 1;
+    const rng = c.rng, cols = rng.barajar((o.paleta ?? c.paleta).slice()).slice(0, 4), esc = o.esc ?? 1, dens = o.dens ?? 1;
     const mix = o.mix ?? { bolsa: 3, caja: 3, lata: 3, botella: 2, frasco: 2, carton: 1 };
     const tipos = Object.keys(mix), atras = o.atras || '', fz = atras === '-z' ? 1 : atras === '+z' ? -1 : 1;
-    const seg = o.seg ?? 6, cap = [0xefefef, 0x33373c, 0xa8aeb5, c.acento];
+    const seg = o.seg ?? 8, cap = [0xefefef, 0x33373c, 0xa8aeb5, c.acento];
     let x = x0 + rng.rango(0, 0.015), g = 0;
     while (x < x1 - 0.05) {
       const tipo = rng.elegirPeso(tipos, (t) => mix[t]), col = cols[Math.floor(rng.r() * cols.length)], col2 = cols[Math.floor(rng.r() * cols.length)];
@@ -294,7 +313,7 @@ export class Constructor {
       // relleno detrás del frente (producto en profundidad)
       const zr0 = atras === '+z' ? zf + dMax : (atras === '-z' ? z0 : zf - dMax - 0.0);
       const zr1 = atras === '+z' ? z1 : (atras === '-z' ? zf - dMax : zf - dMax);
-      if (Math.abs(zr1 - zr0) > 0.03) this.cajaMM(x, y, Math.min(zr0, zr1), gx - 0.002, y + hmaxG * 0.88, Math.max(zr0, zr1), col, { sin: '-y' + (atras || ''), v: 0.9 });
+      if (Math.abs(zr1 - zr0) > 0.03) this.cajaMM(x, y, Math.min(zr0, zr1), gx - 0.002, y + hmaxG * 0.7, Math.max(zr0, zr1), col, { sin: '-y' + (atras || ''), v: 0.8 });
       x = gx + rng.rango(0.004, 0.03) * dens; g++;
     }
   }

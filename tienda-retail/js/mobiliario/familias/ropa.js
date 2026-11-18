@@ -1,6 +1,6 @@
 // Zona ropa y hogar: racks, mesa, maniquí y probadores (nivel de detalle R1: prendas con silueta colgadas de ganchos,
 // componentes reales de cada mueble, maniquí de proporción humana abstracta).
-import { P, claro, Marco, giroHacia, prendaVariada, maniquiDetallado, carta, mezcla } from './comun-b.js';
+import { P, claro, Marco, giroHacia, prendaVariada, maniquiDetallado, carta, mezcla, doblada } from './comun-b.js';
 
 const OUTFITS = [{ top: 0xd99a8a, bottom: 0x5d6a75 }, { top: 0x8fb2d1, bottom: 0xa67950 }, { top: 0xb7a3c9, bottom: 0x33373c }, { top: 0xe8d9b5, bottom: 0x76808e }];
 const SEMI = 0.205; // semiancho nominal de una prenda con mangas (a escala 1)
@@ -8,7 +8,7 @@ const SEMI = 0.205; // semiancho nominal de una prenda con mangas (a escala 1)
 /** Rack redondo: base con escalón, poste telescópico con abrazadera y perilla, aro con rayos y prendas radiales en ganchos. */
 export function rack_redondo(b, c) {
   const { alto: H, ancho: A, rng } = c, hw = Math.min(0.185, A * 0.21), R = A / 2 - hw - 0.005, ya = H - 0.22, rb = Math.min(0.44, A / 2 - 0.004);
-  b.pilar(0, 0, 0, rb, 0.016, P.metalOscuro, 20); b.pilar(0, 0.016, 0, rb * 0.84, 0.012, P.oscuro, 20); b.aro(0, 0.03, 0, rb * 0.93, 0.004, P.metal, 24, 3);
+  b.pilar(0, 0, 0, rb, 0.012, P.metalOscuro, 40); b.pilar(0, 0.012, 0, rb * 0.95, 0.008, P.metalOscuro, 40); b.pilar(0, 0.02, 0, rb * 0.8, 0.012, P.oscuro, 40); b.aro(0, 0.032, 0, rb * 0.9, 0.004, P.metal, 40, 3);
   b.pilar(0, 0.028, 0, 0.075, 0.03, P.metal, 12); b.pilar(0, 0.058, 0, 0.05, 0.022, P.metalOscuro, 10);
   b.pieza('base circular', 0, 'escala');
   const yc = 0.08 + H * 0.45;
@@ -72,7 +72,7 @@ export function rack_recto_doble(b, c) {
     b.pieza(`barra ${nom}`, 2, 'despliega', { aristas: false });
   }
   const paso = 0.09;
-  for (const [y, z, nom, tipos, L] of [[yT, zT, 'superior', ['camisa', 'camisa', 'abrigo', 'vestido', 'blusa'], 0.9], [yB, zB, 'inferior', ['pantalon', 'pantalon', 'blusa', 'camisa'], 0.95]]) {
+  for (const [y, z, nom, tipos, L] of [[yT, zT, 'superior', ['camisa', 'camisa', 'abrigo', 'vestido', 'blusa'], 0.9], [yB, zB, 'inferior', ['pantalon', 'pantalon', 'blusa', 'camisa', 'vestido', 'abrigo'], 1.0]]) {
     for (let x = -W / 2 + 0.07; x < W / 2 - 0.06; x += paso) prendaVariada(new Marco(b, x, y, z, giroHacia(0, 1), (hw / SEMI) * rng.rango(0.92, 1)), rng, c.paletaRopa, { tipos, L });
     b.pieza(`percheros y ropa ${nom}`, 4, 'crece', { aristas: false, py: 'max' });
   }
@@ -97,13 +97,10 @@ export function mesa_exhibicion(b, c) {
       const r = 0.035, base = [[-1.1, 0], [0, 0], [1.1, 0], [-0.55, 1], [0.55, 1]];
       base.forEach(([k, row], n) => b.cil('z', x + k * (pw * 0.3), y0 + r + row * r * 1.55, z, r, pd, n % 2 ? col : col2, 8));
     } else {
-      const n = tipo === 'jersey' ? 2 : tipo === 'jean' ? 3 : 4, hh = tipo === 'jersey' ? 0.05 : tipo === 'jean' ? 0.038 : 0.028;
+      const n = tipo === 'jersey' ? 3 : tipo === 'jean' ? 4 : 5, hh = tipo === 'jersey' ? 0.038 : tipo === 'jean' ? 0.03 : 0.024;
       for (let k = 0; k < n; k++) {
-        const cc = k % 2 ? col : tipo === 'jean' ? 0x6f87a3 : col2, ox = rng.rango(-0.008, 0.008), oy = y0 + k * hh;
-        b.caja(x + ox, oy, z, pw, hh, pd, cc, { v: rng.rango(0.96, 1.04) });
-        if (tipo === 'jean') { b.caja(x + ox, oy + hh * 0.5, z + pd / 2, pw * 0.96, 0.004, 0.003, claro(cc, 0.4), { sin: '-y+y' }); b.caja(x + ox, oy, z - pd / 2 + 0.03, pw, hh, 0.045, mezcla(cc, 0x33373c, 0.3)); }
-        else if (tipo === 'jersey') b.caja(x + ox, oy, z + pd / 2 - 0.015, pw + 0.002, hh, 0.03, claro(cc, 0.3));
-        else { b.caja(x + ox, oy + hh, z + pd * 0.3, pw * 0.45, 0.004, pd * 0.35, claro(cc, 0.5), { sin: '-y' }); b.caja(x + ox - pw / 2 + 0.03, oy, z, 0.05, hh, pd - 0.02, mezcla(cc, 0xffffff, 0.12)); }
+        const cc = tipo === 'jean' ? (k % 2 ? 0x6f87a3 : 0x5f7691) : k % 2 ? col : col2, ox = rng.rango(-0.012, 0.012), oz = rng.rango(-0.01, 0.01);
+        doblada(b, x + ox, y0 + k * hh, z + oz, pw * rng.rango(0.94, 1), hh * 1.04, pd * rng.rango(0.94, 1), cc, { pliegue: k === n - 1, v: rng.rango(0.97, 1.03) });
       }
     }
     b.pieza(`pila ${ix * 2 + iz + 1}`, 4, 'crece', { aristas: false });
@@ -150,14 +147,15 @@ export function probador(b, c) {
     for (const dx of [-0.06, 0, 0.06]) { b.cil('z', px + dx, 1.615, pz + 0.04, 0.008, 0.064, P.metal, 6); b.esfera(px + dx, 1.615, pz + 0.075, 0.012, P.metalOscuro, 6); }
     prendaVariada(new Marco(b, px, 1.615, pz + 0.075, 0, 0.72), rng, c.paletaRopa, { tipos: ['camisa', 'abrigo', 'vestido'] });
     b.pieza(`gancho ${i + 1}`, 3, 'escala', { aristas: false });
-    const zc = D / 2 - 0.12, n = 11, sw = (pw - 0.06) / n;
+    const zc = D / 2 - 0.12, n = 11, abierta = i % 2 === 0, sw = ((pw - 0.06) * (abierta ? 0.36 : 1)) / n;
     b.caja(xc, H - 0.27, zc, pw - 0.05, 0.02, 0.028, P.metal);
     for (let k = 0; k < n; k++) {
       const x = xc - (pw - 0.06) / 2 + (k + 0.5) * sw, dz = k % 2 ? 0.014 : -0.014;
+      if (abierta) { const xr = xc + (pw - 0.06) / 2 - (k + 0.5) * sw; b.caja(xr, 0.1, zc + dz * 1.6, sw * 1.35, 2.0, 0.026, CORT, { v: 0.9 + (k % 2) * 0.14 }); b.caja(xr, H - 0.3, zc, 0.012, 0.03, 0.012, P.metalOscuro, { sin: '-y' }); continue; }
       b.caja(x, 0.1, zc + dz, sw * 1.02, 2.0 + 0.0, 0.02, CORT, { v: 0.9 + (k % 2) * 0.14 });
       b.caja(x, H - 0.3, zc, 0.012, 0.03, 0.012, P.metalOscuro, { sin: '-y' });
     }
-    b.caja(xc, 0.1, zc, pw - 0.06, 0.035, 0.05, mezcla(CORT, 0x33373c, 0.3), { sin: '-y' });
+    if (abierta) b.caja(xc + (pw - 0.06) / 2 - (pw - 0.06) * 0.18, 0.1, zc, (pw - 0.06) * 0.36, 0.035, 0.05, mezcla(CORT, 0x33373c, 0.3), { sin: '-y' }); else b.caja(xc, 0.1, zc, pw - 0.06, 0.035, 0.05, mezcla(CORT, 0x33373c, 0.3), { sin: '-y' });
     b.pieza(`cortina ${i + 1}`, 3, 'despliega', { px: 'min', aristas: false });
   }
   cornisa(b, c, W, D, H, acento, t);
@@ -168,7 +166,7 @@ export function probador_accesible(b, c) {
   const { ancho: W, fondo: D, alto: H, acento } = c, PISO = 0xd9c4a0, PARED = 0xf1efe9, hp = H - 0.23;
   b.caja(0, 0, 0, W, 0.03, D, PISO); b.caja(0, 0.03, D / 2 - 0.025, 0.9, 0.006, 0.05, P.metal);
   b.pieza('piso', 0, 'despliega', { aristas: false });
-  b.pilar(0, 0.03, 0, 0.76, 0.004, mezcla(PISO, acento, 0.35), 28, { sinBase: true }); b.aro(0, 0.034, 0, 0.76, 0.006, mezcla(PISO, acento, 0.6), 36, 3);
+  b.pilar(0, 0.03, 0, 0.76, 0.002, mezcla(PISO, 0x7d7566, 0.1), 36, { sinBase: true });
   b.pieza('círculo de giro', 1, 'escala', { aristas: false });
   for (const s of [-1, 1]) {
     const x = s * (W / 2 - 0.015);
@@ -196,7 +194,7 @@ export function probador_accesible(b, c) {
   b.caja(xw - 0.01, 1.5, -0.3, 0.02, 0.05, 0.3, P.madera); for (const z of [-0.37, -0.3, -0.23]) b.cil('x', xw - 0.04, 1.525, z, 0.007, 0.04, P.metal, 6);
   b.pieza('barra de apoyo', 3, 'escala', { aristas: false });
   const dl = 0.88, dh = hp - 0.1, dz = D / 2 - 0.015;
-  b.caja(0, 0.03, dz, dl, dh, 0.03, P.madera); b.caja(0, 0.03, dz + 0.016, dl - 0.1, dh - 0.12, 0.004, claro(P.madera, 0.12));
+  b.caja(0, 0.03, dz, dl, dh, 0.03, P.madera); b.caja(0, 0.15, dz + 0.016, dl - 0.1, dh - 0.24, 0.004, claro(P.madera, 0.12));
   b.caja(0, 0.03, dz + 0.017, dl, 0.2, 0.006, P.metal); b.caja(0, 0.03, dz - 0.017, dl, 0.2, 0.006, P.metal);
   b.caja(0.33, 1.0, dz + 0.017, 0.05, 0.12, 0.006, P.metalOscuro); b.cil('x', 0.31, 1.03, dz + 0.027, 0.007, 0.16, P.metal, 6);
   for (const y of [0.25, 1.1, 1.95]) b.caja(-dl / 2 + 0.01, y, dz, 0.025, 0.1, 0.04, P.metalOscuro);

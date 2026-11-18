@@ -4,6 +4,7 @@
 import { crearEmisor } from './core/eventos.js';
 import { LOCALES, IDS_LOCALES } from './datos/locales.js';
 import { crearEvaluacion, componerLayout, mejorIndice } from './gen/generador.js';
+import { planInstalaciones } from './instalaciones/plan.js';
 import { atenuar } from './core/estilo.js';
 import { caja } from './core/geom.js';
 import { FAMILIAS, NOMBRE_ZONA, ZONAS } from './datos/catalogo.js';
@@ -38,7 +39,7 @@ const CAPAS = ['luz', 'aire', 'frio'];
 /**
  * @param {{params:any, anim:any, reloj:any, cascaron:any, muebles:any, zonas:any, mep:any, camara:any, pasos:any[], esc:any, margenesUI?:()=>any}} d
  */
-export function crearApp({ params, anim, reloj, cascaron, muebles, zonas, mep, camara, pasos, esc, margenesUI = () => ({}) }) {
+export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zonas, mep, camara, pasos, esc, margenesUI = () => ({}) }) {
   const em = crearEmisor();
   /** @type {Estado} */
   const estado = {
@@ -80,16 +81,37 @@ export function crearApp({ params, anim, reloj, cascaron, muebles, zonas, mep, c
   }
   reloj.onTick(precalcular, 95);
   /** Al arrancar: las tres evaluaciones de la semilla inicial (≈1 s, antes de "ready"). */
-  function precalcularTodo() { for (const loc of IDS_LOCALES) evaluacion(loc, params.semilla).terminar(); }
+  function precalcularTodo() {
+    for (const loc of IDS_LOCALES) evaluacion(loc, params.semilla).terminar();
+    // acomodo base del paso 1 ya compuesto, y una primera llamada al plan de instalaciones (la primera, en frío,
+    // tarda varias veces más): así pulsar el paso 1 no carga ese trabajo en un solo cuadro
+    const lay = componerLayout(evaluacion(params.local, params.semilla), { modo: 'base', anterior: null, vistos: [] });
+    planInstalaciones(LOCALES[params.local], lay);
+    layoutInicial = lay;
+    // planes de piezas de mobiliario de los layouts del guion (base y mejor de cada local): crear un mueble por
+    // primera vez cuesta hasta ~30 ms; así ningún cuadro de la demo carga ese trabajo
+    const specs = [];
+    for (const loc of IDS_LOCALES) for (const modo of ['base', 'mejor']) specs.push(...componerLayout(evaluacion(loc, params.semilla), { modo, anterior: null, vistos: [] }).muebles);
+    muebles.precalentar(specs);
+  }
+  let layoutInicial = null;
+  /** Acomodo base del local y semilla vigentes (usa el precalculado si coincide). */
+  function layoutBase() {
+    const li = layoutInicial;
+    if (li && li.localId === estado.local && li.semilla === estado.semilla) { const vs = vistosDe(li.localId, li.semilla); if (!vs.includes(li.candidato)) vs.push(li.candidato); return li; }
+    return obtenerLayout(estado.local, estado.semilla, null, 'base');
+  }
 
   function indicadoresDe(lay) {
     const mi = mep.indicadores();
     return { ...lay.indicadores, ...Object.fromEntries(Object.entries(mi).filter(([, v]) => v != null)) };
   }
   /** Publica un layout como vigente (estado, eventos e indicadores). */
-  function publicar(lay) {
-    layout = lay;
-    mep.setPlan(LOCALES[lay.localId], lay);
+  function publicar(lay) { fijar(lay); anunciar(lay); }
+  /** Lo interno: layout vigente y plan de instalaciones (sin tocar el estado que ve la interfaz). */
+  function fijar(lay) { layout = lay; mep.setPlan(LOCALES[lay.localId], lay); }
+  /** Lo visible: estado, indicadores y calificación (en los cambios de local, cuando ya aparece el local nuevo). */
+  function anunciar(lay) {
     set({ semilla: lay.semilla, local: lay.localId, layoutId: lay.id, indicadoresPrevios: estado.indicadores, indicadores: indicadoresDe(lay),
       calificacionAnterior: estado.calificacion, calificacion: lay.calificacion, esMejor: lay.esMejor, ranking: lay.ranking,
       candidatos: { evaluados: lay.candidatos.evaluados, validos: lay.candidatos.validos, descartes: lay.candidatos.descartes } }, 'layout');
@@ -107,8 +129,8 @@ export function crearApp({ params, anim, reloj, cascaron, muebles, zonas, mep, c
     frente: { azimut: AZ[loc] - 10, polar: 56 + POL[loc], llenado: 0.9 },
     mobiliario: { azimut: AZ[loc] - 4, polar: 47 + POL[loc], llenado: 0.9 }, // paso 2: deriva leve desde general, algo más alta
     instalaciones: { azimut: AZ[loc] + 6, polar: 44 + POL[loc], llenado: 0.92 },
-    cenital: { azimut: loc === 'B' ? 90 : 0, polar: 2, llenado: 0.88 },
-    cierre: { azimut: AZ[loc] + 22, polar: 55 + POL[loc], llenado: 0.94, orbital: true }, // cabe en cualquier azimut de la órbita
+    cenital: { azimut: loc === 'B' ? 90 : 0, polar: 2, llenado: 0.82 }, // deja hueco al lado del plano para el contador
+    cierre: { azimut: AZ[loc] + 22, polar: 55 + POL[loc], llenado: 0.96, alto: 6.4, orbital: true }, // cabe en cualquier azimut de la órbita
   });
   const niveles = { arq: 1, mob: 1 };
   let ultimoEncuadre = 'general', margenesUsadas = '';
@@ -117,15 +139,32 @@ export function crearApp({ params, anim, reloj, cascaron, muebles, zonas, mep, c
 
   /** Zonas del layout en el orden de las oleadas del paso 2 (las que tienen muebles o tinte). */
   const ordenZonas = () => ZONAS.filter((z) => layout.muebles.some((m) => m.zona === z) || layout.zonas.some((q) => q.id === z && q.rects.length));
-  /** Recorrido a la altura de los ojos por el pasillo entre góndolas más largo. */
+  /**
+   * Recorrido por el pasillo entre góndolas más largo: entra desde la calle a ~2.1 m (algo por encima de los ojos,
+   * para que la mercancía se lea a distancia) y avanza hasta poco más de la mitad del pasillo.
+   */
   function recorridoPasillo() {
     const ps = (layout?.pasillos || []).filter((q) => q.tipo === 'entre_gondolas');
     if (!ps.length) return null;
-    const q = ps.slice().sort((a, b) => Math.hypot(b.puntos[1][0] - b.puntos[0][0], b.puntos[1][1] - b.puntos[0][1]) - Math.hypot(a.puntos[1][0] - a.puntos[0][0], a.puntos[1][1] - a.puntos[0][1]))[0];
+    const lar = (q) => Math.hypot(q.puntos[1][0] - q.puntos[0][0], q.puntos[1][1] - q.puntos[0][1]);
+    const q = ps.slice().sort((a, b) => lar(b) - lar(a) || (a.id < b.id ? -1 : 1))[0];
     let [a, b] = q.puntos; if (a[1] < b[1]) [a, b] = [b, a]; // de la calle hacia el fondo
-    const L = Math.hypot(b[0] - a[0], b[1] - a[1]), u = [(b[0] - a[0]) / L, (b[1] - a[1]) / L];
-    const p0 = [a[0] - u[0] * 1.5, 1.6, a[1] - u[1] * 1.5], p1 = [a[0] + u[0] * L * 0.55, 1.55, a[1] + u[1] * L * 0.55];
-    return { p0, t0: [p0[0] + u[0] * 6, 1.25, p0[2] + u[1] * 6], p1, t1: [p1[0] + u[0] * 6, 1.2, p1[2] + u[1] * 6] };
+    const L = lar(q), u = [(b[0] - a[0]) / L, (b[1] - a[1]) / L];
+    const p0 = [a[0] - u[0] * 2.6, 2.15, a[1] - u[1] * 2.6], p1 = [a[0] + u[0] * L * 0.5, 2.0, a[1] + u[1] * L * 0.5];
+    // punto de entrada y salida: afuera del local sobre el eje del pasillo (se entra y se sale por la fachada o por
+    // un muro cortado, nunca atravesando la cubierta)
+    const bb = cajaLocal(), dBorde = u[1] < -0.5 ? bb.z1 - a[1] : u[1] > 0.5 ? a[1] - bb.z0 : u[0] > 0.5 ? a[0] - bb.x0 : bb.x1 - a[0];
+    const fuera = dBorde + 6, pm = [a[0] - u[0] * fuera, 4.2, a[1] - u[1] * fuera], pm2 = [a[0] - u[0] * (fuera + 2), 6.5, a[1] - u[1] * (fuera + 2)];
+    return { p0, t0: [p0[0] + u[0] * 7, 1.05, p0[2] + u[1] * 7], p1, t1: [p1[0] + u[0] * 7, 1.0, p1[2] + u[1] * 7], pm, pm2, tm: [a[0] + u[0] * 4, 1.2, a[1] + u[1] * 4] };
+  }
+  /** Tras un cambio de layout o de local: cubierta y capas que estaban visibles vuelven (re-trazo en paralelo). */
+  function retrazar(visibles, loc) {
+    if (!visibles.length) return anim.wait(0);
+    return anim.seq([
+      () => anim.all([ops.atenuar(ATEN_MEP, 600), cubierta.montar(loc, { ritmo: 0.7 })]),
+      // re-trazo en paralelo, con los arranques separados unos cuadros (cada arranque prepara su capa: no todos juntos)
+      () => anim.all(visibles.map((c, i) => anim.seq([i * 70, () => mep.trazar([c])]))),
+    ]);
   }
 
   // ---------- Operaciones ----------
@@ -139,7 +178,7 @@ export function crearApp({ params, anim, reloj, cascaron, muebles, zonas, mep, c
     /** Escena vacía (paso 0). */
     limpiar() {
       anim.terminarTodo(); cascaron.vaciar(); muebles.preparar({ muebles: [] }); zonas.preparar({ zonas: [] }); zonas.rotulos(false);
-      anim.instantaneamente(() => mep.retraer(CAPAS)); atenuar('arq', 1); atenuar('mob', 1); niveles.arq = niveles.mob = 1; camara.orbita = false;
+      anim.instantaneamente(() => { mep.retraer(CAPAS); camara.desplazar(0, { dur: 0 }); }); cubierta.vaciar(); atenuar('arq', 1); atenuar('mob', 1); niveles.arq = niveles.mob = 1; camara.orbita = false;
       vistos.clear();
       set({ orbita: false, capas: { luz: false, aire: false, frio: false } });
     },
@@ -175,10 +214,15 @@ export function crearApp({ params, anim, reloj, cascaron, muebles, zonas, mep, c
     escenas: {
       /** Paso 1: el local se construye; la cámara baja de un plano aéreo al general. */
       local() {
-        if (!layout || layout.localId !== estado.local) ops.calcularLayout();
-        zonas.preparar(layout); muebles.preparar(layout);
+        // el trabajo pesado se reparte: este cuadro solo compone el layout y arranca la obra; el plan de
+        // instalaciones se calcula en otro cuadro y los muebles (desarmados) se crean de a pocos durante la obra
+        const lay = layout && layout.localId === estado.local ? layout : layoutBase();
+        layout = lay;
         anim.instantaneamente(() => ops.camara('aereo', { dur: 0, forzar: true }));
-        return anim.all([ops.camara('general', { dur: 4200, delay: 200 }), cascaron.construir(LOCALES[estado.local], layout)]);
+        return anim.all([
+          ops.camara('general', { dur: 4200, delay: 200 }), cascaron.construir(LOCALES[estado.local], lay),
+          anim.seq([50, () => { publicar(lay); return anim.wait(50); }, () => { zonas.preparar(lay); return anim.wait(50); }, () => muebles.preparar(lay)]),
+        ]);
       },
       /**
        * Paso 2: vista general (sin acercamiento). Los muebles llegan en oleadas por zona y cada zona se va
@@ -187,6 +231,7 @@ export function crearApp({ params, anim, reloj, cascaron, muebles, zonas, mep, c
       mobiliario() {
         const orden = ordenZonas(), cada = 1150;
         return anim.all([
+          cascaron.cortar(true, { dur: 500 }), // los muros entre la cámara y el interior se vuelven translúcidos
           zonas.revelar(orden, { inicio: 150, cada, rotulos: estado.rotulos }),
           muebles.armar({ orden, oleada: cada, inicio: 300 }),
           ops.camara('mobiliario', { dur: 9500, ease: 'sine' }),
@@ -195,7 +240,7 @@ export function crearApp({ params, anim, reloj, cascaron, muebles, zonas, mep, c
       /** Paso 3: se atenúa la arquitectura y se trazan las tres capas. */
       instalaciones() {
         return anim.seq([
-          () => anim.all([ops.atenuar(ATEN_MEP, 900), zonas.mostrar(true, { nivel: 0.5, dur: 900 }), zonas.rotulos(false), ops.camara('instalaciones', { dur: 1800 })]),
+          () => anim.all([ops.atenuar(ATEN_MEP, 900), zonas.mostrar(true, { nivel: 0.5, dur: 900 }), zonas.rotulos(false), ops.camara('instalaciones', { dur: 1800 }), cubierta.montar(LOCALES[estado.local])]),
           () => ops.trazar(CAPAS),
         ]);
       },
@@ -209,15 +254,16 @@ export function crearApp({ params, anim, reloj, cascaron, muebles, zonas, mep, c
         const nuevo = obtenerLayout(estado.local, semilla, previo, modoSiguiente(estado.local));
         const bb = cajaLocal();
         return anim.seq([
-          () => anim.all([mep.retraer(visibles), ops.atenuar({ arq: 1, mob: 1 }, 700), zonas.rotulos(false)]),
+          () => anim.all([mep.retraer(visibles), cubierta.desmontar(), ops.atenuar({ arq: 1, mob: 1 }, 700), zonas.rotulos(false)]),
           () => anim.all([ops.camara('cenital', { dur: 1500 }), zonas.mostrar(true, { nivel: 1.6, dur: 900 }), ops.atenuar(0.22, 900, ['mob'])]),
-          () => zonas.parpadeo(nuevo.candidatos.muestras, { evaluados: nuevo.candidatos.evaluados, elegido: nuevo, centro: [(bb.x0 + bb.x1) / 2, 0.5, bb.z0 - 1.4] }),
-          () => { publicar(nuevo); return anim.all([cascaron.setInteriores(nuevo), ops.atenuar(1, 600, ['mob'])]); },
+          () => zonas.parpadeo(nuevo.candidatos.muestras, { evaluados: nuevo.candidatos.evaluados, elegido: nuevo, centro: [(bb.x0 + bb.x1) / 2, 0.5, bb.z0 - 1.4], caja: bb, margenes: camara.margenes }),
+          () => { publicar(nuevo); return anim.wait(50); }, // el plan de instalaciones en su propio cuadro
+          () => anim.all([cascaron.setInteriores(nuevo), ops.atenuar(1, 600, ['mob'])]),
           () => anim.all([
             muebles.transitar(nuevo), ops.camara('general', { dur: 2600, delay: 200 }),
             zonas.mostrar(true, { nivel: 1, dur: 1200, delay: 800 }), zonas.rotulos(estado.rotulos, { delay: 2400, cada: 120 }),
           ]),
-          () => (visibles.length ? anim.seq([() => ops.atenuar(ATEN_MEP, 600), () => anim.all(visibles.map((c) => mep.trazar([c])))  /* re-trazo en paralelo: más corto */]) : anim.wait(0)),
+          () => retrazar(visibles, LOCALES[estado.local]),
         ]);
       },
       /**
@@ -230,11 +276,13 @@ export function crearApp({ params, anim, reloj, cascaron, muebles, zonas, mep, c
         const nuevo = obtenerLayout(id, estado.semilla, layout, 'mejor');
         const locA = LOCALES[estado.local];
         return anim.seq([
-          () => anim.all([mep.retraer(visibles), ops.atenuar({ arq: 1, mob: 1 }, 600), zonas.rotulos(false)]),
+          () => anim.all([mep.retraer(visibles), cubierta.desmontar(), ops.atenuar({ arq: 1, mob: 1 }, 600), zonas.rotulos(false)]),
+          () => { fijar(nuevo); return anim.wait(50); }, // plan de instalaciones en su propio cuadro
           () => {
-            publicar(nuevo);
             const t = muebles.tiemposLocal; // formación: suben, se sostienen sobre el local nuevo y bajan
             return anim.all([
+              // los indicadores cambian cuando ya se ve el local nuevo (a media transformación del cascarón)
+              anim.seq([t.subida + t.vuelo * 0.55, () => { anunciar(nuevo); return anim.wait(0); }]),
               muebles.transitar(nuevo, { modo: 'local', localAnterior: locA, localNuevo: LOCALES[id] }),
               cascaron.transformarA(LOCALES[id], nuevo, { delay: t.subida, dur: t.vuelo }),
               zonas.transformar(nuevo, { delay: t.subida, dur: t.vuelo }),
@@ -242,15 +290,30 @@ export function crearApp({ params, anim, reloj, cascaron, muebles, zonas, mep, c
               zonas.rotulos(estado.rotulos, { delay: t.subida + t.vuelo + t.bajada + 400, cada: 120 }),
             ]);
           },
-          () => (visibles.length ? anim.seq([() => ops.atenuar(ATEN_MEP, 600), () => anim.all(visibles.map((c) => mep.trazar([c])))  /* re-trazo en paralelo: más corto */]) : anim.wait(0)),
+          () => retrazar(visibles, LOCALES[estado.local]),
         ]);
       },
-      /** Paso 7: recorrido bajo por un pasillo de góndolas, sube al plano de cierre y órbita lenta. */
+      /**
+       * Paso 7: acercamiento progresivo (viaje esférico) a la entrada de un pasillo de góndolas, recorrido a ~2 m con
+       * el mobiliario a opacidad y color plenos y la imagen desplazada al centro del área libre de la interfaz; luego
+       * sube al plano de cierre (encuadre orbital) y órbita lenta.
+       */
       cierre() {
-        const r = recorridoPasillo();
-        const pasos = [() => anim.all([zonas.rotulos(false), mep.capasVisibles().length ? ops.atenuar({ arq: 0.7, mob: 1 }, 900) : ops.atenuar({ arq: 1, mob: 1 }, 600)])];
-        if (r) pasos.push(() => camara.mirar(r.p0, r.t0, { dur: 2600 }), () => camara.mirar(r.p1, r.t1, { dur: 4200, ease: 'sine' }));
-        pasos.push(() => ops.camara('cierre', { dur: 3200 }), () => { ops.orbita(true); return anim.wait(0); });
+        const r = recorridoPasillo(), capas = mep.capasVisibles().length > 0;
+        camara.margenes = estado.interfaz ? margenesUI() : {};
+        const pasos = [() => anim.all([zonas.rotulos(false), ops.atenuar({ arq: 1, mob: 1 }, 700), zonas.mostrar(true, { nivel: 0.35, dur: 700 })])];
+        if (r) pasos.push(
+          // se acerca por fuera hasta el eje del pasillo, entra por la fachada, recorre y sale por donde entró
+          () => anim.all([camara.viajar(r.pm, r.tm, { dur: 3000, ease: 'io' }), camara.desplazar(1, { dur: 2400, delay: 600 })]),
+          () => camara.mirar(r.p0, r.t0, { dur: 2200, ease: 'io' }),
+          () => camara.mirar(r.p1, r.t1, { dur: 4200, ease: 'sine' }),
+          () => camara.mirar(r.pm2, r.t1, { dur: 2600, ease: 'io' }),
+        );
+        pasos.push(
+          () => anim.all([ops.camara('cierre', { dur: 3200 }), camara.desplazar(0, { dur: 2000 }),
+            ops.atenuar(capas ? { arq: 0.7, mob: 1 } : { arq: 1, mob: 1 }, 1200, ['arq', 'mob']), zonas.mostrar(true, { nivel: capas ? 0.5 : 1, dur: 1200 })]),
+          () => { ops.orbita(true); return anim.wait(0); },
+        );
         return anim.seq(pasos);
       },
     },
@@ -300,8 +363,8 @@ export function crearApp({ params, anim, reloj, cascaron, muebles, zonas, mep, c
     const poner = CAPAS.filter((c) => estado.capas[c] && !ver.includes(c));
     const algo = CAPAS.some((c) => estado.capas[c]);
     return anim.seq([
-      () => (quitar.length ? mep.retraer(quitar) : anim.wait(0)),
-      () => (algo !== (niveles.arq < 0.9) ? ops.atenuar(algo ? ATEN_MEP : { arq: 1, mob: 1 }, 600) : anim.wait(0)),
+      () => anim.all([quitar.length ? mep.retraer(quitar) : null, !algo ? cubierta.desmontar() : null]),
+      () => anim.all([algo !== (niveles.arq < 0.9) ? ops.atenuar(algo ? ATEN_MEP : { arq: 1, mob: 1 }, 600) : null, algo && estado.paso >= 1 ? cubierta.montar(LOCALES[estado.local]) : null]),
       () => (poner.length ? mep.trazar(poner) : anim.wait(0)),
     ]);
   }

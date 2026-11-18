@@ -134,6 +134,24 @@ export function crearAnim(reloj) {
     return h;
   }
 
+  /**
+   * Tarea repartida en cuadros: llama fn() una vez por cuadro hasta que devuelva true. finish() (o el modo
+   * instantáneo) la completa en el acto. Para trabajo pesado (fusión de geometría, creación de muebles) que no
+   * debe caer entero en un solo cuadro. Determinista: el reparto es por cantidad de trabajo, no por tiempo.
+   * @param {()=>boolean} fn
+   * @returns {Handle}
+   */
+  function tarea(fn) {
+    const h = crearHandle();
+    let fin = false;
+    h._paso = () => (fin = fin || !!fn());
+    h._info = { dur: -1, delay: 0, t0: reloj.ahora, pila: 'tarea' };
+    h._alCerrar = (completo) => { activos.delete(h); if (completo) while (!fin) fin = !!fn(); };
+    if (instantaneo) { h.finish(); return h; }
+    activos.add(h); reloj.pedirCuadro();
+    return h;
+  }
+
   /** Ejecuta fn con todas las interpolaciones instantáneas (para ir a un paso sin animar). */
   function instantaneamente(fn) { instantaneo++; try { return fn(); } finally { instantaneo--; } }
 
@@ -141,7 +159,7 @@ export function crearAnim(reloj) {
   function terminarTodo() { for (const h of [...activos]) h.finish(); }
 
   return {
-    EASE, tween, wait, all, stagger, seq, instantaneamente, terminarTodo,
+    EASE, tween, wait, all, stagger, seq, tarea, instantaneamente, terminarTodo,
     get activos() { return activos.size; },
     /** Diagnóstico: interpolaciones activas (dur, delay, inicio). */
     depurar: () => [...activos].map((h) => h._info),

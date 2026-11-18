@@ -73,7 +73,7 @@ export function mueble_caja(b, c) {
   b.caja(0.44, 0.752, 0.26, 0.12, 0.13, 0.08, 0xe8d9b5); b.caja(0.58, 0.752, 0.18, 0.1, 0.1, 0.07, P.blanco);
   b.lamZ(0.44, 0.8, 0.3005, 0.09, 0.03, claro(acento, 0.5), 1);
   portaBolsas(b, 0.66, 0.74, 0.04); portaBolsas(b, 0.34, 0.74, 0.04);
-  b.pieza('área de empaque', 3, 'cae');
+  b.pieza('área de empaque', 3, 'cae', { caida: 0.25 });
   lector(b, 0.0, 0.74, -0.085);
   terminal(b, 0.35, 0.74, -0.2, 0.26, 0.15);
   exhibidorImpulso(b, c, -0.53, 0.74, -0.2, 0.4);
@@ -88,6 +88,14 @@ export function caja_mostrador(b, c) {
   for (const s of [-1, 1]) b.caja(0, 0.33, s * (D / 2 - 0.004), W - 0.04, 0.14, 0.008, acento, { sin: '-y' });
   for (const x of [-W / 2 + 0.4, W / 2 - 0.4]) b.lamZ(x, 0.1, D / 2 - 0.0075, 0.004, 0.68, 0xc2c4c0, 1);
   b.caja(0.2, 0.62, -(D / 2 - 0.016), 0.4, 0.11, 0.012, 0xd6d9dc); b.lamZ(0.2, 0.67, -(D / 2 - 0.0095), 0.18, 0.014, P.metalOscuro, -1);
+  // vano de impulso al frente (lado del cliente): nicho oscuro con dos repisas y producto de frente
+  b.lamZ(-0.3, 0.5, D / 2 - 0.0075, 0.52, 0.26, P.oscuro, 1);
+  for (const [k, y] of [[0, 0.52], [1, 0.64]]) {
+    b.caja(-0.3, y, D / 2 - 0.0085, 0.52, 0.012, 0.004, P.metal);
+    for (let i = 0; i < 6; i++) b.lamZ(-0.3 - 0.22 + i * 0.088 + 0.04, y + 0.014, D / 2 - 0.0072, 0.07, 0.1 - k * 0.02, c.paleta[(i + k * 3) % c.paleta.length], 1);
+  }
+  b.caja(0.3, 0.1, D / 2 - 0.0085, 0.6, 0.02, 0.004, P.negro); // zoclo retranqueado: sombra
+  b.caja(0.3, 0.5, D / 2 - 0.009, 0.4, 0.14, 0.004, 0xd6d9dc); b.lamZ(0.3, 0.57, D / 2 - 0.0065, 0.2, 0.014, P.metalOscuro, 1); // cajón visible
   b.pieza('cuerpo', 1, 'crece');
   b.caja(0, 0.8, 0, W, 0.04, D, TOPE); b.caja(0, 0.842, D / 2 - 0.006, W, 0.006, 0.012, P.metalOscuro, { sin: '-y' }); b.cil('y', -0.05, 0.84, -0.22, 0.022, 0.004, P.negro, 8, { sinBase: true });
   b.pieza('cubierta', 2, 'cae');

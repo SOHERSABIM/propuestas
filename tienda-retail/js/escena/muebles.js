@@ -5,7 +5,7 @@
 //   solas líneas; las piezas con otros materiales se quedan como están. Antes de animar se deshace la fusión.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { crearMueble, liberarPlanesSinUso } from '../mobiliario/index.js';
+import { crearMueble, liberarPlanesSinUso, resumenMueble } from '../mobiliario/index.js';
 import { ZONAS } from '../datos/catalogo.js';
 import { MAT } from '../core/estilo.js';
 import { DEG } from '../core/geom.js';
@@ -44,47 +44,103 @@ export function crearMuebles({ escena, anim }) {
   function nuevo(m) { const fx = crearMueble(m, { anim }); colocar(fx, m); raiz.add(fx.grupo); porId.set(m.id, { fx, spec: m }); return fx; }
   function quitar(id) { const r = porId.get(id); if (!r) return; r.fx.dispose(); r.fx.grupo.removeFromParent(); porId.delete(id); }
 
+  // ---------- Fusión en reposo, repartida en cuadros ----------
+  // Antes se clonaban y fusionaban todas las mallas horneadas en un solo cuadro (100-190 ms). Ahora se reservan los
+  // arreglos y se copian (transformados) unos cuantos miles de vértices por cuadro; al terminar se cambia de golpe a
+  // la malla fusionada (lo visible es idéntico). Si empieza otra transición, se cancela.
+  let fusion = null;
+  const VERT_CUADRO = 90000;
   function desfusionar() {
+    fusion?.cancel(); fusion = null;
     for (const o of gFus.children.slice()) { o.geometry.dispose(); gFus.remove(o); }
     for (const o of ocultos) o.visible = true; ocultos = [];
   }
   /**
    * Fusiona en reposo lo horneado de todos los muebles: una malla por material (mobVC, vidrio, …) y unas líneas
    * por material de aristas. Solo toma mallas de muebles en estado 'horneado' (las piezas sueltas no).
+   * @returns {any} Handle (tarea repartida en cuadros)
    */
   function fusionar() {
     desfusionar();
-    const mallas = new Map(), lineas = new Map();
+    const grupos = new Map(), cola = [];
     raiz.updateMatrixWorld(true);
     for (const { fx } of porId.values()) {
       if (fx.estado !== 'horneado') continue;
       fx.grupo.traverse((o) => {
         if (o === fx.grupo || !(o.isMesh || o.isLineSegments)) return;
         for (let p = o; p && p !== fx.grupo; p = p.parent) if (!p.visible) return;
-        const g = o.geometry, clave = o.material.uuid + '|' + Object.keys(g.attributes).sort().join(',') + '|' + (g.index ? 'i' : 'n');
-        const dest = o.isLineSegments ? lineas : mallas;
-        if (!dest.has(clave)) dest.set(clave, { mat: o.material, gs: [], ro: o.renderOrder });
-        dest.get(clave).gs.push(g.clone().applyMatrix4(o.matrixWorld)); ocultos.push(o);
+        const g = o.geometry, nombres = Object.keys(g.attributes).sort(), clave = o.material.uuid + '|' + nombres.join(',') + '|' + (g.index ? 'i' : 'n') + (o.isLineSegments ? 'L' : 'M');
+        if (!grupos.has(clave)) grupos.set(clave, { mat: o.material, linea: o.isLineSegments, ro: o.renderOrder, nombres, indexado: !!g.index, nv: 0, ni: 0, attrs: null, idx: null, v: 0, i: 0, fuentes: [] });
+        const gr = grupos.get(clave);
+        gr.fuentes.push(o); gr.nv += g.attributes.position.count; gr.ni += g.index ? g.index.count : 0;
+        cola.push([gr, o, o.matrixWorld.clone()]);
       });
     }
-    for (const o of ocultos) o.visible = false;
-    for (const { mat, gs, ro } of mallas.values()) { const m = new THREE.Mesh(mergeGeometries(gs), mat); m.renderOrder = ro; m.castShadow = !mat.transparent; m.receiveShadow = true; gFus.add(m); gs.forEach((g) => g.dispose()); }
-    for (const { mat, gs } of lineas.values()) { const l = new THREE.LineSegments(mergeGeometries(gs), mat); l.raycast = () => {}; gFus.add(l); gs.forEach((g) => g.dispose()); }
+    if (!cola.length) return anim.wait(0);
+    let k = 0;
+    const tmp = new THREE.Vector3();
+    function copiar(gr, o, mw) {
+      const g = o.geometry, n = g.attributes.position.count, e = mw.elements, base = gr.v;
+      if (!gr.attrs) {
+        gr.attrs = {};
+        for (const nm of gr.nombres) { const a = g.attributes[nm]; gr.attrs[nm] = { tam: a.itemSize, arr: new Float32Array(gr.nv * a.itemSize), norm: a.normalized }; }
+        if (gr.indexado) gr.idx = new Uint32Array(gr.ni);
+      }
+      for (const nm of gr.nombres) {
+        const src = g.attributes[nm], dst = gr.attrs[nm], t = dst.tam, d = dst.arr, o0 = base * t;
+        if (nm === 'position') {
+          for (let i = 0; i < n; i++) { tmp.fromBufferAttribute(src, i).applyMatrix4(mw); d[o0 + i * 3] = tmp.x; d[o0 + i * 3 + 1] = tmp.y; d[o0 + i * 3 + 2] = tmp.z; }
+        } else if (nm === 'normal') {
+          for (let i = 0; i < n; i++) {
+            const x = src.getX(i), y = src.getY(i), z = src.getZ(i);
+            d[o0 + i * 3] = e[0] * x + e[4] * y + e[8] * z; d[o0 + i * 3 + 1] = e[1] * x + e[5] * y + e[9] * z; d[o0 + i * 3 + 2] = e[2] * x + e[6] * y + e[10] * z;
+          }
+        } else if (!src.isInterleavedBufferAttribute && !src.normalized && src.array.length === n * t) d.set(src.array, o0);
+        else for (let i = 0; i < n; i++) for (let c = 0; c < t; c++) d[o0 + i * t + c] = src.getComponent(i, c);
+      }
+      if (gr.indexado) { const ix = g.index; for (let i = 0; i < ix.count; i++) gr.idx[gr.i + i] = ix.getX(i) + base; gr.i += ix.count; }
+      gr.v += n;
+    }
+    fusion = anim.tarea(() => {
+      let presup = VERT_CUADRO;
+      while (k < cola.length && presup > 0) { const [gr, o, mw] = cola[k++]; copiar(gr, o, mw); presup -= o.geometry.attributes.position.count; }
+      if (k < cola.length) return false;
+      for (const gr of grupos.values()) {
+        const geo = new THREE.BufferGeometry();
+        for (const nm of gr.nombres) geo.setAttribute(nm, new THREE.BufferAttribute(gr.attrs[nm].arr, gr.attrs[nm].tam, gr.attrs[nm].norm));
+        if (gr.idx) geo.setIndex(new THREE.BufferAttribute(gr.idx, 1));
+        geo.computeBoundingSphere();
+        if (gr.linea) { const l = new THREE.LineSegments(geo, gr.mat); l.raycast = () => {}; gFus.add(l); }
+        else { const m = new THREE.Mesh(geo, gr.mat); m.renderOrder = gr.ro; m.castShadow = !gr.mat.transparent; m.receiveShadow = true; gFus.add(m); }
+        for (const o of gr.fuentes) { o.visible = false; ocultos.push(o); }
+      }
+      fusion = null;
+      return true;
+    });
+    return fusion;
   }
   // Al terminar cada transición se liberan en la GPU las geometrías de los planes de mobiliario que ya nadie usa
   // (antes crecían ~350 geometrías por transición; ver mobiliario/index.js liberarPlanesSinUso).
   const alTerminar = (h) => h.onDone(() => { liberarPlanesSinUso(); fusionar(); });
+  /** Hundir horneado (sin despiezar): para los que se retiran en un cambio de local. */
+  function hundir(id, delay) {
+    const r = porId.get(id); if (!r) return null;
+    const g = r.fx.grupo;
+    return anim.tween({ delay, dur: 520, ease: 'in', aplicarInicio: false, onUpdate: (k) => { g.scale.set(1 - 0.15 * k, Math.max(0.001, 1 - k), 1 - 0.15 * k); g.position.y = -0.05 * k; } }).onDone(() => quitar(id));
+  }
 
   const api = {
     raiz, porId,
     get layout() { return layout; },
     /** Crea (sin mostrar: desarmados) los muebles del layout. Sustituye a los anteriores. */
-    preparar(lay) {
+    preparar(lay, { porCuadro = 3 } = {}) {
       desfusionar();
       for (const id of [...porId.keys()]) quitar(id);
       layout = lay;
-      for (const m of lay.muebles || []) nuevo(m);
       liberarPlanesSinUso(); // los planes de los muebles retirados ya no se usan: libera su GPU (ver arriba)
+      // crear un mueble cuesta (su plan de piezas la primera vez): se reparte en cuadros; quedan desarmados
+      const lista = (lay.muebles || []).slice(); let i = 0;
+      return anim.tarea(() => { for (let n = 0; n < porCuadro && i < lista.length; n++) nuevo(lista[i++]); return i >= lista.length; });
     },
     /**
      * Arma todos en oleadas por zona (paso 2), en vista general. `orden` = zonas en el orden de las oleadas (por
@@ -117,7 +173,13 @@ export function crearMuebles({ escena, anim }) {
       const c = lay.cambios || { movidos: [], quietos: [], nuevos: lay.muebles.map((m) => m.id), retirados: [...porId.keys()] };
       const hs = [];
       // 1) retirados: se desarman
-      c.retirados.forEach((id, i) => { const r = porId.get(id); if (!r) return; hs.push(r.fx.desarmar({ delay: Math.min(500, i * 20) }).onDone(() => quitar(id))); });
+      // en cambio de local se hunden horneados (sin despiezar: pocas llamadas); en cambio de layout se desarman,
+      // escalonados para que no se despiecen muchos a la vez
+      c.retirados.forEach((id, i) => {
+        const r = porId.get(id); if (!r) return;
+        if (modo === 'local') hs.push(hundir(id, Math.min(700, i * 18)));
+        else hs.push(r.fx.desarmar({ delay: Math.min(1600, i * 130) }).onDone(() => quitar(id)));
+      });
       // 2) movidos: barrido por x
       const specs = new Map(lay.muebles.map((m) => [m.id, m]));
       const mov = c.movidos.filter((id) => porId.has(id)).sort((a, b) => porId.get(a).spec.x - porId.get(b).spec.x || (a < b ? -1 : 1));
@@ -186,14 +248,41 @@ export function crearMuebles({ escena, anim }) {
       for (const id of c.quietos) { const r = porId.get(id); if (r) r.spec = specs.get(id); }
       // 3) nuevos: se arman cuando los viajeros van llegando
       const nuevos = c.nuevos.map((id) => specs.get(id)).sort((p, q) => q.z - p.z || p.x - q.x);
-      const iniNuevos = Math.max(600, finMov - 600);
-      nuevos.forEach((m, i) => { if (porId.has(m.id)) quitar(m.id); const fx = nuevo(m); hs.push(fx.armar({ delay: iniNuevos + Math.min(1200, i * 30) })); });
+      // se crean al llegar su turno (crear cuesta) y se escalonan para que pocos estén despiezados a la vez.
+      // Cambio de local: bajan horneados desde la altura de la formación (como los demás) en vez de armarse.
+      if (modo === 'local' && formacion) {
+        const H = 5.8, ini0 = TL.subida + TL.vuelo - 200;
+        nuevos.forEach((m, i) => {
+          const d = ini0 + Math.min(1600, i * 35);
+          hs.push(anim.seq([() => anim.wait(d), () => {
+            if (porId.has(m.id)) quitar(m.id);
+            const fx = nuevo(m); fx.hornear(); const g = fx.grupo;
+            return anim.seq([
+              () => anim.tween({ dur: 260, ease: 'out', onUpdate: (k) => { g.position.y = H; g.scale.setScalar(Math.max(0.001, k)); } }),
+              () => anim.tween({ dur: TL.bajada, ease: 'lin', onUpdate: (k) => { g.position.y = H * (1 - EASE.out(k)); } }),
+              () => anim.tween({ dur: 220, ease: 'lin', onUpdate: (k) => { g.scale.y = 1 - 0.06 * Math.sin(Math.PI * k); g.scale.x = g.scale.z = 1 + 0.02 * Math.sin(Math.PI * k); } }),
+            ]).onDone(() => { colocar(fx, m); g.scale.set(1, 1, 1); });
+          }]));
+        });
+      } else {
+        const iniNuevos = 600;
+        nuevos.forEach((m, i) => hs.push(anim.seq([() => anim.wait(iniNuevos + Math.min(5000, i * 190)), () => {
+          if (porId.has(m.id)) quitar(m.id);
+          return nuevo(m).armar({ ritmo: 0.8 });
+        }])));
+      }
       return alTerminar(anim.all(hs));
     },
     fusionar, desfusionar, tiemposLocal: TIEMPOS_LOCAL,
+    /**
+     * Precalienta los planes de piezas (lo caro de crear un mueble la primera vez) de una lista de muebles, sin
+     * ponerlos en escena (resumenMueble calcula y deja el plan en la caché de mobiliario).
+     * @param {any[]} specs
+     */
+    precalentar(specs) { for (const m of specs) resumenMueble(m); },
     /** Caja 3D (min/max) de cada mueble para elegir con el puntero (ficha). */
     cajas() { return [...porId.values()].map(({ spec: m }) => { const g = ((Math.round(m.rot / 90) % 4) + 4) % 4, w = g % 2 ? m.fondo : m.ancho, d = g % 2 ? m.ancho : m.fondo; return { spec: m, min: [m.x - w / 2, 0, m.z - d / 2], max: [m.x + w / 2, m.familia === 'tarima_aparador' ? 2.0 : m.alto, m.z + d / 2] }; }); },
-    stats() { return { muebles: porId.size, fusionado: gFus.children.length > 0 }; },
+    stats() { return { muebles: porId.size, fusionado: gFus.children.length > 0, fusionando: !!fusion }; },
   };
   return api;
 }

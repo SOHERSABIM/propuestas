@@ -27,3 +27,8 @@ body { background: linear-gradient(180deg, var(--fondo-1) 0%, var(--fondo-2) 55%
 }
 .rotulo-alternativa.descartada { border-left-color: #d23b30; color: var(--tinta-suave); }
 .rotulo-alternativa.elegida { border-left-color: var(--verde-oscuro); background: #f3f9ee; }
+/* dos renglones: "Alternativa i de N" y el resultado; va al lado del plano (fuera de la planta) */
+.rotulo-alternativa { font-size: clamp(14px, 2.5vh, 44px); line-height: 1.15; }
+.rotulo-alternativa .ra-t { display: block; }
+.rotulo-alternativa .ra-r { display: block; font-size: .78em; font-weight: 600; margin-top: .2em; color: var(--tinta-suave, #5d6a75); }
+.rotulo-alternativa.elegida .ra-r { color: var(--verde-oscuro, #105020); }

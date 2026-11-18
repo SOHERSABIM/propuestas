@@ -4,12 +4,13 @@
 // primero la soportería, luego tramo por tramo desde la unidad hacia los extremos y al final los terminales.
 import * as THREE from 'three';
 import * as G from './geo.js';
-import { crearLote, crearPulsos } from './kit.js';
+import { crearLote } from './kit.js';
+import { H_BANC } from './util.js';
 import { ventana, alcanceRed } from './tiempos.js';
 
-const COL = { principal: 0x2b8fd6, ramal: 0x4aa3e8, bajante: 0x2477b4, unidad: 0xd4e6f4, ventilador: 0xffffff, difusor: 0xe6f1fa, flex: 0xffffff, retorno: 0x9cc9ee, soporte: 0xffffff, pulso: 0xe3f3ff };
-const GEO = { tramo: G.geoTramo, codo: G.geoCodo, teeR: G.geoTeeR, teeP: G.geoTeeP, reduccion: G.geoReduccion, compuerta: G.geoCompuerta, soporte: G.geoSoporte, difusor: G.geoDifusor, flex: G.geoFlex, retorno: G.geoRetorno, bajante: G.geoBajante, unidad: G.geoUnidad, ventilador: G.geoVentilador };
-const ORDEN = ['soporte', 'tramo', 'teeR', 'teeP', 'codo', 'reduccion', 'compuerta', 'bajante', 'flex', 'difusor', 'retorno', 'unidad', 'ventilador'];
+const COL = { principal: 0x4d8dbd, ramal: 0x68a0c9, bajante: 0x3d77a3, unidad: 0xffffff, ventilador: 0xffffff, difusor: 0xe6f1fa, flex: 0xffffff, retorno: 0xa5c3da, soporte: 0xffffff, pulso: 0xe3f3ff };
+const GEO = { tramo: G.geoTramo, codo: G.geoCodo, teeR: G.geoTeeR, teeP: G.geoTeeP, reduccion: G.geoReduccion, compuerta: G.geoCompuerta, soporte: G.geoSoporte, difusor: G.geoDifusor, flex: G.geoFlex, retorno: G.geoRetorno, bajante: G.geoBajante, unidad: G.geoUnidad, bancada: () => G.geoBancada(2.4, 1.6, H_BANC), cuello: G.geoCuelloAire, ventilador: G.geoVentilador };
+const ORDEN = ['soporte', 'tramo', 'teeR', 'teeP', 'codo', 'reduccion', 'compuerta', 'bajante', 'flex', 'difusor', 'retorno', 'bancada', 'cuello', 'unidad', 'ventilador'];
 
 function colorDe(p) {
   if (p.c != null) return p.c;
@@ -22,7 +23,6 @@ function colorDe(p) {
 export function crearCapaAire() {
   const grupo = new THREE.Group(); grupo.name = 'capa-aire'; grupo.visible = false;
   const matLam = new THREE.MeshLambertMaterial({ color: 0xffffff, vertexColors: true });
-  const matBas = new THREE.MeshBasicMaterial({ color: 0xffffff });
   let lotes = [], pulsos = null, plan = null, pAct = 0, dMax = 1, fan = null;
 
   function construir(p) {
@@ -35,8 +35,8 @@ export function crearCapaAire() {
       const pz = A.piezas.filter((q) => q.t === t); if (!pz.length) continue;
       const lote = crearLote(GEO[t](), matLam, pz); lotes.push(lote); grupo.add(lote.mesh); if (t === 'ventilador') fan = lote;
     }
-    pulsos = crearPulsos(A.rutas.map((r) => ({ ...r, dir: 1, color: COL.pulso })), { cada: 2.6, tam: 0.15, vel: 1.4, dy: 0.27 }, matBas);
-    grupo.add(pulsos.mesh); actualizar(0, true);
+    // sin cubos de flujo sobre los ductos (se leían como piezas sueltas): el movimiento lo dan los ventiladores
+    actualizar(0, true);
   }
   function liberar() { for (const c of [...grupo.children]) { grupo.remove(c); c.dispose?.(); } lotes = []; pulsos = null; fan = null; }
   function actualizar(p, forzar = false) { pAct = p; for (const l of lotes) l.actualizar(p, forzar); }

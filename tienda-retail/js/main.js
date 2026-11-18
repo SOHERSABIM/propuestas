@@ -5,6 +5,7 @@ import { crearAnim } from './core/anim.js';
 import { crearEscenario } from './escena/escenario.js';
 import { crearCamara } from './escena/camara.js';
 import { crearCascaron } from './escena/cascaron.js';
+import { crearCubierta } from './escena/cubierta.js';
 import { crearMuebles } from './escena/muebles.js';
 import { crearZonas } from './escena/zonas.js';
 import { crearInstalaciones } from './instalaciones/index.js';
@@ -20,7 +21,8 @@ reloj.velocidad = params.vel;
 const anim = crearAnim(reloj);
 const esc = crearEscenario(document.getElementById('escena'), { reloj });
 const camara = crearCamara({ camara: esc.camara, dom: esc.renderer.domElement, anim, reloj });
-const cascaron = crearCascaron({ escena: esc.escena, anim });
+const cascaron = crearCascaron({ escena: esc.escena, anim, reloj, camara: esc.camara });
+const cubierta = crearCubierta({ escena: esc.escena, anim });
 const muebles = crearMuebles({ escena: esc.escena, anim });
 const zonas = crearZonas({ escena: esc.escena, anim, reloj, camara: esc.camara, dom: esc.renderer.domElement });
 const mep = crearInstalaciones({ escena: esc.escena, anim, reloj });
@@ -28,7 +30,7 @@ const mep = crearInstalaciones({ escena: esc.escena, anim, reloj });
  * Márgenes que ocupa la interfaz visible (px), leídos del DOM: panel lateral izquierdo, barra inferior, rótulo superior.
  * Solo lectura; si la interfaz cambia de forma, el encuadre se adapta solo.
  */
-function margenesUI() {
+function medirMargenes() {
   const W = window.innerWidth, H = window.innerHeight, m = { arriba: 0, abajo: 0, izq: 0, der: 0 };
   const capa = document.querySelector('#ui .ui-capa') || document.getElementById('ui');
   // En la vista de grabación (J: solo indicadores y rótulo) la barra de controles se oculta con una transición de
@@ -47,7 +49,21 @@ function margenesUI() {
   }
   return m;
 }
-const app = crearApp({ params, anim, reloj, cascaron, muebles, zonas, mep, camara, pasos: PASOS, esc, margenesUI });
+/**
+ * Con caché: medir obliga al navegador a recalcular el diseño de la página (decenas de ms si la interfaz acaba de
+ * cambiar). Se vuelve a medir solo si cambia algo que mueve los márgenes: vista, panel o rótulo visibles, número de
+ * tarjetas, tamaño de ventana o escala de la interfaz. Todo eso se lee sin forzar diseño.
+ */
+const cacheMargenes = new Map();
+function margenesUI() {
+  const capa = document.querySelector('#ui .ui-capa');
+  if (!capa) return medirMargenes();
+  const panel = capa.querySelector('.panel-ind'), rp = capa.querySelector('.rotulo-paso');
+  const clave = [capa.dataset.modo, panel?.hidden, panel?.querySelectorAll('.tarjeta').length, rp?.hidden, innerWidth, innerHeight, document.getElementById('ui').style.getPropertyValue('--s')].join('|');
+  if (!cacheMargenes.has(clave)) cacheMargenes.set(clave, medirMargenes());
+  return { ...cacheMargenes.get(clave) };
+}
+const app = crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zonas, mep, camara, pasos: PASOS, esc, margenesUI });
 crearInterfaz(document.getElementById('ui'), app);
 
 // Encuadre y sol iniciales sobre el local de arranque
@@ -59,6 +75,9 @@ reloj.iniciar(esc.dibujar);
 
 async function arrancar() {
   app.precalcularTodo();
+  // márgenes de la interfaz con el rótulo del paso visible, medidos ya (al pulsar el paso 1 no hay que forzar diseño)
+  const rp = document.querySelector('#ui .rotulo-paso');
+  if (rp && rp.hidden && params.rotulos) { rp.hidden = false; margenesUI(); rp.hidden = true; }
   if (params.paso != null) await app.acciones.irAPaso(params.paso, { instantaneo: true });
   if (params.auto) app.acciones.reproducir(true);
   reloj.pedirCuadro();
@@ -90,13 +109,15 @@ window.__tienda = {
       reloj: { ahora: reloj.ahora, manual: reloj.manual }, animActivas: anim.activos,
       indicadores: app.estado.indicadores, calificacion: L?.calificacion ?? null, validacion: L?.validacion ?? null,
       candidatos: L ? { evaluados: L.candidatos.evaluados, validos: L.candidatos.validos } : null,
-      muebles: muebles.stats(), cascaron: cascaron.stats(), zonas: zonas.stats(), instalaciones: mep.stats(),
+      muebles: muebles.stats(), cascaron: cascaron.stats(), cubierta: cubierta.stats(), zonas: zonas.stats(), instalaciones: mep.stats(),
       // QA: posición y orientación de la cámara (para comprobar que no hay NaN); solo lectura, no afecta lo que se ve
       encuadre: { margenes: camara.margenes },
       camara: { pos: esc.camara.position.toArray(), rot: [esc.camara.rotation.x, esc.camara.rotation.y, esc.camara.rotation.z], fov: esc.camara.fov },
       renderer: { calls: r.render.calls, triangles: r.render.triangles, lines: r.render.lines, geometries: r.memory.geometries, textures: r.memory.textures },
     };
   },
+  /** Depuración (capturas): cámara a una posición y objetivo explícitos; dur 0 = inmediato. */
+  mirar: (pos, obj, op = {}) => camara.mirar(pos, obj, { forzar: true, dur: 0, ...op }).done,
   /** Encuadre con nombre (general, aereo, frente, instalaciones, cenital, cierre, pasillo); dur 0 = inmediato. */
   camara: (nombre, op = {}) => app.ops.camara(nombre, { forzar: true, ...op }).done,
   // alias en inglés para scripts de prueba

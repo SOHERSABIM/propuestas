@@ -26,7 +26,31 @@ export function crearZonas({ escena, anim, reloj, camara, dom }) {
 
   // contador del parpadeo (rótulo 3D sobre el local)
   const elCont = document.createElement('div'); elCont.className = 'rotulo-alternativa'; elCont.style.opacity = '0';
+  const elT = document.createElement('span'); elT.className = 'ra-t'; const elR = document.createElement('span'); elR.className = 'ra-r';
+  elCont.append(elT, elR);
   const cont = new CSS2DObject(elCont); raiz.add(cont);
+  /** Colocación del contador: al lado del plano, en el hueco más amplio del área libre (fuera de la planta). */
+  let contCaja = null, contMargenes = null, contTam = null;
+  const ray = new THREE.Raycaster(), plano = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.3), pTmp = new THREE.Vector3(), ndc = new THREE.Vector2();
+  function colocarContador(W, H) {
+    if (!contCaja) return;
+    if (!contTam) contTam = { w: elCont.offsetWidth, h: elCont.offsetHeight };
+    const m = contMargenes || {}, L = m.izq || 0, R = W - (m.der || 0), T = m.arriba || 0, B = H - (m.abajo || 0);
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    for (const x of [contCaja.x0, contCaja.x1]) for (const z of [contCaja.z0, contCaja.z1]) {
+      pTmp.set(x, 0.3, z).project(camara); const sx = (pTmp.x * 0.5 + 0.5) * W, sy = (-pTmp.y * 0.5 + 0.5) * H;
+      x0 = Math.min(x0, sx); x1 = Math.max(x1, sx); y0 = Math.min(y0, sy); y1 = Math.max(y1, sy);
+    }
+    const { w, h } = contTam, sep = 22;
+    const huecos = [
+      { g: x0 - L - w, x: x0 - sep - w / 2, y: (y0 + y1) / 2 }, { g: R - x1 - w, x: x1 + sep + w / 2, y: (y0 + y1) / 2 },
+      { g: (B - y1 - h) * 3, x: (x0 + x1) / 2, y: y1 + sep + h / 2 }, { g: (y0 - T - h) * 3, x: (x0 + x1) / 2, y: y0 - sep - h / 2 },
+    ];
+    const mejor = huecos.reduce((a, b) => (b.g > a.g ? b : a));
+    ndc.set((Math.min(R - w / 2 - 8, Math.max(L + w / 2 + 8, mejor.x)) / W) * 2 - 1, -(Math.min(B - h / 2 - 8, Math.max(T + h / 2 + 8, mejor.y)) / H) * 2 + 1);
+    ray.setFromCamera(ndc, camara);
+    if (ray.ray.intersectPlane(plano, pTmp)) cont.position.copy(pTmp);
+  }
 
   // Rótulos: contenedor (lo posiciona CSS2D) + etiqueta interior (la desplaza el anti-encimado).
   const PRIORIDAD = ['autoservicio', 'refrigerados', 'ropa_hogar', 'mostrador', 'cajas', 'acceso', 'trastienda'];
@@ -40,7 +64,9 @@ export function crearZonas({ escena, anim, reloj, camara, dom }) {
   // si aún choca, se desvanece. Todo sobre el reloj (sin saltos).
   const pv = new THREE.Vector3(); let anchoPrevio = 0;
   reloj?.onTick((dt) => {
-    const W = dom.clientWidth, H = dom.clientHeight; if (!W) return;
+    // tamaño de la ventana (el lienzo la ocupa): leer clientWidth aquí forzaría a recalcular el diseño en cada cuadro
+    const W = innerWidth, H = innerHeight; if (!W) return;
+    colocarContador(W, H);
     if (W !== anchoPrevio) { anchoPrevio = W; for (const z of ZONAS) rotulos[z].userData.w = 0; }
     const puestos = [];
     for (const z of PRIORIDAD) {
@@ -178,20 +204,22 @@ export function crearZonas({ escena, anim, reloj, camara, dom }) {
      * @param {{indice:number, valido:boolean, total:number, zonas:any[]}[]} muestras
      * @param {{evaluados:number, elegido:any, cada?:number, centro:[number,number,number]}} op
      */
-    parpadeo(muestras, { evaluados, elegido, cada = 170, centro }) {
+    parpadeo(muestras, { evaluados, elegido, cada = 170, centro, caja: bb = null, margenes = null }) {
       cont.position.set(...centro);
+      contCaja = bb; contMargenes = margenes; contTam = null;
       const pasos = [() => anim.tween({ dur: 250, onUpdate: (k) => { elCont.style.opacity = String(k); } })];
       muestras.forEach((m, i) => pasos.push(() => {
-        elCont.textContent = `Alternativa ${m.indice + 1} de ${evaluados} · ${m.valido ? `${m.total.toFixed(1)} pts` : 'descartada'}`;
+        elT.textContent = `Alternativa ${m.indice + 1} de ${evaluados}`; elR.textContent = m.valido ? `${m.total.toFixed(1)} pts` : 'descartada';
+        if (i === 0) contTam = null; // se mide una vez con texto (el ancho casi no cambia entre alternativas)
         elCont.classList.toggle('descartada', !m.valido);
         return morfear(m.zonas, { dur: Math.max(60, cada - 40 - Math.min(60, i * 4)), ease: 'out' });
       }));
       pasos.push(() => {
-        elCont.textContent = `Elegida: alternativa ${elegido.candidato + 1} · ${elegido.calificacion.total.toFixed(1)} pts`;
+        elT.textContent = `Elegida: alternativa ${elegido.candidato + 1}`; elR.textContent = `${elegido.calificacion.total.toFixed(1)} pts`; contTam = null;
         elCont.classList.remove('descartada'); elCont.classList.add('elegida');
         return morfear(elegido.zonas, { dur: 600, ease: 'io' });
       });
-      pasos.push(900, () => anim.tween({ dur: 400, onUpdate: (k) => { elCont.style.opacity = String(1 - k); } }).onDone(() => elCont.classList.remove('elegida')));
+      pasos.push(900, () => anim.tween({ dur: 400, onUpdate: (k) => { elCont.style.opacity = String(1 - k); } }).onDone(() => { elCont.classList.remove('elegida'); contCaja = null; }));
       return anim.seq(pasos);
     },
     stats() { return { rects: ZONAS.reduce((s, z) => s + pool[z].length, 0), fusionado: gFus.children.length > 0 }; },

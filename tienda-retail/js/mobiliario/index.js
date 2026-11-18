@@ -26,7 +26,7 @@ import { CONSTRUCTORES } from './familias/index.js';
  */
 
 /** Vidrio compartido (registrado en el grupo 'mob' para que atenúe con el resto del mobiliario). */
-const MAT_VIDRIO = mate(PALETA.mob.cristal, 'mob', { transparent: true, opacity: 0.3, depthWrite: false, side: THREE.DoubleSide });
+const MAT_VIDRIO = mate(PALETA.mob.cristal, 'mob', { transparent: true, opacity: 0.24, depthWrite: false, side: THREE.DoubleSide });
 
 const planes = new Map();
 /**
@@ -111,7 +111,7 @@ function aplicar(pz, v) {
   o.visible = v > 0.002; o.position.set(px, py, pzz);
   switch (pz.modo) {
     case 'crece': o.scale.set(1, Math.max(0.001, v), 1); break;
-    case 'cae': { const u = Math.min(1, Math.max(0, v)); o.position.y = py + (1 - u) * 0.8; o.scale.set(gs, Math.max(0.001, gs * (1 - Math.max(0, v - 1) * 0.8)), gs); break; }
+    case 'cae': { const u = Math.min(1, Math.max(0, v)); o.position.y = py + (1 - u) * (pz._p.caida ?? 0.8); o.scale.set(gs, Math.max(0.001, gs * (1 - Math.max(0, v - 1) * 0.8)), gs); break; }
     case 'escala': o.scale.setScalar(Math.max(0.001, v)); break;
     case 'desliza': o.position.x = px + (1 - Math.min(1, Math.max(0, v))) * 0.6; o.scale.setScalar(gs); break;
     case 'despliega': o.scale.set(Math.max(0.001, v), 1, 1); break;

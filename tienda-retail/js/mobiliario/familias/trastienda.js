@@ -57,11 +57,12 @@ export function rack_selectivo(b, c) {
   niveles.forEach((yb, lv) => {
     const sig = nivs[lv] ?? H, espacio = Math.min(0.93, sig - yb - 0.27);
     if (espacio < 0.4) return;
-    for (let m = 0; m < t; m++) for (const dx of [-0.62, 0.62]) {
-      if (rng.r() < 0.1) continue;
-      const x = xs[m] + (xs[m + 1] - xs[m]) / 2 + dx, nom = `${lv + 1}.${m * 2 + (dx < 0 ? 1 : 2)}`, y0 = yb + 0.116, tipo = rng.r();
-      tarima(b, x, yb, rng);
-      b.pieza(`tarima ${nom}`, 3, 'cae', { aristas: false });
+    const sitios = [];
+    for (let m = 0; m < t; m++) for (const dx of [-0.62, 0.62]) { if (rng.r() < 0.1) continue; sitios.push({ x: xs[m] + (xs[m + 1] - xs[m]) / 2 + dx, tipo: rng.r() }); }
+    for (const st of sitios) tarima(b, st.x, yb, rng);
+    b.pieza(`tarimas nivel ${lv + 1}`, 3, 'cae', { aristas: false });
+    for (const { x, tipo } of sitios) {
+      const y0 = yb + 0.116;
       if (tipo < 0.14 && espacio >= 0.85) {
         for (const sx of [-0.25, 0.25]) for (const sz of [-0.25, 0.25]) {
           b.pilar(x + sx, y0, sz, 0.235, 0.86, BARRIL, 10); b.pilar(x + sx, y0 + 0.2, sz, 0.239, 0.022, mezcla(BARRIL, P.negro, 0.2), 10, { sinBase: true }); b.pilar(x + sx, y0 + 0.6, sz, 0.239, 0.022, mezcla(BARRIL, P.negro, 0.2), 10, { sinBase: true });
@@ -79,7 +80,7 @@ export function rack_selectivo(b, c) {
         fleje(b, x, y0 + k1 * 0.4, 1.0, 1.04); fleje(b, x, y0 + k1 * 0.85, 1.0, 1.04);
         carta(b, x + (rng.r() < 0.5 ? -0.25 : 0.25), y0 + k1 * 0.45, 0.26 + 0.2503, 0.14, 0.1, P.blanco);
       }
-      b.pieza(`cajas ${nom}`, 4, 'crece', { aristas: false });
     }
+    b.pieza(`cargas nivel ${lv + 1}`, 4, 'crece', { aristas: false });
   });
 }

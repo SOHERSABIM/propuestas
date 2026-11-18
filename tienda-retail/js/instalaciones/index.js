@@ -7,6 +7,10 @@ import { crearCapaLuz } from './luz.js';
 import { crearCapaAire } from './aire.js';
 import { crearCapaFrio } from './frio.js';
 import { DURACION, SALTO } from './tiempos.js';
+import { NIVEL_AZOTEA } from './util.js';
+
+/** Cara superior de la losa de azotea (m): todas las bancadas de equipos apoyan exactamente en este nivel. */
+export { NIVEL_AZOTEA };
 
 /** @typedef {'luz'|'aire'|'frio'} CapaId */
 export const CAPAS = /** @type {const} */ (['luz', 'aire', 'frio']);

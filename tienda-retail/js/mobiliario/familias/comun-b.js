@@ -82,56 +82,94 @@ export function prendaVariada(m, rng, paleta, { tipos = ['camisa', 'camisa', 'pa
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// MANIQUÍ de proporción humana abstracta (sin rostro). Mantiene la firma del de comun.js: (b, x, z, y0, ropa, k).
-// Alto total ≈ 1.71 m sobre y0; ancho ≤ 0.46; base de 0.30 m de diámetro.
+// LOFT: superficie suave por anillos (secciones elípticas o redondeadas) apilados en y, con normales suaves.
+// Anillo = {cx, cy, cz, rx, rz}. Sirve para torsos, miembros, cabezas, prendas ceñidas y pilas dobladas.
+// ---------------------------------------------------------------------------------------------------------------
+export function loft(b, anillos, color, { seg = 12, arriba = false, abajo = false, exp = 2, v } = {}) {
+  const col = b._col(color, { v }), n = anillos.length, e = 2 / exp;
+  const P = anillos.map((a) => Array.from({ length: seg }, (_, j) => {
+    const th = (j / seg) * Math.PI * 2, c = Math.cos(th), s = Math.sin(th);
+    return [a.cx + a.rx * Math.sign(c) * Math.abs(c) ** e, a.cy, a.cz + a.rz * Math.sign(s) * Math.abs(s) ** e];
+  }));
+  const sub = (p, q) => [p[0] - q[0], p[1] - q[1], p[2] - q[2]], len = (u) => Math.hypot(u[0], u[1], u[2]);
+  const N = P.map((ring, i) => ring.map((p, j) => {
+    const tt = sub(ring[(j + 1) % seg], ring[(j + seg - 1) % seg]), ts = sub(P[Math.min(n - 1, i + 1)][j], P[Math.max(0, i - 1)][j]);
+    let nn = [tt[1] * ts[2] - tt[2] * ts[1], tt[2] * ts[0] - tt[0] * ts[2], tt[0] * ts[1] - tt[1] * ts[0]], l = len(nn);
+    const a = anillos[i], out = [p[0] - a.cx, 0, p[2] - a.cz];
+    if (l < 1e-9) return [0, i === 0 ? -1 : 1, 0];
+    nn = [nn[0] / l, nn[1] / l, nn[2] / l];
+    if (nn[0] * out[0] + nn[2] * out[2] < 0) nn = [-nn[0], -nn[1], -nn[2]];
+    return nn;
+  }));
+  for (let i = 0; i < n - 1; i++) for (let j = 0; j < seg; j++) {
+    const k = (j + 1) % seg;
+    if (len(sub(P[i][j], P[i + 1][j])) + len(sub(P[i][k], P[i + 1][k])) < 1e-6) continue;
+    b._triH(P[i][j], P[i + 1][j], P[i + 1][k], N[i][j], N[i + 1][j], N[i + 1][k], col);
+    b._triH(P[i][j], P[i + 1][k], P[i][k], N[i][j], N[i + 1][k], N[i][k], col);
+  }
+  const tapa = (i, ny) => { const a = anillos[i], c = [a.cx, a.cy, a.cz], nv = [0, ny, 0]; for (let j = 0; j < seg; j++) b._triH(c, P[i][j], P[i][(j + 1) % seg], nv, nv, nv, col); };
+  if (arriba) tapa(n - 1, 1); if (abajo) tapa(0, -1);
+}
+/** Prenda doblada con canto redondeado (sección cuadrada suave). Base en y0; deja un pliegue fino en la cara superior. */
+export function doblada(b, x, y0, z, w, h, d, color, { pliegue = true, v } = {}) {
+  const a = w / 2, e = d / 2;
+  loft(b, [ani(x, y0, z, a * 0.93, e * 0.93), ani(x, y0 + h * 0.22, z, a * 0.995, e * 0.995), ani(x, y0 + h * 0.78, z, a * 0.995, e * 0.995), ani(x, y0 + h, z, a * 0.93, e * 0.93)], color, { seg: 16, exp: 4, arriba: true, v });
+  if (pliegue) b.tronco(x, y0 + h + 0.0004, z - d * 0.18, w * 0.84, 0.006, w * 0.84, 0.006, 0.0004, mezcla(color, 0x33373c, 0.22), { sin: '-y-x+x-z+z' });
+}
+const ani = (cx, cy, cz, rx, rz = rx) => ({ cx, cy, cz, rx, rz });
+
+// ---------------------------------------------------------------------------------------------------------------
+// MANIQUÍ de proporción humana abstracta (sin rostro), de volúmenes redondeados. Firma intacta: (b, x, z, y0, ropa, k).
+// Alto total ≈ 1.73 m sobre y0; ancho ≤ 0.47; base de 0.30 m de diámetro.
 // ---------------------------------------------------------------------------------------------------------------
 export function maniquiDetallado(b, x, z, y0, ropa, k = '') {
-  const piel = 0xe9e6e0, sombra = 0xd9d5cd, s = (n) => (k ? `${n} ${k}` : n);
-  // base: plato con escalón y tapa del tubo trasero
-  b.pilar(x, y0, z, 0.15, 0.014, P.oscuro, 18); b.pilar(x, y0 + 0.014, z, 0.13, 0.008, P.metalOscuro, 18); b.pilar(x, y0 + 0.022, z - 0.07, 0.022, 0.012, P.metal, 8);
+  const piel = 0xe9e6e0, sombra = 0xd9d5cd, s = (n) => (k ? `${n} ${k}` : n), Y = (y) => y0 + y;
+  b.pilar(x, y0, z, 0.15, 0.014, P.oscuro, 28); b.pilar(x, y0 + 0.014, z, 0.13, 0.008, P.metalOscuro, 28); b.pilar(x, y0 + 0.022, z - 0.07, 0.022, 0.012, P.metal, 10);
   b.pieza(s('base'), 0, 'escala');
-  // piernas: pies, tobillo, pantorrilla, rodilla, muslo; varilla de soporte trasera
+  // piernas torneadas, pies y varilla trasera
   for (const sx of [-1, 1]) {
     const px = x + sx * 0.085;
-    b.caja(px, y0 + 0.022, z + 0.03, 0.08, 0.05, 0.21, sombra);
-    b.tronco(px, y0 + 0.072, z, 0.055, 0.06, 0.085, 0.09, 0.34, piel, { sin: '-y' });
-    b.esfera(px, y0 + 0.43, z, 0.05, piel, 8);
-    b.tronco(px, y0 + 0.43, z, 0.095, 0.1, 0.15, 0.17, 0.36, piel, { sin: '-y' });
+    b.tronco(px, Y(0.022), z + 0.025, 0.07, 0.2, 0.062, 0.16, 0.05, sombra, { sin: '-y' });
+    loft(b, [ani(px, Y(0.07), z, 0.03, 0.032), ani(px, Y(0.16), z, 0.04, 0.05), ani(px, Y(0.25), z, 0.049, 0.055), ani(px, Y(0.38), z, 0.043, 0.046), ani(px, Y(0.45), z, 0.046, 0.05),
+      ani(px, Y(0.56), z, 0.06, 0.07), ani(px, Y(0.68), z, 0.074, 0.083), ani(px, Y(0.82), z, 0.083, 0.09)], piel, { seg: 12, abajo: true });
   }
-  b.pilar(x, y0 + 0.034, z - 0.07, 0.009, 0.82, P.metalOscuro, 6); b.caja(x, y0 + 0.82, z - 0.09, 0.05, 0.03, 0.05, P.metalOscuro);
-  b.pieza(s('poste y piernas'), 1, 'crece');
-  // tronco, cuello y brazos
-  b.tronco(x, y0 + 0.78, z, 0.285, 0.175, 0.315, 0.195, 0.12, piel, { sin: '-y' });
-  b.tronco(x, y0 + 0.9, z, 0.315, 0.195, 0.255, 0.165, 0.17, piel);
-  b.tronco(x, y0 + 1.07, z, 0.255, 0.165, 0.335, 0.205, 0.2, piel);
-  b.tronco(x, y0 + 1.27, z, 0.335, 0.205, 0.395, 0.16, 0.13, piel);
-  b.pilar(x, y0 + 1.39, z, 0.038, 0.12, sombra, 8);
+  b.pilar(x, Y(0.034), z - 0.075, 0.009, 0.8, P.metalOscuro, 6); b.caja(x, Y(0.82), z - 0.09, 0.05, 0.03, 0.05, P.metalOscuro);
+  b.pieza(s('poste y piernas'), 1, 'crece', { aristas: false });
+  // torso ahusado con hombros redondeados, cuello y brazos
+  loft(b, [ani(x, Y(0.8), z, 0.158, 0.098), ani(x, Y(0.9), z, 0.152, 0.092), ani(x, Y(1.02), z, 0.126, 0.08), ani(x, Y(1.15), z, 0.15, 0.094), ani(x, Y(1.27), z, 0.176, 0.102),
+    ani(x, Y(1.35), z, 0.18, 0.09), ani(x, Y(1.395), z, 0.12, 0.068), ani(x, Y(1.425), z, 0.05, 0.046)], piel, { seg: 16 });
+  loft(b, [ani(x, Y(1.4), z, 0.043), ani(x, Y(1.46), z, 0.038), ani(x, Y(1.52), z + 0.004, 0.036)], sombra, { seg: 10 });
   for (const sx of [-1, 1]) {
-    const ax = x + sx * 0.195;
-    b.esfera(ax, y0 + 1.36, z, 0.042, piel, 8);
-    b.barra([ax, y0 + 1.36, z], [ax + sx * 0.008, y0 + 1.1, z + 0.01], 0.06, piel);
-    b.barra([ax + sx * 0.008, y0 + 1.1, z + 0.01], [ax + sx * 0.004, y0 + 0.88, z + 0.07], 0.048, piel);
-    b.tronco(ax + sx * 0.004, y0 + 0.79, z + 0.075, 0.05, 0.03, 0.045, 0.05, 0.1, sombra);
+    const hx = x + sx * 0.18;
+    b.esfera(hx, Y(1.355), z, 0.05, piel, 10);
+    loft(b, [ani(hx, Y(1.35), z, 0.043), ani(hx + sx * 0.004, Y(1.22), z, 0.041), ani(hx + sx * 0.01, Y(1.1), z + 0.008, 0.034)], piel, { seg: 10 });
+    b.esfera(hx + sx * 0.01, Y(1.1), z + 0.008, 0.034, piel, 8);
+    loft(b, [ani(hx + sx * 0.01, Y(1.1), z + 0.008, 0.033), ani(hx + sx * 0.006, Y(0.98), z + 0.04, 0.03), ani(hx + sx * 0.004, Y(0.88), z + 0.062, 0.023)], piel, { seg: 10 });
+    loft(b, [ani(hx + sx * 0.004, Y(0.88), z + 0.062, 0.022, 0.02), ani(hx + sx * 0.004, Y(0.83), z + 0.066, 0.028, 0.013), ani(hx + sx * 0.004, Y(0.775), z + 0.068, 0.016, 0.01)], sombra, { seg: 8, abajo: true });
   }
   b.pieza(s('torso'), 2, 'crece', { aristas: false });
-  // cabeza ovoide sin rostro
-  b.esfera(x, y0 + 1.625, z, 0.086, piel, 10); b.esfera(x, y0 + 1.575, z + 0.008, 0.066, piel, 8);
+  // cabeza ovoide lisa, sin rostro, con normales suaves
+  loft(b, [ani(x, Y(1.5), z + 0.012, 0.012, 0.012), ani(x, Y(1.515), z + 0.012, 0.045, 0.05), ani(x, Y(1.545), z + 0.008, 0.072, 0.08), ani(x, Y(1.585), z + 0.002, 0.086, 0.095), ani(x, Y(1.63), z, 0.09, 0.097),
+    ani(x, Y(1.675), z - 0.004, 0.083, 0.09), ani(x, Y(1.708), z - 0.006, 0.06, 0.066), ani(x, Y(1.728), z - 0.006, 0.026, 0.03), ani(x, Y(1.733), z - 0.006, 0.002, 0.002)], piel, { seg: 16 });
   b.pieza(s('cabeza'), 2, 'escala', { aristas: false });
-  // pantalón: piernas en dos tramos con dobladillo, pretina y cinturón
+  // pantalón: piernas ceñidas con dobladillo, cadera y cinturón
   for (const sx of [-1, 1]) {
-    const px = x + sx * 0.082;
-    b.tronco(px, y0 + 0.1, z, 0.09, 0.095, 0.125, 0.125, 0.36, ropa.bottom, { sin: '-y' });
-    b.tronco(px, y0 + 0.46, z, 0.125, 0.125, 0.17, 0.19, 0.4, ropa.bottom, { sin: '-y' });
-    b.tronco(px, y0 + 0.1, z, 0.095, 0.1, 0.095, 0.1, 0.025, claro(ropa.bottom, 0.15), { sin: '-y' });
+    const px = x + sx * 0.085;
+    loft(b, [ani(px, Y(0.1), z, 0.043, 0.046), ani(px, Y(0.16), z, 0.049, 0.058), ani(px, Y(0.25), z, 0.06, 0.066), ani(px, Y(0.38), z, 0.056, 0.06), ani(px, Y(0.45), z, 0.058, 0.064),
+      ani(px, Y(0.56), z, 0.072, 0.082), ani(px, Y(0.68), z, 0.086, 0.095), ani(px, Y(0.84), z, 0.096, 0.1)], ropa.bottom, { seg: 12 });
+    loft(b, [ani(px, Y(0.1), z, 0.047, 0.05), ani(px, Y(0.125), z, 0.047, 0.05)], claro(ropa.bottom, 0.15), { seg: 12 });
   }
-  b.tronco(x, y0 + 0.86, z, 0.335, 0.2, 0.31, 0.19, 0.08, ropa.bottom); b.caja(x, y0 + 0.92, z, 0.315, 0.022, 0.195, mezcla(ropa.bottom, 0x17191c, 0.5));
+  loft(b, [ani(x, Y(0.84), z, 0.166, 0.104), ani(x, Y(0.9), z, 0.158, 0.098), ani(x, Y(0.97), z, 0.146, 0.094)], ropa.bottom, { seg: 16 });
   b.pieza(s('pantalón'), 4, 'crece', { aristas: false });
-  // camisa: faldón, pecho, hombros, mangas cortas y cuello
-  b.tronco(x, y0 + 0.9, z, 0.31, 0.205, 0.355, 0.23, 0.32, ropa.top, { sin: '-y' });
-  b.tronco(x, y0 + 1.22, z, 0.355, 0.23, 0.42, 0.185, 0.17, ropa.top);
-  for (const sx of [-1, 1]) b.barra([x + sx * 0.192, y0 + 1.37, z], [x + sx * 0.2, y0 + 1.16, z + 0.01], 0.075, ropa.top);
-  b.tronco(x, y0 + 1.385, z, 0.1, 0.1, 0.085, 0.085, 0.03, claro(ropa.top, 0.4), { sin: '-y' });
-  b.caja(x, y0 + 0.9, z + 0.116, 0.026, 0.5, 0.004, claro(ropa.top, 0.3), { sin: '-y+x-x-z' });
+  // camisa: capa que sigue el torso, mangas cortas que siguen el brazo y cuello
+  loft(b, [ani(x, Y(0.8), z, 0.192, 0.126), ani(x, Y(0.9), z, 0.178, 0.118), ani(x, Y(1.02), z, 0.14, 0.092), ani(x, Y(1.15), z, 0.163, 0.106), ani(x, Y(1.27), z, 0.19, 0.114), ani(x, Y(1.35), z, 0.192, 0.101),
+    ani(x, Y(1.397), z, 0.128, 0.078), ani(x, Y(1.418), z, 0.058, 0.054)], ropa.top, { seg: 16 });
+  for (const sx of [-1, 1]) {
+    const hx = x + sx * 0.18;
+    b.esfera(hx, Y(1.36), z, 0.055, ropa.top, 10);
+    loft(b, [ani(hx, Y(1.36), z, 0.054), ani(hx + sx * 0.004, Y(1.28), z, 0.051), ani(hx + sx * 0.008, Y(1.18), z + 0.004, 0.048)], ropa.top, { seg: 10, v: 0.97 });
+  }
+  loft(b, [ani(x, Y(1.405), z, 0.056), ani(x, Y(1.435), z, 0.05)], claro(ropa.top, 0.45), { seg: 12 });
   b.pieza(s('camisa'), 4, 'crece', { aristas: false });
 }
 

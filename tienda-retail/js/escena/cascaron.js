@@ -1,19 +1,25 @@
 // Cascarón del local: losa, columnas, muros exteriores, fachada de cristal, puertas y muros interiores. Frente: núcleo.
 // Modelo de ELEMENTOS: cada pieza es una caja unitaria escalada {x, z, y0, w, h, d, ang}. Así el paso 1 la hace
 // crecer, el paso 5 la transforma (se empareja por tipo y orientación con la del local destino y se interpola)
-// y en reposo todo se FUSIONA en una malla por material (pocas llamadas de dibujo).
+// y todo se dibuja en LOTES dinámicos: una malla por material y unas líneas por material de aristas, escritas en sitio
+// (pocas llamadas de dibujo también durante las animaciones y sin fusión costosa al terminar).
+// Corte dinámico: los muros exteriores que quedan entre la cámara y el interior se vuelven translúcidos (desde el
+// paso 2), en cualquier local y ángulo.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { MAT, mate, PALETA, UMBRAL_ARISTA } from '../core/estilo.js';
+import { MAT, mate, PALETA } from '../core/estilo.js';
 import { caja, lados, areaFirmada } from '../core/geom.js';
 import { regionDePoligono } from '../gen/regiones.js';
+import { crearLotes } from './lotes.js';
 
 const ALTO_PRETIL = 0.6;
 const MODULO_CANCEL = 1.5;
 const MAT_PUERTA = mate(PALETA.arq.puerta, 'arq');
 
-const CAJA = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
-const ARISTAS_CAJA = new THREE.EdgesGeometry(CAJA, UMBRAL_ARISTA);
+/** Muro exterior cortado (entre la cámara y el interior). Grupo 'arq': se atenúa con la arquitectura. */
+const MAT_CORTE = mate(PALETA.arq.muroExt, 'arq', { transparent: true, opacity: 1, depthWrite: false });
+const OPAC_CORTE = 0.16;
+const CORTABLES = new Set(['muro', 'dintel', 'puerta']);
 
 /** Desplaza un polígono hacia afuera una distancia d. */
 function desplazar(poly, d) {
@@ -37,7 +43,7 @@ const tEn = (l, p) => (p[0] - l.a[0]) * l.dir[0] + (p[1] - l.a[1]) * l.dir[1];
  */
 export function elementosDe(loc, layout) {
   const els = [];
-  const E = (tipo, mat, arista, x, z, y0, w, h, d, ang = 0, sombra = true) => els.push({ tipo, mat, arista, x, z, y0, w, h, d, ang, sombra });
+  const E = (tipo, mat, arista, x, z, y0, w, h, d, ang = 0, sombra = true, n = null) => els.push({ tipo, mat, arista, x, z, y0, w, h, d, ang, sombra, n });
   const esp = loc.espesorMuro, H = loc.altura + ALTO_PRETIL, sgn = Math.sign(areaFirmada(loc.poligono));
   // losa: franjas del polígono desplazado
   for (const r of regionDePoligono(desplazar(loc.poligono, esp + 0.35))) E('losa', MAT.losa, MAT.aristaSuave, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, -0.3, r.x1 - r.x0, 0.3, r.z1 - r.z0, 0, false);
@@ -50,7 +56,7 @@ export function elementosDe(loc, layout) {
     const largo = l.largo + (convexoFin ? esp : 0);
     const ang = Math.atan2(-l.dir[1], l.dir[0]);
     const en = (t, off = esp / 2) => [l.a[0] + l.dir[0] * t + l.normal[0] * off, l.a[1] + l.dir[1] * t + l.normal[1] * off];
-    const pieza = (tipo, mat, ar, ta, tb, y0, h, d = esp, off = esp / 2, sombra = true) => { if (tb - ta < 0.01 || h < 0.01) return; const [x, z] = en((ta + tb) / 2, off); E(tipo, mat, ar, x, z, y0, tb - ta, h, d, ang, sombra); };
+    const pieza = (tipo, mat, ar, ta, tb, y0, h, d = esp, off = esp / 2, sombra = true) => { if (tb - ta < 0.01 || h < 0.01) return; const [x, z] = en((ta + tb) / 2, off); E(tipo, mat, ar, x, z, y0, tb - ta, h, d, ang, sombra, l.normal); };
     const fach = loc.fachadas.some((f) => sobreLado(l, f.a) && sobreLado(l, f.b));
     if (!fach) {
       const cortes = vanos.filter((v) => sobreLado(l, v.centro) && tEn(l, v.centro) > 0 && tEn(l, v.centro) < l.largo).map((v) => ({ t: tEn(l, v.centro), v })).sort((a, b) => a.t - b.t);
@@ -105,70 +111,74 @@ function emparejarEl(viejos, nuevos) {
 }
 
 /**
- * @param {{escena:any, anim:any}} ctx
+ * @param {{escena:any, anim:any, reloj?:any, camara?:any}} ctx
  */
-export function crearCascaron({ escena, anim }) {
+export function crearCascaron({ escena, anim, reloj, camara }) {
   const raiz = new THREE.Group(); raiz.name = 'cascaron'; escena.add(raiz);
-  const gEl = new THREE.Group(); const gFus = new THREE.Group(); raiz.add(gEl, gFus);
-  /** @type {{e:any, obj:THREE.Mesh}[]} */
+  const lotes = crearLotes(raiz, {
+    sombra: (m) => m !== MAT.cristal && m !== MAT.losa && m !== MAT_CORTE,
+    orden: (m) => (m === MAT.cristal || m === MAT_CORTE ? 2 : 0),
+  });
+  /** @type {{e:any, s:any, mat:any, arista:any}[]} */
   let vivos = [];
   let local = null, layout = null, enCurso = null;
+  const item = (e, s = e) => ({ e, s: { ...s }, mat: e.mat, arista: e.arista, corte: false });
+  const aplicar = (v, s) => { v.s = s; lotes.escribir(v); };
+  const rehacer = (lista = lotes.items) => { firma = NaN; lotes.reconstruir(lista); };
 
-  function crearObj(e) {
-    const m = new THREE.Mesh(CAJA, e.mat); m.castShadow = e.sombra; m.receiveShadow = true;
-    if (e.mat === MAT.cristal) m.renderOrder = 2;
-    if (e.arista) { const l = new THREE.LineSegments(ARISTAS_CAJA, e.arista); l.raycast = () => {}; m.add(l); }
-    gEl.add(m); return m;
+  // ---------- Corte dinámico de muros ----------
+  let corte = 0, firma = NaN, tCorte = null;
+  function nivelArq() { const b = MAT.muroExt.userData.opacidadBase || 1; return MAT.muroExt.opacity / b; }
+  function opacidadCorte() {
+    const base = 1 - (1 - OPAC_CORTE) * corte;
+    MAT_CORTE.userData.opacidadBase = base; MAT_CORTE.opacity = base * nivelArq();
   }
-  function aplicar(obj, s) {
-    obj.position.set(s.x, s.y0, s.z); obj.rotation.y = s.ang;
-    obj.scale.set(Math.max(1e-3, s.w), Math.max(1e-3, s.h), Math.max(1e-3, s.d));
-    obj.visible = s.w > 2e-3 && s.h > 2e-3 && s.d > 2e-3;
-  }
-
-  /** Fusiona todo en una malla por material + aristas por material (reposo). */
-  function fusionar() {
-    desfusionar();
-    const porMat = new Map(), porArista = new Map();
-    for (const { obj } of vivos) {
-      if (!obj.visible) continue;
-      obj.updateMatrixWorld(true);
-      const g = CAJA.clone().applyMatrix4(obj.matrixWorld);
-      if (!porMat.has(obj.material)) porMat.set(obj.material, []); porMat.get(obj.material).push(g);
-      const l = obj.children[0];
-      if (l) { const gl = ARISTAS_CAJA.clone().applyMatrix4(obj.matrixWorld); if (!porArista.has(l.material)) porArista.set(l.material, []); porArista.get(l.material).push(gl); }
+  /** Revisa qué muros quedan entre la cámara y el interior; si cambió el conjunto, reasigna materiales. */
+  function revisarCorte() {
+    const lista = lotes.items; if (!lista.length || !camara) return;
+    const px = camara.position.x, pz = camara.position.z;
+    let h = 7;
+    for (const v of lista) {
+      const n = v.e.n;
+      const c = corte > 0 && n && CORTABLES.has(v.e.tipo) && n[0] * (px - v.s.x) + n[1] * (pz - v.s.z) > 0.5;
+      v.corte = c; h = (h * 31 + (c ? 1 : 0)) | 0;
     }
-    for (const [mat, gs] of porMat) {
-      const m = new THREE.Mesh(mergeGeometries(gs), mat); gs.forEach((g) => g.dispose());
-      m.castShadow = mat !== MAT.cristal && mat !== MAT.losa; m.receiveShadow = true; if (mat === MAT.cristal) m.renderOrder = 2;
-      gFus.add(m);
-    }
-    for (const [mat, gs] of porArista) { const l = new THREE.LineSegments(mergeGeometries(gs), mat); gs.forEach((g) => g.dispose()); l.raycast = () => {}; gFus.add(l); }
-    gEl.visible = false;
+    if (h === firma) return;
+    for (const v of lista) { v.mat = v.corte ? MAT_CORTE : v.e.mat; v.arista = v.corte ? MAT.aristaSuave : v.e.arista; }
+    lotes.reconstruir(lista); firma = h;
   }
-  function desfusionar() {
-    for (const o of gFus.children.slice()) { o.geometry.dispose(); gFus.remove(o); }
-    gEl.visible = true;
-  }
-  function limpiarEl() { for (const { obj } of vivos) gEl.remove(obj); vivos = []; }
+  reloj?.onTick(revisarCorte, 55);
 
   const api = {
     raiz,
     get local() { return local; },
     caja: () => caja(local.poligono),
     /** Deja la escena sin local (paso 0). */
-    vaciar() { enCurso?.cancel(); desfusionar(); limpiarEl(); local = null; layout = null; },
+    vaciar() { enCurso?.cancel(); enCurso = null; vivos = []; rehacer([]); local = null; layout = null; api.cortar(false, { dur: 0 }); },
+    /**
+     * Corte dinámico de muros (paso 2 en adelante): los muros exteriores entre la cámara y el interior se vuelven
+     * translúcidos con un fundido. @returns {any} Handle
+     */
+    cortar(ver, { dur = 600, delay = 0 } = {}) {
+      tCorte?.cancel();
+      const a = corte, b = ver ? 1 : 0;
+      tCorte = anim.tween({ delay, dur, ease: 'io', onUpdate: (k) => { corte = a + (b - a) * k; opacidadCorte(); if (k === 0 || k === 1) firma = NaN; } });
+      return tCorte;
+    },
+    /** Reaplica la opacidad del corte tras un atenuado de la arquitectura. */
+    refrescar: opacidadCorte,
     /**
      * Construye el local desde cero con animación (paso 1): losa, columnas, muros, fachada, interiores.
      * @returns {any} Handle
      */
     construir(loc, lay) {
-      enCurso?.cancel(); desfusionar(); limpiarEl(); local = loc; layout = lay;
+      enCurso?.cancel(); local = loc; layout = lay;
       const bb = caja(loc.poligono);
       const hs = [];
-      for (const e of elementosDe(loc, lay)) {
-        const obj = crearObj(e); vivos.push({ e, obj });
-        const fin = { ...e };
+      vivos = elementosDe(loc, lay).map((e) => item(e));
+      rehacer(vivos);
+      for (const v of vivos) {
+        const e = v.e, fin = { ...e };
         const ord = (bb.z1 - e.z) + (e.x - bb.x0); // de la esquina frontal izquierda hacia el fondo
         let delay, dur = 650, ease = 'out', f;
         switch (e.tipo) {
@@ -179,10 +189,10 @@ export function crearCascaron({ escena, anim }) {
           case 'interior': delay = 2700 + Math.min(900, ord * 25); dur = 700; f = (k) => ({ ...fin, h: e.h * k }); break;
           default: delay = 1700 + Math.min(1000, ord * 18); dur = 650; ease = 'back'; f = (k) => ({ ...fin, h: e.h * k, y0: e.tipo === 'peto' || e.tipo === 'trav' ? e.y0 * k : e.y0 });
         }
-        aplicar(obj, f(0));
-        hs.push(anim.tween({ delay, dur, ease, onUpdate: (k) => aplicar(obj, f(Math.max(0, k))) }));
+        aplicar(v, f(0));
+        hs.push(anim.tween({ delay, dur, ease, onUpdate: (k) => aplicar(v, f(Math.max(0, k))) }));
       }
-      enCurso = anim.all(hs).onDone(() => { enCurso = null; fusionar(); });
+      enCurso = anim.all(hs).onDone(() => { enCurso = null; });
       return enCurso;
     },
     /**
@@ -192,32 +202,36 @@ export function crearCascaron({ escena, anim }) {
      */
     transformarA(loc, lay, { dur = 2200, delay = 0 } = {}) {
       if (!local) return api.construir(loc, lay);
-      enCurso?.finish(); desfusionar();
+      enCurso?.finish();
       const nuevos = elementosDe(loc, lay);
       const { pares, soloViejos, soloNuevos } = emparejarEl(vivos.map((v) => v.e), nuevos);
-      const hs = [], sig = [];
+      const hs = [], sig = [], dibujo = [...vivos];
+      const igual = (a, b) => ['x', 'z', 'y0', 'w', 'h', 'd', 'ang'].every((k) => Math.abs(a[k] - b[k]) < 1e-6);
       for (const [i, j] of pares) {
-        const v = vivos[i], a = { ...v.e }, b = nuevos[j];
-        v.e = b; sig.push(v);
-        hs.push(anim.tween({ delay: delay + 150, dur: dur - 150, ease: 'io', onUpdate: (k) => aplicar(v.obj, { x: a.x + (b.x - a.x) * k, z: a.z + (b.z - a.z) * k, y0: a.y0 + (b.y0 - a.y0) * k, w: a.w + (b.w - a.w) * k, h: a.h + (b.h - a.h) * k, d: a.d + (b.d - a.d) * k, ang: b.ang }) }));
+        const v = vivos[i], a = { ...v.s }, b = nuevos[j];
+        v.e = b; v.mat = b.mat; v.arista = b.arista; sig.push(v);
+        if (igual(a, b)) continue; // sin cambio: no se anima
+        hs.push(anim.tween({ delay: delay + 150, dur: dur - 150, ease: 'io', onUpdate: (k) => aplicar(v, { x: a.x + (b.x - a.x) * k, z: a.z + (b.z - a.z) * k, y0: a.y0 + (b.y0 - a.y0) * k, w: a.w + (b.w - a.w) * k, h: a.h + (b.h - a.h) * k, d: a.d + (b.d - a.d) * k, ang: b.ang }) }));
       }
       for (const i of soloViejos) {
-        const v = vivos[i], a = { ...v.e };
-        hs.push(anim.tween({ delay, dur: dur * 0.45, ease: 'in', onUpdate: (k) => aplicar(v.obj, a.tipo === 'losa' ? { ...a, w: a.w * (1 - k), d: a.d * (1 - k) } : { ...a, h: a.h * (1 - k) }), onDone: () => gEl.remove(v.obj) }));
+        const v = vivos[i], a = { ...v.s };
+        hs.push(anim.tween({ delay, dur: dur * 0.45, ease: 'in', onUpdate: (k) => aplicar(v, a.w !== undefined && v.e.tipo === 'losa' ? { ...a, w: a.w * (1 - k), d: a.d * (1 - k) } : { ...a, h: a.h * (1 - k) }) }));
       }
+      const entran = [];
       for (const j of soloNuevos) {
-        const e = nuevos[j], obj = crearObj(e); const v = { e, obj }; sig.push(v);
+        const e = nuevos[j], v = item(e); sig.push(v); dibujo.push(v); entran.push(v);
         const f = (k) => (e.tipo === 'losa' ? { ...e, w: e.w * k, d: e.d * k } : { ...e, h: e.h * k });
-        aplicar(obj, f(0));
-        hs.push(anim.tween({ delay: delay + dur * 0.5, dur: dur * 0.5, ease: e.tipo === 'col' ? 'back' : 'out', onUpdate: (k) => aplicar(obj, f(Math.max(0, k))) }));
+        v.s = f(0);
+        hs.push(anim.tween({ delay: delay + dur * 0.5, dur: dur * 0.5, ease: e.tipo === 'col' ? 'back' : 'out', aplicarInicio: false, onUpdate: (k) => aplicar(v, f(Math.max(0, k))) }));
       }
+      rehacer(dibujo);
       vivos = sig; local = loc; layout = lay;
-      enCurso = anim.all(hs).onDone(() => { enCurso = null; fusionar(); });
+      enCurso = anim.all(hs).onDone(() => { enCurso = null; rehacer(vivos); });
       return enCurso;
     },
     /** Solo muros interiores (cambio de layout en el mismo local). */
     setInteriores(lay, op) { return api.transformarA(local, lay, { dur: 1600, ...op }); },
-    stats() { return { elementos: vivos.length, fusionado: !gEl.visible }; },
+    stats() { return { elementos: vivos.length, fusionado: true, llamadas: lotes.llamadas(), corte: lotes.items.filter((v) => v.corte).length }; },
   };
   return api;
 }

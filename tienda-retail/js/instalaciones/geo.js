@@ -180,43 +180,76 @@ export const geoBajante = () => unica('bajante', () => {
   return p.geo();
 });
 
-/** Unidad paquete (azotea): base (curb), gabinete con puertas, serpentín, capota de retorno y bocas de ventiladores. Origen: centro de la base. */
+/** Anillo poligonal plano (rejilla de protección): n cajas tangentes. */
+function anillo(p, cx, cy, cz, r, w, h, hex, n = 20) {
+  const l = 2 * r * Math.tan(Math.PI / n) + 0.004;
+  for (let i = 0; i < n; i++) { const a = ((i + 0.5) / n) * Math.PI * 2; p.caja(cx + Math.cos(a) * r, cy, cz - Math.sin(a) * r, l, h, w, hex, 0, a + Math.PI / 2, 0); }
+}
+/** Rejilla de protección del ventilador (aros + radios) con motor central. y0 = cara de la rejilla. */
+function rejilla(p, x, z, y0, R, hexRej, hexMotor) {
+  for (const r of [0.15, 0.3, R]) anillo(p, x, y0, z, r, 0.014, 0.014, hexRej, r < 0.2 ? 14 : 22);
+  for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; p.caja(x + Math.cos(a) * (R / 2 + 0.05), y0, z - Math.sin(a) * (R / 2 + 0.05), R - 0.1, 0.012, 0.014, hexRej, 0, a, 0); }
+  p.cil(x, y0 + 0.03, z, 0.1, 0.07, hexMotor, 'y', 14);       // motor central sobre la rejilla
+  p.cil(x, y0 + 0.07, z, 0.06, 0.02, 0x20272e, 'y', 12);
+}
+const ACENTO_AIRE = 0x3b87c4;
+/** Unidad paquete (azotea): gabinete gris con acento de capa, serpentín, capota de retorno y ventiladores bajo rejilla. Origen: centro de la base. */
 export const geoUnidad = () => unica('unidad', () => {
   const p = new Partes();
-  p.caja(0, 0.1, 0, 2.5, 0.2, 1.7, 0x5f6a74);                       // base (curb) perimetral
+  p.caja(0, 0.1, 0, 2.5, 0.2, 1.7, 0x59626b);                       // base (curb) perimetral
   p.caja(0, 0.045, 0, 2.2, 0.09, 1.4, 0x3d464e);
-  p.caja(0, 0.54, 0, 2.4, 0.68, 1.6, 0xe9f0f5);                      // gabinete
-  p.caja(0, 0.89, 0, 2.44, 0.04, 1.64, 0xc9d4dd);                    // cubierta
-  for (const x of [-1.0, 1.0]) p.caja(x, 0.54, 0, 0.014, 0.68, 1.62, 0x8c99a5);            // juntas de paneles
-  // serpentín (aletas) en las dos caras largas, entre marcos
+  p.caja(0, 0.54, 0, 2.4, 0.68, 1.6, 0xc4c9ce);                      // gabinete gris
+  p.caja(0, 0.89, 0, 2.44, 0.04, 1.64, 0xaab2b9);                    // cubierta
+  for (const x of [-1.0, 1.0]) p.caja(x, 0.54, 0, 0.014, 0.68, 1.62, 0x808b95);            // juntas de paneles
   for (const sz of [-1, 1]) {
     p.caja(0, 0.54, sz * 0.802, 1.9, 0.56, 0.01, 0x7e8d9b);
     for (let i = 0; i < 21; i++) p.caja(-0.9 + i * 0.09, 0.54, sz * 0.808, 0.012, 0.54, 0.012, 0x4f5d6b);
-    p.caja(0, 0.84, sz * 0.805, 1.96, 0.04, 0.02, 0xd3dce4); p.caja(0, 0.24, sz * 0.805, 1.96, 0.04, 0.02, 0xd3dce4);
-    for (const x of [-0.98, 0.98]) p.caja(x, 0.54, sz * 0.805, 0.04, 0.6, 0.02, 0xd3dce4);
+    p.caja(0, 0.84, sz * 0.805, 1.96, 0.04, 0.02, 0xb2bac2); p.caja(0, 0.24, sz * 0.805, 1.96, 0.04, 0.02, 0xb2bac2);
+    for (const x of [-0.98, 0.98]) p.caja(x, 0.54, sz * 0.805, 0.04, 0.6, 0.02, 0xb2bac2);
+    p.caja(0, 0.905, sz * 0.826, 2.44, 0.03, 0.012, ACENTO_AIRE);   // franja de acento de la capa
   }
-  // puertas de acceso con manijas, en los extremos
-  for (const sx of [-1, 1]) { p.caja(sx * 1.205, 0.54, 0, 0.012, 0.5, 1.2, 0xd5dfe8); p.caja(sx * 1.215, 0.54, 0.4, 0.014, 0.1, 0.04, 0x30363c); }
-  // capota de aire de retorno sobre el extremo −x
-  p.caja(-1.38, 0.5, 0, 0.3, 0.42, 1.0, 0xcfd9e2); p.caja(-1.5, 0.5, 0, 0.01, 0.34, 0.9, 0x5a6874);
-  // bocas de ventiladores
+  for (const sx of [-1, 1]) { p.caja(sx * 1.205, 0.54, 0, 0.012, 0.5, 1.2, 0xb8bfc6); p.caja(sx * 1.215, 0.54, 0.4, 0.014, 0.1, 0.04, 0x30363c); p.caja(sx * 1.211, 0.74, 0, 0.012, 0.05, 1.2, ACENTO_AIRE); }
+  p.caja(-1.38, 0.5, 0, 0.3, 0.42, 1.0, 0xaeb6be); p.caja(-1.5, 0.5, 0, 0.01, 0.34, 0.9, 0x5a6874);
   for (const x of [-0.55, 0.55]) {
-    p.cil(x, 0.95, 0, 0.47, 0.1, 0x8b97a3, 'y', 24, true);
+    p.cil(x, 0.95, 0, 0.47, 0.1, 0x7f8a95, 'y', 24, true);          // cuello del ventilador
     p.cil(x, 0.9, 0, 0.44, 0.012, 0x20272e, 'y', 24);
-    p.caja(x, 0.99, 0, 0.94, 0.012, 0.02, 0x4a555f); p.caja(x, 0.99, 0, 0.02, 0.012, 0.94, 0x4a555f);
-    p.cil(x, 0.99, 0, 0.3, 0.01, 0x4a555f, 'y', 20, true);
+    rejilla(p, x, 0, 0.995, 0.45, 0x58636e, 0x3a444e);
   }
   return p.geo();
 });
 
-/** Ventilador (palas y cubo) para girar sobre su eje. Origen en el cubo. */
+/** Ventilador (palas y cubo) para girar sobre su eje, contenido bajo la rejilla. Origen en el cubo. */
 export const geoVentilador = () => unica('ventilador', () => {
   const p = new Partes();
-  p.cil(0, 0, 0, 0.07, 0.07, 0x2d3a46, 'y', 12);
+  p.cil(0, 0, 0, 0.075, 0.07, 0x2d3a46, 'y', 12);
   for (let i = 0; i < 5; i++) {
     const a = (i / 5) * Math.PI * 2;
     p.caja(Math.cos(a) * 0.24, 0, -Math.sin(a) * 0.24, 0.34, 0.012, 0.11, 0x3b4c5c, 0.35, a, 0);
   }
+  return p.geo();
+});
+
+/** Bancada metálica: marco de perfiles (largueros y travesaños) sobre patas con placas y aisladores antivibratorios. Base en y=0, cara superior en H. */
+export const geoBancada = (ancho, fondo, H) => unica(`bancada_${ancho}_${fondo}_${H}`, () => {
+  const p = new Partes(), ax = ancho / 2 - 0.16, az = fondo / 2 - 0.14, PER = 0x7d8790, PAT = 0x6a737c;
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    p.caja(sx * ax, 0.01, sz * az, 0.24, 0.02, 0.24, 0x4b535b);                     // placa de apoyo
+    p.caja(sx * ax, (H - 0.12) / 2 + 0.02, sz * az, 0.08, H - 0.12, 0.08, PAT);     // pata (perfil cuadrado)
+    p.cil(sx * ax, H - 0.09, sz * az, 0.055, 0.07, 0x2c3238, 'y', 10);              // aislador antivibratorio
+  }
+  for (const sz of [-1, 1]) p.caja(0, H - 0.04, sz * az, ancho - 0.1, 0.08, 0.1, PER);   // largueros (canal)
+  for (const sx of [-1, 0, 1]) p.caja(sx * ax, H - 0.04, 0, 0.1, 0.08, fondo - 0.1, PER);   // travesaños
+  p.caja(0, 0.16, az, ancho - 0.5, 0.04, 0.04, PAT); p.caja(0, 0.16, -az, ancho - 0.5, 0.04, 0.04, PAT);     // arriostres
+  return p.geo();
+});
+/** Cuello de azotea de un ducto: brida, base elevada (curb) con remate y conexión flexible hasta el equipo. Base en y=0 (losa). */
+export const geoCuelloAire = () => unica('cuelloAire', () => {
+  const p = new Partes();
+  p.caja(0, 0.01, 0, 1.0, 0.02, 1.0, 0x555d65);
+  for (const s of [-1, 1]) { p.caja(s * 0.38, 0.11, 0, 0.06, 0.2, 0.82, 0x8a949d); p.caja(0, 0.11, s * 0.38, 0.82, 0.2, 0.06, 0x8a949d); }
+  p.caja(0, 0.215, 0, 0.9, 0.03, 0.9, 0x666f78);
+  p.caja(0, 0.26, 0, 0.62, 0.1, 0.62, 0x4c7fa8);                                      // conexión flexible (lona)
+  for (const y of [0.235, 0.285]) p.caja(0, y, 0, 0.66, 0.015, 0.66, 0x2e3a45);
   return p.geo();
 });
 
@@ -239,25 +272,34 @@ export const geoValvula = () => unica('valvula', () => {
   p.caja(0, 1.5, 0, 2.1, 0.3, 0.38, 0xf0eaff);
   return p.geo();
 });
-/** Condensadora remota: base con patas, gabinete, serpentín en tres caras, ventiladores y caja de válvulas. Origen: centro de la base. */
+const ACENTO_FRIO = 0x8467bf;
+/** Condensadora remota: base con patas, gabinete gris con acento de capa, serpentín en tres caras y ventiladores bajo rejilla con motor central. Origen: centro de la base. */
 export const geoCond = () => unica('cond', () => {
   const p = new Partes();
   for (const z of [-0.45, 0.45]) p.caja(0, 0.05, z, 2.2, 0.1, 0.14, 0x30363c);
-  p.caja(0, 0.55, 0, 2.1, 0.9, 1.1, 0xe6e1f2);
-  p.caja(0, 1.02, 0, 2.2, 0.04, 1.2, 0xc8c0dc);
+  p.caja(0, 0.55, 0, 2.1, 0.9, 1.1, 0xc5c9cf);
+  p.caja(0, 1.02, 0, 2.2, 0.04, 1.2, 0xaab0b8);
   for (const sz of [-1, 1]) {
-    p.caja(0, 0.55, sz * 0.553, 1.9, 0.78, 0.01, 0x7a7090);
-    for (let i = 0; i < 22; i++) p.caja(-0.95 + i * 0.09, 0.55, sz * 0.559, 0.012, 0.76, 0.012, 0x4c4566);
-    p.caja(0, 0.96, sz * 0.558, 2.0, 0.05, 0.02, 0xcfc8e2); p.caja(0, 0.16, sz * 0.558, 2.0, 0.05, 0.02, 0xcfc8e2);
-    for (const x of [-0.99, 0.99]) p.caja(x, 0.56, sz * 0.558, 0.05, 0.84, 0.02, 0xcfc8e2);
+    p.caja(0, 0.55, sz * 0.553, 1.9, 0.78, 0.01, 0x7a7e8a);
+    for (let i = 0; i < 22; i++) p.caja(-0.95 + i * 0.09, 0.55, sz * 0.559, 0.012, 0.76, 0.012, 0x4c4f5e);
+    p.caja(0, 0.96, sz * 0.558, 2.0, 0.05, 0.02, 0xb4bac2); p.caja(0, 0.16, sz * 0.558, 2.0, 0.05, 0.02, 0xb4bac2);
+    for (const x of [-0.99, 0.99]) p.caja(x, 0.56, sz * 0.558, 0.05, 0.84, 0.02, 0xb4bac2);
+    p.caja(0, 1.0, sz * 0.606, 2.2, 0.035, 0.012, ACENTO_FRIO);   // franja de acento
   }
-  p.caja(1.055, 0.5, 0, 0.012, 0.6, 0.86, 0xd6cfe8); p.caja(1.065, 0.5, 0.25, 0.012, 0.18, 0.28, 0x6a42b5);
+  p.caja(1.055, 0.5, 0, 0.012, 0.6, 0.86, 0xb9bec6); p.caja(1.065, 0.5, 0.25, 0.012, 0.18, 0.28, ACENTO_FRIO);
   for (const x of [-0.5, 0.5]) {
-    p.cil(x, 1.07, 0, 0.47, 0.06, 0x7e7694, 'y', 24, true);
+    p.cil(x, 1.07, 0, 0.47, 0.06, 0x7b8089, 'y', 24, true);
     p.cil(x, 1.02, 0, 0.44, 0.012, 0x20272e, 'y', 24);
-    p.caja(x, 1.095, 0, 0.94, 0.012, 0.02, 0x4a4460); p.caja(x, 1.095, 0, 0.02, 0.012, 0.94, 0x4a4460);
-    p.cil(x, 1.095, 0, 0.3, 0.01, 0x4a4460, 'y', 20, true);
+    rejilla(p, x, 0, 1.095, 0.45, 0x565a66, 0x3a3e4a);
   }
+  return p.geo();
+});
+/** Pasamuros de azotea de la tubería de frío: brida y base elevada con sellado, para el par líquido/succión. Base en y=0 (losa). */
+export const geoCuelloFrio = () => unica('cuelloFrio', () => {
+  const p = new Partes();
+  p.caja(0, 0.01, 0, 0.7, 0.02, 0.7, 0x555d65);
+  for (const s of [-1, 1]) { p.caja(s * 0.27, 0.07, 0, 0.05, 0.1, 0.54, 0x8a949d); p.caja(0, 0.07, s * 0.27, 0.54, 0.1, 0.05, 0x8a949d); }
+  p.caja(0, 0.1, 0, 0.5, 0.04, 0.5, 0x3a3f46);                                          // sellado
   return p.geo();
 });
 
@@ -316,3 +358,15 @@ export const geoCajaConex = () => unica('cajaConex', () => {
 
 export const GEO_UNIT_CAJA = new THREE.BoxGeometry(1, 1, 1);
 export const GEO_PLANO = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+
+/** Canaleta de piso con tapa (unitaria a lo largo de x; ancho 0.24, alto 0.045): marco oscuro, tapa clara con dos nervios. */
+export function geoCanaleta() {
+  return unica('canaleta', () => {
+    const p = new Partes();
+    p.caja(0, 0.008, 0, 1, 0.016, 0.26, 0x6f717a);
+    p.caja(0, 0.0305, 0, 1, 0.029, 0.22, 0xb9bcc4);
+    p.caja(0, 0.0475, -0.06, 1, 0.004, 0.012, 0x8d9099);
+    p.caja(0, 0.0475, 0.06, 1, 0.004, 0.012, 0x8d9099);
+    return p.geo();
+  });
+}

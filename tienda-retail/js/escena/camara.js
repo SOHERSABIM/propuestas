@@ -59,41 +59,62 @@ export function crearCamara({ camara, dom, anim, reloj }) {
   function ajustar(c, { azimut = 38, polar = 52, llenado = 0.78, alto = 5.4, holgura = 0.6, orbital = false } = {}) {
     const W = dom.clientWidth || window.innerWidth, H = dom.clientHeight || window.innerHeight;
     camTmp.fov = camara.fov; camTmp.aspect = W / H; camTmp.near = 0.3; camTmp.far = 2000; camTmp.updateProjectionMatrix();
-    let xs = [c.x0 - holgura, c.x1 + holgura], zs = [c.z0 - holgura, c.z1 + holgura];
-    if (orbital) {
-      // órbita: se encuadra el prisma cuadrado que contiene al cilindro circunscrito (centro = pivote de la órbita),
-      // así el modelo cabe en el área libre en cualquier azimut mientras gira
-      const cx = (c.x0 + c.x1) / 2, cz = (c.z0 + c.z1) / 2, r = Math.hypot(c.x1 - c.x0, c.z1 - c.z0) / 2 + holgura;
-      xs = [cx - r, cx + r]; zs = [cz - r, cz + r];
-    }
-    const ys = [-0.3, alto];
-    let k = 0; for (const x of xs) for (const y of ys) for (const z of zs) esquinas[k++].set(x, y, z);
+    const xs = [c.x0 - holgura, c.x1 + holgura], zs = [c.z0 - holgura, c.z1 + holgura], ys = [-0.3, alto];
+    const ccx = (c.x0 + c.x1) / 2, ccz = (c.z0 + c.z1) / 2;
     // área libre en NDC
     const m = margenes;
     const L = -1 + (2 * m.izq) / W, R = 1 - (2 * m.der) / W, B = -1 + (2 * m.abajo) / H, T = 1 - (2 * m.arriba) / H;
     const cxN = (L + R) / 2, cyN = (B + T) / 2, anchoN = (R - L) * llenado, altoN = (T - B) * llenado;
-    const az = azimut * DEG, po = Math.max(2, polar) * DEG;
-    const dir = new THREE.Vector3(-Math.sin(po) * Math.sin(az), Math.cos(po), Math.sin(po) * Math.cos(az));
-    const obj = new THREE.Vector3((c.x0 + c.x1) / 2, alto * 0.25, (c.z0 + c.z1) / 2);
-    const medir = (d) => {
-      camTmp.position.copy(obj).addScaledVector(dir, d); camTmp.up.set(0, 1, 0); camTmp.lookAt(obj); camTmp.updateMatrixWorld(true);
-      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-      for (const e of esquinas) { v3.copy(e).project(camTmp); x0 = Math.min(x0, v3.x); x1 = Math.max(x1, v3.x); y0 = Math.min(y0, v3.y); y1 = Math.max(y1, v3.y); }
-      return { x0, x1, y0, y1 };
+    /** Distancia y objetivo para un azimut; con giro = g, la caja se gira g alrededor de su centro (órbita). */
+    const resolver = (azGrados, giro, dFijo) => {
+      let k = 0; const cg = Math.cos(giro), sg = Math.sin(giro);
+      for (const x of xs) for (const y of ys) for (const z of zs) { const dx = x - ccx, dz = z - ccz; esquinas[k++].set(ccx + dx * cg + dz * sg, y, ccz - dx * sg + dz * cg); }
+      const az = azGrados * DEG, po = Math.max(2, polar) * DEG;
+      const dir = new THREE.Vector3(-Math.sin(po) * Math.sin(az), Math.cos(po), Math.sin(po) * Math.cos(az));
+      const obj = new THREE.Vector3(ccx, alto * 0.25, ccz);
+      const medir = (d) => {
+        camTmp.position.copy(obj).addScaledVector(dir, d); camTmp.up.set(0, 1, 0); camTmp.lookAt(obj); camTmp.updateMatrixWorld(true);
+        let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+        for (const e of esquinas) { v3.copy(e).project(camTmp); x0 = Math.min(x0, v3.x); x1 = Math.max(x1, v3.x); y0 = Math.min(y0, v3.y); y1 = Math.max(y1, v3.y); }
+        return { x0, x1, y0, y1 };
+      };
+      let d = dFijo ?? 60;
+      for (let it = 0; it < 4; it++) {
+        if (dFijo == null) {
+          let lo = 3, hi = 600;
+          for (let b = 0; b < 26; b++) { d = (lo + hi) / 2; const r = medir(d); const f = Math.max((r.x1 - r.x0) / anchoN, (r.y1 - r.y0) / altoN); if (f > 1) lo = d; else hi = d; }
+          d = hi;
+        }
+        // centrar: desplaza el objetivo en el plano de la cámara
+        const r = medir(d), dx = (r.x0 + r.x1) / 2 - cxN, dy = (r.y0 + r.y1) / 2 - cyN;
+        const t = Math.tan((camTmp.fov * DEG) / 2) * d;
+        const der = new THREE.Vector3().setFromMatrixColumn(camTmp.matrixWorld, 0), arr = new THREE.Vector3().setFromMatrixColumn(camTmp.matrixWorld, 1);
+        obj.addScaledVector(der, dx * t * camTmp.aspect).addScaledVector(arr, dy * t);
+      }
+      return { d, pos: obj.clone().addScaledVector(dir, d).toArray(), obj: obj.toArray() };
     };
-    let d = 60;
-    for (let it = 0; it < 4; it++) {
-      let lo = 3, hi = 600;
-      for (let b = 0; b < 26; b++) { d = (lo + hi) / 2; const r = medir(d); const f = Math.max((r.x1 - r.x0) / anchoN, (r.y1 - r.y0) / altoN); if (f > 1) lo = d; else hi = d; }
-      d = hi;
-      // centrar: desplaza el objetivo en el plano de la cámara
-      const r = medir(d), dx = (r.x0 + r.x1) / 2 - cxN, dy = (r.y0 + r.y1) / 2 - cyN;
-      const t = Math.tan((camTmp.fov * DEG) / 2) * d;
-      const der = new THREE.Vector3().setFromMatrixColumn(camTmp.matrixWorld, 0), arr = new THREE.Vector3().setFromMatrixColumn(camTmp.matrixWorld, 1);
-      obj.addScaledVector(der, dx * t * camTmp.aspect).addScaledVector(arr, dy * t);
-    }
-    return { pos: obj.clone().addScaledVector(dir, d).toArray(), obj: obj.toArray() };
+    if (!orbital) { const r = resolver(azimut, 0); return { pos: r.pos, obj: r.obj }; }
+    // órbita: la distancia es la mayor que exige la caja real girada en 12 azimuts (cabe al girar y llena más que
+    // el cilindro circunscrito); el encuadre se centra en el azimut de partida
+    let dMax = 0;
+    for (let i = 0; i < 12; i++) dMax = Math.max(dMax, resolver(azimut, (i * 30) * DEG).d);
+    const r = resolver(azimut, 0, dMax);
+    return { pos: r.pos, obj: r.obj };
   }
+
+  // ---------- Desplazamiento de la imagen (planos cercanos): el punto de fuga va al centro del área libre ----------
+  let desp = 0;
+  const ultimo = { px: 0, py: 0, W: 0, H: 0 };
+  function aplicarDesplazamiento() {
+    if (desp === 0 && ultimo.px === 0 && ultimo.py === 0) return;
+    const W = window.innerWidth, H = window.innerHeight; // sin forzar diseño (el lienzo ocupa la ventana)
+    const px = desp * ((margenes.izq - margenes.der) / 2), py = desp * ((margenes.arriba - margenes.abajo) / 2);
+    if (px === ultimo.px && py === ultimo.py && W === ultimo.W && H === ultimo.H) return;
+    ultimo.px = px; ultimo.py = py; ultimo.W = W; ultimo.H = H;
+    if (Math.abs(px) < 0.5 && Math.abs(py) < 0.5) camara.clearViewOffset(); else camara.setViewOffset(W, H, -px, -py, W, H);
+    camara.updateProjectionMatrix();
+  }
+  reloj.onTick(aplicarDesplazamiento, 51);
 
   const api = {
     controles,
@@ -127,6 +148,23 @@ export function crearCamara({ camara, dom, anim, reloj }) {
       } });
       return tween;
     },
+    /**
+     * Viaje esférico alrededor de un objetivo explícito (acercamientos progresivos: el radio, la altura y el giro
+     * cambian juntos, sin cortes bruscos).
+     */
+    viajar(pos, obj, op = {}) {
+      if (manual && !op.forzar) return anim.wait(0);
+      tween?.cancel(); tween = viajeEsferico(pos, obj, op); return tween;
+    },
+    /**
+     * Desplazamiento de la imagen hacia el centro del área libre de la interfaz (0 = centrado en pantalla, 1 =
+     * centrado en el área libre). Para planos cercanos que no pueden usar el encuadre automático. @returns Handle
+     */
+    desplazar(v, { dur = 1200, delay = 0, ease = 'io' } = {}) {
+      const a = desp;
+      return anim.tween({ dur, delay, ease, onUpdate: (e) => { desp = a + (v - a) * e; } });
+    },
+    get desplazamiento() { return desp; },
     /** Posición y objetivo de un encuadre sin moverse (para componer planos). */
     plano, ajustar,
     /** Márgenes de la interfaz en px {arriba, abajo, izq, der}: el encuadre automático los respeta. */

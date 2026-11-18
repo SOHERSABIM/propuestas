@@ -2,9 +2,9 @@
 // bridas, codos, tés, reducciones, compuertas, bajantes de unidades paquete, conexiones flexibles a difusores y
 // rejillas de retorno. Cada pieza lleva su distancia `d` por la red desde la unidad más cercana: de ahí sale el
 // orden de aparición (tiempos.js). Alturas: ducto principal y ramales a 3.90 m; difusores con cuello a 3.75 m.
-import { r3, rectC, solapa, rectEnPoligono, segDentro, rectSeg, cajaEje, cajaC, unirCajas, huellaMueble, rectsDePoligono, yawX, yawHacia } from './util.js';
+import { r3, rectC, solapa, rectEnPoligono, segDentro, rectSeg, cajaEje, cajaC, unirCajas, huellaMueble, rectsDePoligono, yawX, yawHacia, NIVEL_AZOTEA, H_BANC } from './util.js';
 
-export const Y_DUCTO = 3.9, Y_CUELLO = 3.75, Y_CARA = 3.35, Y_RETORNO = 3.55, Y_AZOTEA = 4.8;
+export const Y_DUCTO = 4.1, Y_CUELLO = 3.95, Y_CARA = 3.55, Y_RETORNO = 3.75, Y_AZOTEA = NIVEL_AZOTEA;
 export const DIM_UNIDAD = { ancho: 2.4, fondo: 1.6, alto: 1.0 };
 export const SZ = { P: { w: 0.7, h: 0.4 }, R: { w: 0.4, h: 0.3 }, S: { w: 0.3, h: 0.225 } };
 const TEE_R = 0.9, TEE_P = 1.0, STUB = 0.55, TRAMO = 1.35, DROP = 0.7;
@@ -134,11 +134,13 @@ export function planAire(local, layout, ctx) {
   // unidades y bajantes
   posU.forEach((q, k) => {
     const e = espinas[q.i], un = unidades[k]; const ry = e.eje === 'x' ? 0 : yawX(0, -1);
-    add({ t: 'unidad', ph: 'equipo', k, x: un.p[0], y: Y_AZOTEA, z: un.p[2], ry, sx: 1, sy: 1, sz: 1, d: 0, fr: [0, 0], net: 'aire', caja: cajaC(un.p[0], Y_AZOTEA + DIM_UNIDAD.alto / 2, un.p[2], un.ancho, DIM_UNIDAD.alto, un.fondo), ref: un.id });
+    add({ t: 'bancada', ph: 'bancada', k, x: un.p[0], y: Y_AZOTEA, z: un.p[2], ry, sx: 1, sy: 1, sz: 1, d: 0, fr: [0, 0], net: 'aire', caja: cajaC(un.p[0], Y_AZOTEA + H_BANC / 2, un.p[2], un.ancho, H_BANC, un.fondo), ref: un.id, nivel: Y_AZOTEA, bw: DIM_UNIDAD.ancho, bd: DIM_UNIDAD.fondo });
+    add({ t: 'cuello', ph: 'bancada', k, x: un.p[0], y: Y_AZOTEA, z: un.p[2], ry: 0, sx: 1, sy: 1, sz: 1, d: 0, fr: [0, 0], net: 'aire', caja: cajaC(un.p[0], Y_AZOTEA + 0.15, un.p[2], 1.0, 0.3, 1.0), ref: un.id });
+    add({ t: 'unidad', ph: 'equipo', k, x: un.p[0], y: Y_AZOTEA + H_BANC, z: un.p[2], ry, sx: 1, sy: 1, sz: 1, d: 0, fr: [0, 0], net: 'aire', caja: cajaC(un.p[0], Y_AZOTEA + H_BANC + DIM_UNIDAD.alto / 2, un.p[2], un.ancho, DIM_UNIDAD.alto, un.fondo), ref: un.id });
     add({ t: 'bajante', ph: 'bajante', k, x: un.p[0], y: Y_AZOTEA, z: un.p[2], ry: 0, sx: 0.6, sy: DROP, sz: 0.6, d: 0, fr: [0, 0], net: 'aire', caja: cajaC(un.p[0], Y_AZOTEA - DROP / 2, un.p[2], 0.6, DROP, 0.6), ref: un.id });
     for (let f = 0; f < 2; f++) {
       const o = (f ? 1 : -1) * 0.55, ex = e.eje === 'x' ? o : 0, ez = e.eje === 'x' ? 0 : o;
-      add({ t: 'ventilador', ph: 'fan', k: k * 2 + f, x: un.p[0] + ex, y: Y_AZOTEA + DIM_UNIDAD.alto + 0.03, z: un.p[2] + ez, ry: 0, sx: 1, sy: 1, sz: 1, d: 0, fr: [0, 0], net: 'aire', caja: cajaC(un.p[0] + ex, Y_AZOTEA + DIM_UNIDAD.alto + 0.07, un.p[2] + ez, 0.9, 0.14, 0.9), ref: un.id });
+      add({ t: 'ventilador', ph: 'fan', k: k * 2 + f, x: un.p[0] + ex, y: Y_AZOTEA + H_BANC + DIM_UNIDAD.alto - 0.06, z: un.p[2] + ez, ry: 0, sx: 1, sy: 1, sz: 1, d: 0, fr: [0, 0], net: 'aire', caja: cajaC(un.p[0] + ex, Y_AZOTEA + H_BANC + DIM_UNIDAD.alto - 0.02, un.p[2] + ez, 0.9, 0.14, 0.9), ref: un.id });
     }
   });
 

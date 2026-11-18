@@ -11,7 +11,7 @@ export const REGLA_LUZ = {
 };
 export const DIM_LUZ = { lineal: { largo: 1.5, ancho: 0.16 }, panel: { largo: 1.2, ancho: 0.6 }, riel: { largo: 4.8, ancho: 0.08 } };
 export const ALTO_CUERPO = { lineal: 0.1, panel: 0.07, riel: 0.07 };
-export const Y_CANAL = 4.68, Y_LOSA = 4.8, D_CANAL = 0.03;
+export const Y_CANAL = 4.72, Y_LOSA = 4.8, D_CANAL = 0.03;
 
 export function planLuz(local, layout, ctx) {
   const zr = layout.zonas.flatMap((z) => z.rects.map((r) => ({ ...r, id: z.id })));
@@ -25,22 +25,22 @@ export function planLuz(local, layout, ctx) {
   const duros = [...ctx.aire.piezas, ...ctx.frio.piezas].filter((p) => p.caja && p.t !== 'unidad' && p.t !== 'ventilador' && p.t !== 'cond').map((p) => p.caja);
   const mueblesAlt = ctx.muebles.map((m) => ({ r: huellaMueble(m), alto: m.alto }));
   /** ¿la columna de la luminaria (huella fp, desde yBajo hasta la losa) choca con algo? */
-  function bloqueada(fp, yBajo) {
-    const col = { x0: fp.x0 - 0.12, x1: fp.x1 + 0.12, y0: yBajo, y1: Y_LOSA, z0: fp.z0 - 0.12, z1: fp.z1 + 0.12 };
+  function bloqueada(fp, yBajo, mg = 0.12) {
+    const col = { x0: fp.x0 - mg, x1: fp.x1 + mg, y0: yBajo, y1: Y_LOSA, z0: fp.z0 - mg, z1: fp.z1 + mg };
     if (duros.some((c) => cajasChocan(c, col))) return true;
     if (mueblesAlt.some((q) => q.alto > yBajo - 0.05 && solapa(q.r, fp, 0.08))) return true;
     return false;
   }
 
   /** @type {any[]} */ const lum = [];
-  function poner(tipo, x, z, rot, zr1, largo) {
+  function poner(tipo, x, z, rot, zr1, largo, mg = 0.12) {
     const d = DIM_LUZ[tipo]; largo = largo ?? d.largo;
     const fp = rot === 0 ? rectC(x, z, largo, d.ancho) : rectC(x, z, d.ancho, largo);
     if (!cabe(zr1, fp, 0.02)) return false;
     if (colsL.some((c) => solapa(c, fp))) return false;
     if (tipo === 'panel' && muros.some((m) => solapa(m, fp))) return false;
     const y = REGLA_LUZ[zr1.id].y;
-    if (bloqueada(fp, y - ALTO_CUERPO[tipo] / 2 - (tipo === 'riel' ? 0.2 : 0.03))) return false;
+    if (bloqueada(fp, y - ALTO_CUERPO[tipo] / 2 - (tipo === 'riel' ? 0.2 : 0.03), mg)) return false;
     const sep = tipo === 'riel' ? 0.2 : 0.3;
     if (lum.some((l) => solapa(l.fp, fp, sep))) return false;
     lum.push({ tipo, x, z, rot, largo, ancho: d.ancho, zona: zr1.id, y, fp });
@@ -112,7 +112,7 @@ export function planLuz(local, layout, ctx) {
       const cand = [];
       for (let x = x0 + 0.4; x <= x1 - 0.4 + 1e-9; x += 0.1) for (let z = z0 + 0.3; z <= z1 - 0.3 + 1e-9; z += 0.1) cand.push([x, z]);
       cand.sort((a, b) => Math.hypot(a[0] - cx, a[1] - cz) - Math.hypot(b[0] - cx, b[1] - cz));
-      cand.some(([x, z]) => poner('panel', x, z, 0, zz) || poner('panel', x, z, 90, zz));
+      if (!cand.some(([x, z]) => poner('panel', x, z, 0, zz) || poner('panel', x, z, 90, zz))) cand.some(([x, z]) => poner('panel', x, z, 0, zz, undefined, 0.03) || poner('panel', x, z, 90, zz, undefined, 0.03));
     }
   }
   // 4) relleno de lineales donde los pasillos no cubren (≥ 2 m a cualquier luminaria existente)
@@ -228,7 +228,7 @@ export function planLuz(local, layout, ctx) {
           const sx = a ? lx + o : lx, sz = a ? lz : lz + o;
           add({ t: 'spot', ph: 'cuelga', lit: true, x: sx, y: y - h / 2 - 0.02, z: sz, ry: (s % 2 ? 1 : -1) * Math.PI / 2 + (a ? 0 : Math.PI / 2), sx: 1, sy: 1, sz: 1, d: dl, fr: [0, 0], net: rid, caja: cajaC(sx, y - h / 2 - 0.09, sz, 0.12, 0.2, 0.12), lum: id, yArranque: Y_CANAL - 0.06 });
         }
-        add({ t: 'charco', ph: 'luz', lit: true, x: lx, y: 0.03, z: lz, ry: 0, sx: a ? (l.tipo === 'panel' ? 2.8 : l.largo + 2.2) : (l.tipo === 'panel' ? 2.6 : 2.5), sy: 1, sz: a ? (l.tipo === 'panel' ? 2.6 : 2.5) : (l.tipo === 'panel' ? 2.8 : l.largo + 2.2), d: dl, fr: [0, 0], net: rid, lum: id });
+        add({ t: 'charco', ph: 'luz', lit: true, x: lx, y: 0.03, z: lz, ry: 0, sx: a ? (l.tipo === 'panel' ? 4.4 : l.largo + 3.4) : (l.tipo === 'panel' ? 4.2 : 3.9), sy: 1, sz: a ? (l.tipo === 'panel' ? 4.2 : 3.9) : (l.tipo === 'panel' ? 4.4 : l.largo + 3.4), d: dl, fr: [0, 0], net: rid, lum: id });
       }
     });
   }

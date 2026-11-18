@@ -12,10 +12,10 @@ const MIN = 1e-5;
 /** Cómo llega cada tipo de componente. */
 export const MODO = {
   // tramos de red: entran desde arriba y desde el lado del equipo, y se acoplan al anterior
-  tramo: 'cae', codo: 'cae', teeR: 'cae', teeP: 'cae', reduccion: 'cae', compuerta: 'cae', tubo: 'cae', codoTubo: 'cae', valvula: 'cae', caja: 'cae',
+  tramo: 'cae', codo: 'cae', teeR: 'cae', teeP: 'cae', reduccion: 'cae', compuerta: 'cae', tubo: 'cae', codoTubo: 'cae', valvula: 'cae', caja: 'cae', canaleta: 'piso',
   // lo que cuelga de la losa crece hacia abajo anclado arriba
   soporte: 'ext', bajante: 'ext', flex: 'ext', retorno: 'ext', varilla: 'ext',
-  unidad: 'grua', cond: 'grua', ventilador: 'pop', difusor: 'punta',
+  unidad: 'grua', cond: 'grua', bancada: 'ext', cuello: 'ext', ventilador: 'pop', difusor: 'punta',
   carcasaLineal: 'cuelga', carcasaPanel: 'cuelga', lente: 'cuelga', spot: 'cuelga', charco: 'charco',
 };
 
@@ -32,7 +32,7 @@ function registro(p) {
   };
   // desplazamiento de llegada de los tramos de red: desde el lado del equipo y desde arriba
   const vert = Math.abs(r.fr[0]) + Math.abs(r.fr[1]) < 0.5;
-  r.off = [r.fr[0] * 0.9, vert ? 0.75 : 0.5, r.fr[1] * 0.9];
+  r.off = [r.fr[0] * 0.9, vert ? 0.75 : 0.5, r.fr[1] * 0.9]; if (r.modo === 'piso') r.off = [r.fr[0] * 0.9, 0, r.fr[1] * 0.9];
   if (r.basis) { _a.fromArray(r.basis[0]); _b.fromArray(r.basis[1]); _d.fromArray(r.basis[2]); _m.makeBasis(_a, _b, _d); r.qrot = new THREE.Quaternion().setFromRotationMatrix(_m); } else r.qrot = null;
   return r;
 }
@@ -54,6 +54,7 @@ export function crearLote(geo, mat, piezas, { orden = 0, transparente = false } 
     if (q <= 0) { ocultar(mesh, i); return; }
     let x = r.x, y = r.y, z = r.z, sx = r.sx, sy = r.sy, sz = r.sz;
     switch (r.modo) {
+      case 'piso': { const e = EASE.out(q), k = 1 - e, g = EASE.out(clamp(q * 2.4)); x += r.off[0] * k; z += r.off[2] * k; sx *= g; break; }
       case 'cae': { const e = EASE.out(q), k = 1 - e, g = EASE.out(clamp(q * 2.4)); x += r.off[0] * k; y += r.off[1] * k; z += r.off[2] * k; sx *= g; sy *= g; sz *= g; break; }
       case 'ext': { const e = EASE.out(q); sy *= e; const g = EASE.out(clamp(q * 3)); sx *= g; sz *= g; break; }
       case 'grua': { const e = EASE.out(q); y += 1.7 * (1 - e); const g = 0.9 + 0.1 * e; sx *= g; sy *= g; sz *= g; break; }

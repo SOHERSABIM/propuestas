@@ -74,3 +74,8 @@ export function huellaMueble(m) {
 export const yawHacia = (dx, dz) => Math.atan2(dx, dz);
 /** Yaw con el que el eje local +x del modelo apunta a (dx, dz). */
 export const yawX = (dx, dz) => Math.atan2(-dz, dx);
+
+/** Cara superior de la losa de azotea (m): nivel de apoyo de todas las bancadas. El núcleo la importa de index.js. */
+export const NIVEL_AZOTEA = 4.8;
+/** Altura de la bancada metálica de los equipos de azotea. */
+export const H_BANC = 0.3;

@@ -3,7 +3,8 @@
 // los datos del contrato (luminarias, unidades, ramales, difusores, líneas de frío…) y, además, las PIEZAS de cada red
 // (tramos, codos, tés, soportes…) con su distancia por la red al equipo, que usa la animación por tramos.
 import { rectC, solapa, cajaC, cajasChocan, huellaMueble, rectsDePoligono, r3 } from './util.js';
-import { planAire, DIM_UNIDAD, SZ, Y_DUCTO, Y_AZOTEA } from './plan-aire.js';
+import { planAire, DIM_UNIDAD, SZ, Y_DUCTO, Y_CUELLO, Y_CARA, Y_AZOTEA } from './plan-aire.js';
+import { planTrincheras } from './plan-trinchera.js';
 import { planFrio, DIM_COND, Y_FRIO, D_SUC } from './plan-frio.js';
 import { planLuz, REGLA_LUZ, DIM_LUZ, Y_CANAL } from './plan-luz.js';
 
@@ -12,7 +13,7 @@ export { rectsDePoligono, DIM_UNIDAD, DIM_COND, REGLA_LUZ, DIM_LUZ };
 /** Alturas por capa (m sobre piso terminado). Cambios respecto al contrato: ver docs/status/r1-inst.done. */
 export const ALTURAS = {
   luz: { autoservicio: 3.6, refrigerados: 3.6, ropa_hogar: 3.8, cajas: 3.4, mostrador: 3.4, acceso: 3.6, trastienda: 3.0, canalizacion: Y_CANAL },
-  aire: { ductoPrincipal: Y_DUCTO, ramal: Y_DUCTO, difusor: 3.75, caraDifusor: 3.35, azotea: Y_AZOTEA },
+  aire: { ductoPrincipal: Y_DUCTO, ramal: Y_DUCTO, difusor: Y_CUELLO, caraDifusor: Y_CARA, azotea: Y_AZOTEA },
   frio: { lineas: Y_FRIO, azotea: Y_AZOTEA },
 };
 
@@ -22,14 +23,15 @@ export const cajasDe = (p) => p.cajas ?? (p.caja ? [p.caja] : []);
 /** Busca la posición de cada soporte (trapecio) que no choque con nada: desplaza a lo largo del tramo. */
 function colocarSoportes(candidatos, otros, extraOcupadas) {
   const hechos = [];
+  const cerca = (lista, u) => lista.filter((o) => o.x0 < u.x1 + 0.02 && o.x1 > u.x0 - 0.02 && o.z0 < u.z1 + 0.02 && o.z1 > u.z0 - 0.02 && o.y0 < u.y1 + 0.02 && o.y1 > u.y0 - 0.02);
   for (const c of candidatos) {
+    // todas las posiciones posibles de este soporte caben en una caja: solo se comparan los obstáculos que la tocan
+    const opciones = c.desplazamientos.map((t) => ({ t, cj: c.cajasEn(t) }));
+    const u = { x0: 1e9, x1: -1e9, y0: 1e9, y1: -1e9, z0: 1e9, z1: -1e9 };
+    for (const o of opciones) for (const b of o.cj) { u.x0 = Math.min(u.x0, b.x0); u.x1 = Math.max(u.x1, b.x1); u.y0 = Math.min(u.y0, b.y0); u.y1 = Math.max(u.y1, b.y1); u.z0 = Math.min(u.z0, b.z0); u.z1 = Math.max(u.z1, b.z1); }
+    const rel = [...cerca(otros, u), ...cerca(extraOcupadas, u), ...cerca(hechos, u)];
     let ok = null;
-    for (const t of c.desplazamientos) {
-      const cj = c.cajasEn(t);
-      const mias = [...otros, ...extraOcupadas, ...hechos];
-      if (cj.some((b) => mias.some((o) => cajasChocan(o, b, 0.01)))) continue;
-      ok = { t, cj }; break;
-    }
+    for (const o of opciones) { if (o.cj.some((b) => rel.some((q) => cajasChocan(q, b, 0.01)))) continue; ok = o; break; }
     if (!ok) continue;
     hechos.push(...ok.cj);
     c.crear(ok.t, ok.cj);
@@ -43,7 +45,10 @@ function colocarSoportes(candidatos, otros, extraOcupadas) {
  */
 export function planInstalaciones(local, layout) {
   const cols = (m) => local.columnas.map(([x, z]) => rectC(x, z, local.columna + 2 * m, local.columna + 2 * m));
-  const equiposFrios = layout.muebles.filter((m) => m.frio && m.frio.conexion && (!layout.equiposFrios || layout.equiposFrios.includes(m.id)));
+  const conFrio = layout.muebles.filter((m) => m.frio && m.frio.conexion && (!layout.equiposFrios || layout.equiposFrios.includes(m.id)));
+  // congeladores isla: sin tubería desde el techo; reciben su línea por canaleta de piso desde un muro o columna
+  const tr = planTrincheras(local, layout, layout.equiposFrios);
+  const equiposFrios = [...conFrio.filter((m) => !tr.islas.has(m.id)), ...tr.equipos];
   const altos = layout.muebles.map((m) => ({ r: huellaMueble(m), alto: m.alto }));
   const aire = planAire(local, layout, { equiposFrios, altos });
   const frio = planFrio(local, layout, { cols, equiposFrios, aire });
@@ -88,7 +93,7 @@ export function planInstalaciones(local, layout) {
   // el propio ducto no debe contar contra su soporte (varillas a ±(w/2+0.1) de su eje): se excluye al colocarlos
   return {
     localId: local.id, layoutId: layout.id,
-    luz, aire, frio,
+    luz, aire, frio, trincheras: tr.arboles.map((t, i) => ({ id: tr.equipos[i].id, islas: t.islas, subida: t.subida })), sinTrinchera: tr.sinTrinchera,
     indicadores: { luminarias: luz.luminarias.length, tr: aire.tr, condensadoras: frio.condensadoras.length },
     extra: { difusores: aire.difusores.length, retornos: aire.retornos.length, unidadesAire: aire.unidades.length, lineasFrio: frio.lineas.length, piezas: { luz: luz.piezas.length, aire: aire.piezas.length, frio: frio.piezas.length } },
   };

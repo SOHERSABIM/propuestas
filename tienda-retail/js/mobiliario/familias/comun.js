@@ -49,3 +49,19 @@ export function etiquetas(b, x0, x1, y, z, dir, color, color2, paso = 0.14) {
 }
 /** Patas niveladoras (zapatas): cilindros cortos bajo la base. */
 export function zapatas(b, pts, r = 0.022, h = 0.03, color = P.negro) { for (const [x, z] of pts) b.pilar(x, 0, z, r, h, color, 6); }
+
+/**
+ * Cesta de varilla: aro superior de color, aro inferior, varillas verticales, travesaños y fondo de varilla.
+ * Centrada en (x, z), base en y0.
+ */
+export function cesta(b, x, y0, z, w, d, h, { rod = 0.07, color = 0xc3c8cd, rim = 0xa8aeb5, t = 0.007, fondo = true } = {}) {
+  const rect = (y, ww, dd, tt, col) => {
+    b.caja(x, y, z - dd / 2, ww, tt, tt, col); b.caja(x, y, z + dd / 2, ww, tt, tt, col);
+    b.caja(x - ww / 2, y, z, tt, tt, dd - tt, col); b.caja(x + ww / 2, y, z, tt, tt, dd - tt, col);
+  };
+  rect(y0 + h - 0.008, w, d, 0.016, rim); rect(y0, w, d, 0.01, color); rect(y0 + h * 0.5, w, d, t, color);
+  const nx = Math.max(2, Math.round(w / rod)), nz = Math.max(2, Math.round(d / rod));
+  for (let i = 0; i <= nx; i++) for (const s of [-1, 1]) b.caja(x - w / 2 + (i / nx) * w, y0, z + s * d / 2, t, h - 0.008, t, color, { sin: '-y+y' });
+  for (let i = 1; i < nz; i++) for (const s of [-1, 1]) b.caja(x + s * w / 2, y0, z - d / 2 + (i / nz) * d, t, h - 0.008, t, color, { sin: '-y+y' });
+  if (fondo) for (let i = 1; i < nx; i++) b.caja(x - w / 2 + (i / nx) * w, y0, z, t, 0.006, d - 0.01, color, { sin: '-y' });
+}
