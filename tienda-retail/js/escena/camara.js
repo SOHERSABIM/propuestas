@@ -15,6 +15,31 @@ export function crearCamara({ camara, dom, anim, reloj }) {
   /** Centro del modelo encuadrado: la órbita gira cámara y objetivo juntos alrededor de él (el modelo no se sale del área libre). */
   const pivote = new THREE.Vector3();
   controles.addEventListener('start', () => { manual = true; tween?.cancel(); reloj.pedirCuadro(); });
+  // ---------- Pose base + deriva ----------
+  // Las interpolaciones escriben la pose BASE (bPos, bObj); la cámara real es esa pose girada `phi` alrededor del eje
+  // vertical que pasa por el centro del modelo (pivote). `phi` avanza con la deriva (órbita lenta). Al empezar cada
+  // interpolación la pose real se vuelve base y phi = 0 ("hornear"): nunca hay salto, y como la velocidad de la
+  // deriva se suma a la de la interpolación, la cámara no se queda quieta al final de un movimiento con curva.
+  const bPos = camara.position.clone(), bObj = controles.target.clone();
+  let phi = 0, omega = 0, omegaObj = 0, velOrbita = 3;
+  function hornear() { bPos.copy(camara.position); bObj.copy(controles.target); phi = 0; }
+  function componer() {
+    if (phi === 0) { camara.position.copy(bPos); controles.target.copy(bObj); }
+    else {
+      const c = Math.cos(phi), s2 = Math.sin(phi);
+      let dx = bPos.x - pivote.x, dz = bPos.z - pivote.z;
+      camara.position.set(pivote.x + dx * c - dz * s2, bPos.y, pivote.z + dx * s2 + dz * c);
+      dx = bObj.x - pivote.x; dz = bObj.z - pivote.z;
+      controles.target.set(pivote.x + dx * c - dz * s2, bObj.y, pivote.z + dx * s2 + dz * c);
+    }
+    camara.lookAt(controles.target);
+  }
+  /** Gira (pos, obj) -grados alrededor del pivote: anticipa la deriva que acumulará una interpolación. */
+  function preGirar(pos, obj, grados) {
+    if (!grados) return;
+    const a = -grados * DEG, c = Math.cos(a), s2 = Math.sin(a);
+    for (const v of [pos, obj]) { const dx = v[0] - pivote.x, dz = v[2] - pivote.z; v[0] = pivote.x + dx * c - dz * s2; v[2] = pivote.z + dx * s2 + dz * c; }
+  }
   controles.addEventListener('change', () => reloj.pedirCuadro());
 
   /** Calcula posición y objetivo para mirar un rectángulo envolvente. */
@@ -32,7 +57,8 @@ export function crearCamara({ camara, dom, anim, reloj }) {
    * (radio, polar y azimut por el camino corto). Evita giros raros al entrar o salir de la vista cenital.
    */
   function viajeEsferico(pos, obj, op) {
-    const t0 = controles.target.toArray(), p0 = camara.position.toArray();
+    hornear();
+    const t0 = bObj.toArray(), p0 = bPos.toArray();
     const esf = (p, t) => { const dx = p[0] - t[0], dy = p[1] - t[1], dz = p[2] - t[2], r = Math.hypot(dx, dy, dz); return { r, pol: Math.acos(Math.max(-1, Math.min(1, dy / r))), az: Math.atan2(dx, dz) }; };
     const b = esf(pos, obj); let a = esf(p0, t0);
     if (!(a.r > 1e-4)) a = { ...b }; // cámara sin posición previa (arranque)
@@ -42,9 +68,9 @@ export function crearCamara({ camara, dom, anim, reloj }) {
       onUpdate: (e) => {
         const tx = t0[0] + (obj[0] - t0[0]) * e, ty = t0[1] + (obj[1] - t0[1]) * e, tz = t0[2] + (obj[2] - t0[2]) * e;
         const r = a.r + (b.r - a.r) * e, pol = a.pol + (b.pol - a.pol) * e, az = a.az + dAz * e;
-        controles.target.set(tx, ty, tz);
-        camara.position.set(tx + r * Math.sin(pol) * Math.sin(az), ty + r * Math.cos(pol), tz + r * Math.sin(pol) * Math.cos(az));
-        camara.lookAt(controles.target);
+        bObj.set(tx, ty, tz);
+        bPos.set(tx + r * Math.sin(pol) * Math.sin(az), ty + r * Math.cos(pol), tz + r * Math.sin(pol) * Math.cos(az));
+        componer();
       },
     });
   }
@@ -116,6 +142,7 @@ export function crearCamara({ camara, dom, anim, reloj }) {
   }
   reloj.onTick(aplicarDesplazamiento, 51);
 
+  const tPos = new THREE.Vector3(), tObj = new THREE.Vector3();
   const api = {
     controles,
     /** true si el usuario tomó la cámara (la automática cede hasta reiniciar o pedir encuadre forzado). */
@@ -132,19 +159,23 @@ export function crearCamara({ camara, dom, anim, reloj }) {
       if (manual && !op.forzar) return anim.wait(0);
       if (op.forzar) manual = false;
       const { pos, obj } = op.llenado ? ajustar(caja, op) : plano(caja, op);
-      if (op.llenado) pivote.set((caja.x0 + caja.x1) / 2, (op.alto ?? 5.4) * 0.25, (caja.z0 + caja.z1) / 2); else pivote.fromArray(obj);
       tween?.cancel();
+      // el pivote cambia con la pose ya horneada (phi = 0): sin salto
+      hornear();
+      if (op.llenado) pivote.set((caja.x0 + caja.x1) / 2, (op.alto ?? 5.4) * 0.25, (caja.z0 + caja.z1) / 2); else pivote.fromArray(obj);
+      // la deriva sumará omegaObj durante el viaje: el destino se gira de antemano para llegar al encuadre pedido
+      if (op.anticipar !== false && !anim.instantaneo) preGirar(pos, obj, (omegaObj * ((op.dur ?? 1400) + (op.delay ?? 0)) * anim.ritmo) / 1000);
       tween = viajeEsferico(pos, obj, op);
       return tween;
     },
     /** Mueve la cámara a una posición y objetivo explícitos (planos especiales como el recorrido por pasillo). */
     mirar(pos, obj, op = {}) {
       if (manual && !op.forzar) return anim.wait(0);
-      const p0 = camara.position.toArray(), t0 = controles.target.toArray();
-      tween?.cancel();
+      tween?.cancel(); hornear();
+      const p0 = bPos.toArray(), t0 = bObj.toArray();
       tween = anim.tween({ dur: op.dur ?? 1400, delay: op.delay ?? 0, ease: op.ease ?? 'io', onUpdate: (e) => {
-        camara.position.set(p0[0] + (pos[0] - p0[0]) * e, p0[1] + (pos[1] - p0[1]) * e, p0[2] + (pos[2] - p0[2]) * e);
-        controles.target.set(t0[0] + (obj[0] - t0[0]) * e, t0[1] + (obj[1] - t0[1]) * e, t0[2] + (obj[2] - t0[2]) * e); camara.lookAt(controles.target);
+        bPos.set(p0[0] + (pos[0] - p0[0]) * e, p0[1] + (pos[1] - p0[1]) * e, p0[2] + (pos[2] - p0[2]) * e);
+        bObj.set(t0[0] + (obj[0] - t0[0]) * e, t0[1] + (obj[1] - t0[1]) * e, t0[2] + (obj[2] - t0[2]) * e); componer();
       } });
       return tween;
     },
@@ -154,7 +185,20 @@ export function crearCamara({ camara, dom, anim, reloj }) {
      */
     viajar(pos, obj, op = {}) {
       if (manual && !op.forzar) return anim.wait(0);
-      tween?.cancel(); tween = viajeEsferico(pos, obj, op); return tween;
+      tween?.cancel(); tween = viajeEsferico(pos, obj, op); return tween; // viajeEsferico hornea
+    },
+    /**
+     * Trayecto libre: en cada cuadro f(k, pos, obj) escribe en dos Vector3 reutilizados (sin asignar memoria) la
+     * posición y el objetivo para el avance k (0..1, lineal). La cámara cede si el usuario la toma. @returns Handle
+     */
+    trayecto(f, op = {}) {
+      if (manual && !op.forzar) return anim.wait(0);
+      tween?.cancel(); hornear();
+      tween = anim.tween({ dur: op.dur ?? 10000, delay: op.delay ?? 0, ease: 'lin', onUpdate: (e, k) => {
+        if (manual) return;
+        f(k, tPos, tObj); bPos.copy(tPos); bObj.copy(tObj); componer();
+      } });
+      return tween;
     },
     /**
      * Desplazamiento de la imagen hacia el centro del área libre de la interfaz (0 = centrado en pantalla, 1 =
@@ -165,6 +209,12 @@ export function crearCamara({ camara, dom, anim, reloj }) {
       return anim.tween({ dur, delay, ease, onUpdate: (e) => { desp = a + (v - a) * e; } });
     },
     get desplazamiento() { return desp; },
+    /**
+     * Plano cercano (m): en los planos a la altura de los ojos lo que quede a menos de esa distancia de la lente no
+     * se dibuja (columnas o ductos que pasarían rozando). 0.3 = normal.
+     */
+    set cerca(v) { if (camara.near !== v) { camara.near = v; camara.updateProjectionMatrix(); } },
+    get cerca() { return camara.near; },
     /** Posición y objetivo de un encuadre sin moverse (para componer planos). */
     plano, ajustar,
     /** Márgenes de la interfaz en px {arriba, abajo, izq, der}: el encuadre automático los respeta. */
@@ -173,18 +223,32 @@ export function crearCamara({ camara, dom, anim, reloj }) {
     /** Azimut actual (grados, misma convención que los encuadres) de la cámara alrededor del centro del modelo. */
     azimutActual() { const p = camara.position; return Math.atan2(-(p.x - pivote.x), p.z - pivote.z) / DEG; },
     /** Libera la cámara para que vuelva a obedecer a la coreografía. */
-    recuperar() { manual = false; },
+    recuperar() { if (manual) hornear(); manual = false; },
+    /**
+     * Deriva (°/s, con signo: + = azimut creciente) alrededor del centro del modelo. Cambia de velocidad con
+     * aceleración limitada (sin tirones). 0 = quieta. La órbita (tecla O y cierre) usa `velOrbita`.
+     */
+    set deriva(v) { omegaObj = v; },
+    get deriva() { return omegaObj; },
+    set velOrbita(v) { velOrbita = v; },
+    /** Velocidad angular actual de la deriva (°/s). */
+    get omega() { return omega; },
+    /** Deja la deriva en 0 de inmediato (planos en primera persona). */
+    pararDeriva() { omega = omegaObj = 0; },
+    /** La órbita arranca ya a su velocidad (la salida del recorrido llega con esa misma velocidad). */
+    arrancarOrbita() { omega = velOrbita; },
+    pivote,
   };
-  // Órbita lenta (paso de cierre / tecla O): 6°/s, sobre el reloj. Gira cámara y objetivo juntos alrededor del centro
-  // del modelo: el desplazamiento del encuadre (que deja libre el panel de indicadores) se conserva al girar.
+  // Deriva y órbita sobre el reloj: phi avanza con omega (que sigue a su objetivo con aceleración ≤ 2.5 °/s²).
+  // La órbita (cierre, tecla O) gira cámara y objetivo juntos alrededor del centro del modelo: el desplazamiento
+  // del encuadre (que deja libre el panel de indicadores) se conserva al girar.
   reloj.onTick((dt) => {
-    if (!orbita || manual || !bb) return;
-    const a = (6 * DEG * dt) / 1000, c = Math.cos(a), s = Math.sin(a);
-    for (const v of [camara.position, controles.target]) {
-      const dx = v.x - pivote.x, dz = v.z - pivote.z;
-      v.x = pivote.x + dx * c - dz * s; v.z = pivote.z + dx * s + dz * c;
-    }
-    camara.lookAt(controles.target);
+    if (manual || !bb) return;
+    const obj = orbita ? velOrbita : omegaObj, acc = 2.5 * dt / 1000;
+    omega = Math.abs(obj - omega) <= acc ? obj : omega + Math.sign(obj - omega) * acc;
+    if (omega === 0) return;
+    phi += (omega * DEG * dt) / 1000;
+    componer();
   }, 50);
   return api;
 }

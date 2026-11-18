@@ -39,6 +39,7 @@ export function crearInterfaz(raiz, app) {
       <div class="rejilla-ind"></div>
       <p class="gen-linea"></p>
     </aside>
+    <div class="marca-grande" aria-hidden="true"><img src="assets/logo-sohersa.png" alt="" draggable="false"></div>
     <nav class="controles" aria-label="Controles de la demo">
       <div class="g-pasos">
         <ol class="pasos">${PASOS.map((p, i) => `<li><button class="punto" type="button" data-paso="${i + 1}" aria-label="Paso ${i + 1}: ${p.titulo}" title="${i + 1} · ${p.titulo}">${i + 1}</button></li>`).join('')}</ol>
@@ -109,6 +110,7 @@ export function crearInterfaz(raiz, app) {
     const m = modo();
     seguirCalificacion(s);
     if (m !== modoPrev) { modoPrev = m; capa.dataset.modo = m; capa.inert = m === 'oculta'; actividadRaton(); }
+    capa.dataset.fase = s.fase || '';
     raiz.classList.toggle('ocupada', s.ocupado);
     // pasos
     raiz.querySelectorAll('.punto').forEach((b) => { const n = +b.dataset.paso;

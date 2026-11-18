@@ -24,6 +24,9 @@ export const EASE = {
 export function crearAnim(reloj) {
   const activos = new Set();
   let instantaneo = 0; // >0: todo se resuelve al instante (para ir a un paso sin animar)
+  /** Ritmo: factor que multiplica duraciones y retardos de lo que se cree mientras esté puesto (pasos más ágiles sin
+   * reescribir cada módulo). 1 = normal. Lo fija la app por paso; ?vel= sigue actuando aparte, sobre el reloj. */
+  let ritmo = 1;
 
   function crearHandle() {
     let resolver; const cbs = [];
@@ -54,8 +57,8 @@ export function crearAnim(reloj) {
    */
   function tween(o) {
     const ease = typeof o.ease === 'function' ? o.ease : EASE[o.ease || 'io'];
-    const dur = instantaneo ? 0 : Math.max(0, o.dur ?? 500);
-    const delay = instantaneo ? 0 : Math.max(0, o.delay ?? 0);
+    const dur = instantaneo ? 0 : Math.max(0, (o.dur ?? 500) * ritmo);
+    const delay = instantaneo ? 0 : Math.max(0, (o.delay ?? 0) * ritmo);
     const h = crearHandle();
     const t0 = reloj.ahora + delay;
     let iniciado = false;
@@ -161,6 +164,8 @@ export function crearAnim(reloj) {
   return {
     EASE, tween, wait, all, stagger, seq, tarea, instantaneamente, terminarTodo,
     get activos() { return activos.size; },
+    get ritmo() { return ritmo; },
+    set ritmo(v) { ritmo = Math.max(0.1, Math.min(4, v)); },
     /** Diagnóstico: interpolaciones activas (dur, delay, inicio). */
     depurar: () => [...activos].map((h) => h._info),
     get instantaneo() { return instantaneo > 0; },

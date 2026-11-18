@@ -9,6 +9,7 @@
  * @property {number|null} paso     ?paso=3 ir directo (instantáneo) a ese paso al arrancar
  * @property {number}  vel          ?vel=1 velocidad del reloj (0.25 a 4)
  * @property {boolean} rotulos      ?rotulos=0 apaga rótulos
+ * @property {number}  duracion     ?duracion=90 duración de la reproducción automática en s (45 a 150)
  */
 /** @returns {Params} */
 export function leerParams(search = (typeof location !== 'undefined' ? location.search : '')) {
@@ -24,5 +25,6 @@ export function leerParams(search = (typeof location !== 'undefined' ? location.
     paso: q.has('paso') ? Math.floor(num('paso', 1)) : null,
     vel: num('vel', 1),
     rotulos: q.get('rotulos') !== '0',
+    duracion: Math.max(45, Math.min(150, num('duracion', 90))),
   };
 }
