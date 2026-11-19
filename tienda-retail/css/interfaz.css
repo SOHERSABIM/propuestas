@@ -46,18 +46,23 @@ body.sin-cursor, body.sin-cursor * { cursor: none !important; }
 .marca img { height: calc(var(--s) * 80px); display: block; } /* logotipo completo 1000x440 con leyenda: a 80 px se lee "by Compucad" */
 .herramientas { position: absolute; right: calc(var(--s) * 36px); top: calc(var(--s) * 28px); display: flex; gap: calc(var(--s) * 10px); }
 .rotulo-paso { position: absolute; left: 50%; top: calc(var(--s) * 28px); transform: translateX(-50%); display: flex; align-items: center; gap: calc(var(--s) * 18px);
-  max-width: calc(100% - 760 * var(--s) * 1px); background: rgba(255,255,255,.93); border-left: calc(var(--s) * 7px) solid var(--verde); border-radius: calc(var(--s) * 5px);
+  max-width: calc(100% - 512 * var(--s) * 1px); background: rgba(255,255,255,.93); border-left: calc(var(--s) * 7px) solid var(--verde); border-radius: calc(var(--s) * 5px);
   padding: calc(var(--s) * 12px) calc(var(--s) * 26px) calc(var(--s) * 12px) calc(var(--s) * 22px); box-shadow: 0 2px 10px rgba(0,0,0,.10); white-space: nowrap; }
 .rp-n { font: 600 calc(var(--s) * 19px)/1 var(--fuente); letter-spacing: .06em; text-transform: uppercase; color: var(--tinta-suave); }
 .rp-t { font: 700 calc(var(--s) * 30px)/1.1 var(--fuente); }
 .rp-d { font: 400 calc(var(--s) * 22px)/1.2 var(--fuente); color: var(--tinta-suave); overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .rp-c { display: none; font: 600 calc(var(--s) * 17px)/1 var(--fuente); padding: calc(var(--s) * 7px) calc(var(--s) * 11px); border-radius: calc(var(--s) * 4px); background: #f1f3f5; color: var(--tinta-suave); border: calc(var(--s) * 1.5px) dashed #aeb5bb; }
 .rotulo-paso.con-capas .rp-c { display: inline-block; }
+/* si la descripción no cabe: título arriba, descripción abajo (la mide index.js) */
+.rotulo-paso.dos-lineas { display: grid; grid-template-columns: auto 1fr auto; align-items: center; column-gap: calc(var(--s) * 18px); row-gap: calc(var(--s) * 6px); white-space: normal; }
+.rotulo-paso.dos-lineas .rp-n, .rotulo-paso.dos-lineas .rp-t, .rotulo-paso.dos-lineas .rp-c { white-space: nowrap; }
+.rotulo-paso.dos-lineas .rp-d { grid-column: 1 / -1; grid-row: 2; overflow: visible; text-overflow: clip; }
+.rotulo-paso.dos-lineas .rp-c { justify-self: end; }
 
 /* logotipo grande del cierre: oculto salvo en data-fase="cierre" */
 .marca-grande { position: absolute; left: 50%; bottom: calc(var(--s) * 76px); padding: calc(var(--s) * 10px) calc(var(--s) * 20px); opacity: 0; visibility: hidden;
   transform: translate(-50%, calc(var(--s) * 16px)); transition: opacity .6s ease, transform .6s ease, visibility 0s linear .6s; }
-.marca-grande img { height: calc(var(--s) * 150px); display: block; }
+.marca-grande img { height: calc(var(--s) * 200px); display: block; }
 .ui-capa[data-modo="completa"] .marca-grande { bottom: calc(var(--s) * 176px); }
 .ui-capa[data-fase="cierre"] .marca-grande { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition: opacity .6s ease, transform .6s ease, visibility 0s; }
 .ui-capa[data-fase="cierre"] .marca { opacity: 0; }
@@ -65,8 +70,8 @@ body.sin-cursor, body.sin-cursor * { cursor: none !important; }
 .panel-ind { transition: opacity .4s ease; }
 
 /* ---- indicadores: columna al borde izquierdo ---- */
-.panel-ind { --p: var(--s); position: absolute; left: calc(var(--s) * 36px); top: calc(var(--s) * 118px); width: calc(var(--p) * 340px); }
-.ui-capa[data-modo="solo"] .panel-ind { --p: calc(var(--s) * 1.1); top: calc(var(--s) * 116px); }
+.panel-ind { --p: calc(var(--s) * var(--k, 1)); position: absolute; left: calc(var(--s) * 36px); top: calc(var(--s) * 118px); width: calc(var(--p) * 340px); }
+.ui-capa[data-modo="solo"] .panel-ind { --p: calc(var(--s) * 1.1 * var(--k, 1)); top: calc(var(--s) * 116px); }
 .rejilla-ind { display: flex; flex-direction: column; gap: calc(var(--p) * 7px); }
 .tarjeta { background: rgba(255,255,255,.93); border-left: calc(var(--p) * 6px) solid var(--verde); border-radius: calc(var(--p) * 5px); padding: calc(var(--p) * 7px) calc(var(--p) * 14px) calc(var(--p) * 8px) calc(var(--p) * 16px); display: grid; grid-template-columns: 1fr auto;
   align-items: end; column-gap: calc(var(--p) * 8px); box-shadow: 0 2px 8px rgba(0,0,0,.09); }

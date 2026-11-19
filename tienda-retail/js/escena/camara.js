@@ -67,7 +67,7 @@ export function crearCamara({ camara, dom, anim, reloj }) {
       dur: op.dur ?? 1400, delay: op.delay ?? 0, ease: op.ease ?? 'io',
       onUpdate: (e) => {
         const tx = t0[0] + (obj[0] - t0[0]) * e, ty = t0[1] + (obj[1] - t0[1]) * e, tz = t0[2] + (obj[2] - t0[2]) * e;
-        const r = a.r + (b.r - a.r) * e, pol = a.pol + (b.pol - a.pol) * e, az = a.az + dAz * e;
+        const r = (a.r + (b.r - a.r) * e) * (1 + (op.abombar || 0) * Math.sin(Math.PI * e)), pol = a.pol + (b.pol - a.pol) * e, az = a.az + dAz * e;
         bObj.set(tx, ty, tz);
         bPos.set(tx + r * Math.sin(pol) * Math.sin(az), ty + r * Math.cos(pol), tz + r * Math.sin(pol) * Math.cos(az));
         componer();
@@ -233,6 +233,19 @@ export function crearCamara({ camara, dom, anim, reloj }) {
     set velOrbita(v) { velOrbita = v; },
     /** Velocidad angular actual de la deriva (°/s). */
     get omega() { return omega; },
+    /**
+     * Acercamiento suave (remanso): la cámara avanza hacia su objetivo `frac` de la distancia en `dur` ms. Lo cancela
+     * el siguiente movimiento (que arranca desde la pose alcanzada). @returns Handle
+     */
+    acercar(frac, { dur = 4000, ease = 'sine' } = {}) {
+      if (manual) return anim.wait(0);
+      tween?.cancel(); hornear();
+      const p0 = bPos.clone(), o = bObj.clone();
+      tween = anim.tween({ dur, ease, aplicarInicio: false, onUpdate: (e) => { bPos.copy(p0).sub(o).multiplyScalar(1 - frac * e).add(o); componer(); } });
+      return tween;
+    },
+    /** Velocidad actual de la deriva en un punto (m/s), escrita en out [x, y, z]. */
+    velDeriva(p, out) { const w = omega * DEG; out[0] = -(p[2] - pivote.z) * w; out[1] = 0; out[2] = (p[0] - pivote.x) * w; return out; },
     /** Deja la deriva en 0 de inmediato (planos en primera persona). */
     pararDeriva() { omega = omegaObj = 0; },
     /** La órbita arranca ya a su velocidad (la salida del recorrido llega con esa misma velocidad). */

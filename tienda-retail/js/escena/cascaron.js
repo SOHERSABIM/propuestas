@@ -84,6 +84,9 @@ export function elementosDe(loc, layout) {
     const vid = (ta, tb, y0, h) => pieza('cristal', MAT.cristal, null, ta, tb, y0, h, 0.03, esp / 2, false);
     if (enEste) {
       vid(0, a0, 0.3, loc.altura - 0.3); vid(a1, largo, 0.3, loc.altura - 0.3); vid(a0, a1, acc.alto + 0.1, loc.altura - acc.alto - 0.1);
+      // puerta de cristal en el vano (desde adentro no se ve un hueco blanco); se corta con el resto de la fachada
+      // cuando la cámara entra o sale por ella
+      vid(a0 + 0.02, a1 - 0.02, 0.0, acc.alto);
       pieza('marco', MAT.marco, MAT.arista, a0 - 0.06, a1 + 0.06, acc.alto, 0.1, 0.16);
       pieza('marco', MAT.marco, MAT.arista, a0 - 0.06, a0 + 0.02, 0, acc.alto, 0.16); pieza('marco', MAT.marco, MAT.arista, a1 - 0.02, a1 + 0.06, 0, acc.alto, 0.16);
     } else vid(0, largo, 0.3, loc.altura - 0.3);
@@ -195,7 +198,7 @@ export function crearCascaron({ escena, anim, reloj, camara }) {
         const ord = (bb.z1 - e.z) + (e.x - bb.x0); // de la esquina frontal izquierda hacia el fondo
         let delay, dur = 650, ease = 'out', f;
         switch (e.tipo) {
-          case 'losa': delay = 0; dur = 900; f = (k) => ({ ...fin, w: e.w * k, d: e.d * k }); break;
+          case 'losa': delay = 0; dur = 900; f = (k) => ({ ...fin, w: e.w * (0.3 + 0.7 * k), d: e.d * (0.3 + 0.7 * k) }); break; // visible desde el primer cuadro
           case 'col': delay = 500 + Math.min(900, ord * 22); dur = 600; ease = 'back'; f = (k) => ({ ...fin, h: e.h * k }); break;
           case 'muro': case 'dintel': delay = 1200 + Math.min(900, ord * 20); dur = 800; f = (k) => ({ ...fin, h: e.h * k }); break;
           case 'puerta': delay = 2100 + Math.min(500, ord * 10); f = (k) => ({ ...fin, h: e.h * k }); break;

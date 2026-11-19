@@ -47,8 +47,37 @@ export function crearInstalaciones({ escena, anim, reloj }) {
     for (const id of CAPAS) if (est[id].prog > 0) capa[id].flujo(ahora);
   }, 60);
 
+  // Realce por capa (R9): opacidad multiplicada por capa, sin tocar geometría ni conteos. Los materiales se recogen
+  // al empezar cada realce (la geometría puede haberse reconstruido) y se guarda su opacidad original.
+  const baseOp = new Map(), matsCapa = { luz: [], aire: [], frio: [] }, nivelCapa = { luz: 1, aire: 1, frio: 1 };
+  function recoger(id) {
+    const s = new Set();
+    capa[id].grupo.traverse((o) => { if (o.material) for (const m of Array.isArray(o.material) ? o.material : [o.material]) s.add(m); });
+    matsCapa[id] = [...s];
+    for (const m of matsCapa[id]) if (!baseOp.has(m)) baseOp.set(m, { op: m.opacity, tr: m.transparent, dw: m.depthWrite });
+  }
+  function nivelar(id, v) {
+    nivelCapa[id] = v;
+    for (const m of matsCapa[id]) {
+      const b = baseOp.get(m), t = v < 0.999 || b.tr;
+      if (m.transparent !== t) { m.transparent = t; m.depthWrite = v < 0.999 ? false : b.dw; m.needsUpdate = true; }
+      m.opacity = b.op * v;
+    }
+    reloj.pedirCuadro();
+  }
+
   return {
     raiz,
+    /**
+     * Realce: lleva la opacidad de cada capa al nivel dado (1 = normal) en `dur` ms. Solo materiales; Handle.
+     * @param {{luz?:number, aire?:number, frio?:number}} niveles
+     */
+    realzar(niveles, { dur = 450, delay = 0 } = {}) {
+      const ids = CAPAS.filter((c) => niveles[c] != null);
+      for (const id of ids) recoger(id);
+      const ini = Object.fromEntries(ids.map((c) => [c, nivelCapa[c]]));
+      return anim.tween({ dur, delay, ease: 'io', aplicarInicio: false, onUpdate: (k) => { for (const id of ids) nivelar(id, ini[id] + (niveles[id] - ini[id]) * k); } });
+    },
     /** Calcula el plan para el local/layout vigente sin animar. No toca lo que está dibujado. */
     setPlan(local, layout) { plan = planInstalaciones(local, layout); return plan; },
     get plan() { return plan; },

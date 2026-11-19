@@ -59,16 +59,19 @@ export function crearInterfaz(raiz, app) {
   </div>`;
   const capa = raiz.querySelector('.ui-capa');
   // ---------- Escala para video: base 1080 px de alto (y 1920 de ancho); "+" "-" y ?escala=1.2 ----------
+  let listo = false;
   const ESC_MIN = 0.5, ESC_MAX = 2.5;
   const pe = parseFloat(new URLSearchParams(location.search).get('escala'));
   let escala = Number.isFinite(pe) && pe > 0 ? Math.min(ESC_MAX, Math.max(ESC_MIN, pe)) : 1;
   function aplicarEscala() {
     const base = Math.max(0.45, Math.min(innerHeight / 1080, innerWidth / 1920));
     raiz.style.setProperty('--s', (base * escala).toFixed(4));
+    medir();
   }
   const escalar = (d) => { escala = Math.min(ESC_MAX, Math.max(ESC_MIN, Math.round((escala + d) * 100) / 100)); aplicarEscala(); };
   window.addEventListener('resize', aplicarEscala);
   aplicarEscala();
+  const MARGEN_INF = 24;   // px x --s libres bajo el panel de indicadores en modo "solo"
   const $ = (s) => raiz.querySelector(s);
   const btn = (a) => $(`[data-a="${a}"]`);
   const ayuda = crearAyuda(raiz);
@@ -104,6 +107,38 @@ export function crearInterfaz(raiz, app) {
   function seguirCalificacion(s) {
     if (s.layoutId == null) { calId = calAct = calPrev = null; return; }
     if (s.layoutId !== calId) { calId = s.layoutId; calPrev = calAct; calAct = total(s.calificacion) ?? null; }
+  }
+  // Ajuste de cabida (se mide solo si cambia escala, ventana, modo, rótulo o tarjetas; no en cada cuadro):
+  // 1) rótulo del paso: si descripción no cabe en una línea, pasa a dos (.dos-lineas); 2) panel en "solo": reduce --k para caber.
+  let claveMed = '';
+  function medir(forzar = true) {
+    if (!listo) return;
+    const rp = $('.rotulo-paso'), pan = $('.panel-ind'), m = capa.dataset.modo;
+    const clave = [raiz.style.getPropertyValue('--s'), innerWidth, innerHeight, m, rp.textContent, rp.classList.contains('con-capas'), rp.hidden, pan.hidden,
+      pan.querySelectorAll('.t-ins:not(:empty)').length, pan.querySelectorAll('.tarjeta').length].join('|');
+    if (!forzar && clave === claveMed) return;
+    claveMed = clave;
+    if (!rp.hidden && m !== 'oculta') {
+      rp.classList.remove('dos-lineas');
+      const d = rp.querySelector('.rp-d');
+      if (!d.hidden && (d.scrollWidth > d.clientWidth + 1 || rp.scrollWidth > rp.clientWidth + 1)) rp.classList.add('dos-lineas');
+    }
+    pan.style.removeProperty('--k'); pan.style.removeProperty('top');
+    if (m === 'solo' && !pan.hidden && !rp.hidden) {   // el rótulo en dos líneas crece hacia abajo: el panel cede
+      const sc = parseFloat(raiz.style.getPropertyValue('--s')) || 1, rr = rp.getBoundingClientRect(), pr = pan.getBoundingClientRect();
+      if (rr.left < pr.right + 8 * sc && rr.bottom + 12 * sc > pr.top) pan.style.top = `${(rr.bottom + 12 * sc).toFixed(1)}px`;
+    }
+    if (m === 'solo' && !pan.hidden) {
+      const sc = parseFloat(raiz.style.getPropertyValue('--s')) || 1, r0 = pan.getBoundingClientRect();
+      const disp = innerHeight - r0.top - MARGEN_INF * sc;
+      let k = 1;
+      for (let i = 0; i < 3 && r0.height > 0; i++) {
+        const h = pan.getBoundingClientRect().height;
+        if (h <= disp + 0.5) break;
+        k = Math.max(0.35, k * (disp / h) * 0.995); pan.style.setProperty('--k', k.toFixed(4));
+      }
+    }
+    claveMed = clave;
   }
   const tx = (el, v) => { if (el.textContent !== v) el.textContent = v; };
   function pintar(s) {
@@ -153,6 +188,7 @@ export function crearInterfaz(raiz, app) {
     const c = s.candidatos, g = $('.gen-linea');
     g.hidden = !(vis && c && Number.isFinite(c.evaluados));
     if (!g.hidden) tx(g, `${c.evaluados} alternativas evaluadas${Number.isFinite(c.validos) ? ` · ${c.validos} válidas` : ''}`);
+    medir(false);
   }
 
   // ---------- Eventos ----------
@@ -176,5 +212,7 @@ export function crearInterfaz(raiz, app) {
   });
   app.on('estado', pintar);
   montarTeclado({ app, ayuda, vista, escalar });
+  listo = true;
   pintar(app.estado);
+  medir();
 }

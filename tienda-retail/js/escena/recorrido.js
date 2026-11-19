@@ -195,9 +195,18 @@ function anchoColumnas(local, x, z, yaw) {
  *   paso:number, marcas:Object, salida:{dir:number[], fin:number[]}|null}|null}
  */
 export function rutaRecorrido(local, layout, op = {}) {
+  const g = rutaPasos(local, layout, op); let r = g.next();
+  while (!r.done) r = g.next();
+  return r.value;
+}
+/**
+ * La misma ruta como generador: cada `next()` hace un trozo de trabajo de pocos milisegundos (para repartir el cálculo
+ * en varios cuadros mientras corre otra animación). El valor final (`done`) es la ruta.
+ */
+export function* rutaPasos(local, layout, op = {}) {
   let mejor = null;
   for (const H of [{ m: HOLGURA, col: HOLGURA_COL, muro: HOLGURA_MURO }, { m: 0.5, col: 1.0, muro: 0.6 }, { m: 0.45, col: 0.7, muro: 0.5 }]) {
-    const r = rutaCon(local, layout, H, op);
+    const r = yield* rutaCon(local, layout, H, op);
     if (r && (!mejor || r.puntos > mejor.puntos)) mejor = r;
     if (mejor && mejor.puntos >= 5) break;
   }
@@ -205,7 +214,8 @@ export function rutaRecorrido(local, layout, op = {}) {
   const R = muestrear(mejor.P, op.largoMax ?? 42);
   R.salida = mejor.salida;
   R.metas = mejor.metas; R.plan = mejor.plan;
-  mirar(local, layout, R, op);
+  yield;
+  yield* mirar(local, layout, R, op);
   return R;
 }
 
@@ -217,11 +227,12 @@ function centroZona(layout, id) {
 const enZona = (layout, id, x, z) => layout.zonas.some((q) => q.id === id && q.rects.some((r) => x >= r.x0 && x <= r.x1 && z >= r.z0 && z <= r.z1));
 const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 
-function rutaCon(local, layout, H, { largoObj = 38 } = {}) {
+function* rutaCon(local, layout, H, { largoObj = 38 } = {}) {
   const R = rejilla(local, layout, H);
+  yield;
   const acc = local.acceso, nrm = acc.normal;
   const entrada = [acc.centro[0] - nrm[0] * 1.2, acc.centro[1] - nrm[1] * 1.2];
-  const afuera = [acc.centro[0] + nrm[0] * 2.5, acc.centro[1] + nrm[1] * 2.5];
+  const afuera = [acc.centro[0] + nrm[0] * 1.0, acc.centro[1] + nrm[1] * 1.0];
   // frente de cajas: el punto de un pasillo principal más cercano al centro de cajas
   const cc = centroZona(layout, 'cajas');
   let cajas = cc;
@@ -284,6 +295,10 @@ function rutaCon(local, layout, H, { largoObj = 38 } = {}) {
     return out;
   };
   const destino = [ropa].filter(Boolean);
+  // campos de distancia desde cada origen posible (uno por trozo de trabajo)
+  for (const p of [entrada, cajas, ...ps.flatMap((q) => q.puntos), ...tramosFrio(entrada).flat()].filter(Boolean)) {
+    const a = cel(p); if (a >= 0 && !campos.has(a)) { campos.set(a, campo(R, a)); yield; }
+  }
   for (const q of ps.length ? ps : [null]) for (const inv of [false, true]) for (const conCajas of [true, false]) {
     if (!q && inv) continue;
     const tramo = q ? (inv ? [q.puntos[1], q.puntos[0]] : q.puntos) : [];
@@ -319,6 +334,7 @@ function rutaCon(local, layout, H, { largoObj = 38 } = {}) {
     const dest = libreCerca(R, m); if (dest < 0 || dest === actual) continue;
     const c = aEstrella(R, actual, dest); if (!c) continue;
     celdas.push(...c.slice(1)); actual = dest; alcanzadas++; cortes.push(celdas.length - 1);
+    yield;
   }
   // cuerda: se conservan los vértices necesarios y SIEMPRE las metas (el paso por cada zona no se recorta)
   const pts = celdas.map((i) => R.centro(i));
@@ -329,7 +345,8 @@ function rutaCon(local, layout, H, { largoObj = 38 } = {}) {
     cuerda.push(pts[cortes[t + 1]]);
   }
   let P = [afuera, entrada, ...cuerda];
-  if (salida && dist(P[P.length - 1], salida.fin) > 0.3) salida.fin = P[P.length - 1];
+  if (salida && dist(P[P.length - 1], salida.fin) < 0.6) P[P.length - 1] = salida.fin; // termina justo en el punto elegido
+  else if (salida) salida.fin = P[P.length - 1];
   for (let it = 0; it < 3; it++) {
     const Q = [P[0]];
     for (let k = 0; k + 1 < P.length; k++) { const a = P[k], b = P[k + 1]; Q.push([a[0] * 0.75 + b[0] * 0.25, a[1] * 0.75 + b[1] * 0.25], [a[0] * 0.25 + b[0] * 0.75, a[1] * 0.25 + b[1] * 0.75]); }
@@ -368,7 +385,7 @@ function finalRopa(local, layout, R, frioPar) {
           for (const r of tapa) hol = Math.min(hol, dRect(r, x, z));
           for (const [qx, qz] of cols) holCol = Math.min(holCol, Math.hypot(qx - x, qz - z) - local.columna / 2);
         }
-        if (hol < 0.9 || holCol < 1.6) continue;
+        if (hol < 1.25 || holCol < 1.6) continue;
         // cerca del centro de ropa y del final de refrigerados (ruta más corta), con holgura
         const ref = frioPar ? Math.min(dist(fin, frioPar[0]), dist(fin, frioPar[1])) : 0;
         const puntaje = Math.min(hol, 1.6) * 2 + Math.min(holCol, 3) - Math.abs(d - 3.5) * 0.5 - 0.25 * dist(fin, cRopa) - 0.15 * ref;
@@ -406,8 +423,9 @@ function muestrear(P, largoMax) {
  *  · final: voltea (≤ 120°) hacia el lado con más contenido; la salida sigue derecho.
  *  · giro ≤ 70°/s y cabeceo ≤ 45°/s a la velocidad dada.
  */
-function mirar(local, layout, R, { velocidad = 3, ductos = [] } = {}) {
+function* mirar(local, layout, R, { velocidad = 3, ductos = [] } = {}) {
   const V = rejillaVista(local, layout), n = R.n, base = new Float32Array(n), pitch = new Float32Array(n);
+  yield;
   const AD = 50;
   for (let i = 0; i < n; i++) {
     const j = Math.min(n - 1, i + AD), k = Math.max(0, j - AD);
@@ -420,6 +438,7 @@ function mirar(local, layout, R, { velocidad = 3, ductos = [] } = {}) {
   {
     const costoV = (i, a) => { const m = medirCuadro(V, R.xs[i], R.zs[i], a, 0); return m.muro + Math.max(0, anchoColumnas(local, R.xs[i], R.zs[i], a) - 0.1) * 4; };
     for (let i = 10; i + 90 < n; i += 5) {
+      if (i % 40 === 10) yield;
       const j = i + 90, d = yaw[j] - yaw[i];
       if (Math.abs(d) < 2.0) continue;
       const alt = d - Math.sign(d) * 2 * Math.PI;
@@ -437,6 +456,7 @@ function mirar(local, layout, R, { velocidad = 3, ductos = [] } = {}) {
   const mPorS = velocidad, muestrasPorS = mPorS / PASO;
   // muro ciego al frente: girar hacia lo abierto (como antes, más suave)
   for (let i = 20; i < n; i++) {
+    if (i % 60 === 0) yield;
     if (tapado(V, R.xs[i], R.zs[i], yaw[i]) <= 0.4) continue;
     let mejor = 0, pts = -Infinity;
     for (const g of [0, -20, 20, -40, 40, -60, 60]) { const a = yaw[i] + g * RAD; let s = 0; for (const c of CONO) s += Math.min(9, V.rayo(R.xs[i], R.zs[i], a + c).d); s = s / CONO.length - 0.03 * Math.abs(g); if (s > pts) { pts = s; mejor = g * RAD; } }
@@ -457,7 +477,7 @@ function mirar(local, layout, R, { velocidad = 3, ductos = [] } = {}) {
   for (const [s, e] of tramos('gondolas')) {
     marcas.gondolas.push([s * PASO, e * PASO]);
     const lam = 7.5 / PASO;
-    for (let i = s; i < e; i++) { const w = rampa(i, s, e, 12); off[i] = 24 * RAD * Math.sin((2 * Math.PI * (i - s)) / lam); pesoOff[i] = w; pitch[i] = -7 * RAD * w; }
+    for (let i = s; i < e; i++) { const w = rampa(i, s, e, 6); off[i] = 22 * RAD * Math.cos((2 * Math.PI * (i - s)) / lam); pesoOff[i] = w; pitch[i] = -2 * RAD * w; }
   }
   // refrigerados: hacia el muro de puertas
   if (R.metas?.frio) {
@@ -477,12 +497,29 @@ function mirar(local, layout, R, { velocidad = 3, ductos = [] } = {}) {
       }
     }
   }
+  // ropa: la mirada se va hacia mesas, percheros y maniquíes (no hacia probadores ni fachada)
+  {
+    const ropa = layout.muebles.filter((m) => m.zona === 'ropa_hogar' && !m.familia.startsWith('probador'));
+    if (ropa.length) {
+      for (let i = 20; i < n; i++) {
+        if (!enZona(layout, 'ropa_hogar', R.xs[i], R.zs[i]) && !(i + 15 < n && enZona(layout, 'ropa_hogar', R.xs[i + 15], R.zs[i + 15]))) continue;
+        let sx = 0, sz = 0, sw = 0;
+        for (const m of ropa) { const dx = m.x - R.xs[i], dz = m.z - R.zs[i], d = Math.hypot(dx, dz); if (d < 1.2 || d > 9) continue; const w = 1 / d; sx += dx * w; sz += dz * w; sw += w; }
+        if (!sw) continue;
+        const a = angulo(Math.atan2(sx, sz) - yaw[i]);
+        if (Math.abs(a) > 100 * RAD) continue;
+        // si en esa dirección lo primero que hay cerca es un probador (caja lisa), se mira al frente
+        if (V.rayo(R.xs[i], R.zs[i], yaw[i] + a, 4).c === 3) continue;
+        off[i] = Math.max(-70 * RAD, Math.min(70 * RAD, a)); pesoOff[i] = Math.max(pesoOff[i], 0.85);
+      }
+    }
+  }
   // final: volteo hacia el lado con más contenido (la salida sigue derecho hacia el cristal)
   const nVol = Math.round(2.8 * muestrasPorS);
   if (R.salida && n > nVol + 40) {
     const i = n - 1, x = R.xs[i], z = R.zs[i], ySal = Math.atan2(R.salida.dir[0], R.salida.dir[1]);
     let mejor = null;
-    for (const g of [90, -90, 120, -120]) {
+    for (const g of [90, 120, 150, -150]) { // nunca hacia la fachada ni hacia los probadores del fondo
       const a = ySal + g * RAD; let s = 0;
       for (let r = -3; r <= 3; r++) { const h = V.rayo(x, z, a + r * 8 * RAD, 12); s += h.c === 1 ? 3 : h.c === 4 ? 0 : h.c === 5 ? 0.5 : h.c === 0 ? 1.5 : 0; s += h.bajo > -0.6 ? 0.8 : 0; }
       s += Math.abs(g) >= 150 ? 2 : 0; // mirar de regreso a la tienda: la salida es un retroceso
@@ -502,7 +539,9 @@ function mirar(local, layout, R, { velocidad = 3, ductos = [] } = {}) {
   const nSub = Math.round(0.9 * muestrasPorS), nSos = Math.round(2.5 * muestrasPorS), nVen = nSos + 2 * nSub;
   let mejorV = null;
   const iMax = n - (R.salida ? nVol : 30) - nVen - 10;
+  yield;
   for (let i0 = Math.round(4 / PASO); i0 < iMax; i0 += 5) {
+    if (i0 % 100 === 0) yield;
     let s = 0, curva = 0, malo = false;
     for (let i = i0 + nSub; i < i0 + nSub + nSos; i += 3) {
       if (zona[i] === 'frio') { malo = true; break; }
@@ -527,18 +566,21 @@ function mirar(local, layout, R, { velocidad = 3, ductos = [] } = {}) {
       const w = i < i0 + nSub ? suaveEscalon((i - i0) / nSub) : i >= i0 + nSub + nSos ? 1 - suaveEscalon((i - i0 - nSub - nSos) / nSub) : 1;
       pitch[i] = pitch[i] * (1 - w) + 42 * RAD * w; pesoOff[i] *= 1 - w;
     }
+    // al bajar, la mirada queda un poco abajo (pasillo y mercancía), no a la altura del muro del fondo
+    for (let i = i3 - Math.round(nSub / 2); i < Math.min(n, i3 + 25); i++) { const w = Math.min(1, (i - (i3 - nSub / 2)) / 8, (i3 + 25 - i) / 8); pitch[i] = Math.min(pitch[i], pitch[i] * (1 - w) - 7 * RAD * w); }
   }
   // composición; luego, donde el cuadro quedaría con mucho muro liso o una columna muy cerca, se corrige el rumbo
   // hacia el giro más pequeño que lo evita (fuera de la mirada hacia arriba)
   const out = new Float32Array(n);
   for (let i = 0; i < n; i++) out[i] = yaw[i] + off[i] * pesoOff[i];
-  const costo = (i, a) => { const m = pitch[i] > 20 * RAD ? { muro: 0 } : medirCuadro(V, R.xs[i], R.zs[i], a, pitch[i]); return Math.max(0, m.muro - 0.3) * 3 + Math.max(0, anchoColumnas(local, R.xs[i], R.zs[i], a) - 0.12) * 8; };
+  const costo = (i, a) => { const m = pitch[i] > 20 * RAD ? { muro: 0 } : medirCuadro(V, R.xs[i], R.zs[i], a, pitch[i]); return Math.max(0, m.muro - 0.2) * 3 + Math.max(0, anchoColumnas(local, R.xs[i], R.zs[i], a) - 0.12) * 8; };
   for (let pasada = 0; pasada < 4; pasada++) {
     const corr = new Float32Array(n);
     for (let i = 15; i < n; i += 2) {
+      if (i % 30 === 15) yield;
       const c0 = costo(i, out[i]); if (c0 <= 0) continue;
       let mejor = 0, mc = c0;
-      for (const g of [-12, 12, -24, 24, -36, 36, -50, 50, -65, 65]) { const c = costo(i, out[i] + g * RAD) + Math.abs(g) * 0.004; if (c < mc - 0.02) { mc = c; mejor = g * RAD; } }
+      for (const g of [-12, 12, -24, 24, -36, 36, -50, 50, -65, 65, -80, 80]) { const c = costo(i, out[i] + g * RAD) + Math.abs(g) * 0.004; if (c < mc - 0.02) { mc = c; mejor = g * RAD; } }
       corr[i] = mejor; if (i + 1 < n) corr[i + 1] = mejor;
     }
     // la corrección entra y sale suave: se conserva el máximo de la vecindad y luego media móvil

@@ -5,7 +5,7 @@ import { crearEmisor } from './core/eventos.js';
 import { LOCALES, IDS_LOCALES } from './datos/locales.js';
 import { crearEvaluacion, componerLayout, mejorIndice } from './gen/generador.js';
 import { planInstalaciones } from './instalaciones/plan.js';
-import { rutaRecorrido } from './escena/recorrido.js';
+import { rutaPasos } from './escena/recorrido.js';
 import { atenuar } from './core/estilo.js';
 import { caja, dentro, DEG as DEG_ } from './core/geom.js';
 import { EASE } from './core/anim.js';
@@ -55,6 +55,8 @@ export const objetivoPaso = (i, D) => (D >= 60 ? T60[i] + ((T90[i] - T60[i]) * (
 const ritmoPaso = (i, D) => RITMO[i] * Math.min(1.7, D >= 60 ? Math.pow(D / 60, E_ACCION[i]) : D / 60);
 /** Deriva de la cámara (°/s) en los pasos 1-6: con avance manual sigue mientras se habla. */
 const DERIVA = 2.5;
+/** En el remanso: deriva más viva y acercamiento suave (fracción de la distancia). */
+const DERIVA_REMANSO = 4.5, ACERCAR = 0.12;
 
 /**
  * @param {{params:any, anim:any, reloj:any, cascaron:any, muebles:any, zonas:any, mep:any, camara:any, pasos:any[], esc:any, margenesUI?:()=>any}} d
@@ -104,6 +106,36 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
     for (const loc of IDS_LOCALES) { const ev = evaluacion(loc, estado.semilla); if (!ev.terminado) { ev.paso(1); return; } }
   }
   reloj.onTick(precalcular, 95);
+  // ---------- Ruta del recorrido (paso 7), precalculada en reposo ----------
+  // Al fijar un layout se arma su ruta con un generador (escena/recorrido.js → rutaPasos) que avanza un trozo de pocos
+  // ms por cuadro mientras corren los pasos 5-6: al pulsar el paso 7 la ruta ya está (sin cuadro largo).
+  const VEL_RECORRIDO = 3.5;
+  const rutas = new Map(); let rutaEnCurso = null;
+  const opRuta = () => {
+    const f7 = objetivoPaso(6, D) / 21, plan = mep.plan, ductos = [];
+    if (plan?.aire) for (const d of [...plan.aire.principal.filter((q) => !q.bajante), ...plan.aire.ramales]) for (let k = 1; k < d.puntos.length; k++) ductos.push([d.puntos[k - 1][0], d.puntos[k - 1][2], d.puntos[k][0], d.puntos[k][2]]);
+    return { largoObj: 40 * f7, largoMax: Math.min(60, 44 * f7), velocidad: VEL_RECORRIDO, ductos };
+  };
+  const claveRuta = (lay) => `${lay.localId}|${lay.id}|${lay.candidato}`;
+  function prepararRuta(lay) {
+    const k = claveRuta(lay); if (rutas.has(k) || rutaEnCurso?.k === k) return;
+    rutaEnCurso = { k, g: rutaPasos(LOCALES[lay.localId], lay, opRuta()) };
+  }
+  reloj.onTick(() => {
+    if (!rutaEnCurso) return;
+    const r = rutaEnCurso.g.next();
+    if (r.done) { rutas.set(rutaEnCurso.k, r.value); rutaEnCurso = null; }
+  }, 96);
+  /** Ruta del layout (de la caché; si falta y `forzar`, la termina de calcular en el acto). */
+  function rutaDe(lay, forzar) {
+    const k = claveRuta(lay);
+    if (rutas.has(k)) return rutas.get(k);
+    if (!forzar) return null;
+    let g = rutaEnCurso?.k === k ? rutaEnCurso.g : rutaPasos(LOCALES[lay.localId], lay, opRuta());
+    let r = g.next(); while (!r.done) r = g.next();
+    if (rutaEnCurso?.k === k) rutaEnCurso = null;
+    rutas.set(k, r.value); return r.value;
+  }
   /** Al arrancar: las tres evaluaciones de la semilla inicial (≈1 s, antes de "ready"). */
   function precalcularTodo() {
     for (const loc of IDS_LOCALES) evaluacion(loc, params.semilla).terminar();
@@ -137,7 +169,7 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
   /** Publica un layout como vigente (estado, eventos e indicadores). */
   function publicar(lay) { fijar(lay); anunciar(lay); }
   /** Lo interno: layout vigente y plan de instalaciones (sin tocar el estado que ve la interfaz). */
-  function fijar(lay) { layout = lay; mep.setPlan(LOCALES[lay.localId], lay); }
+  function fijar(lay) { layout = lay; mep.setPlan(LOCALES[lay.localId], lay); if (!anim.instantaneo) prepararRuta(lay); }
   /** Lo visible: estado, indicadores y calificación (en los cambios de local, cuando ya aparece el local nuevo). */
   function anunciar(lay) {
     set({ semilla: lay.semilla, local: lay.localId, layoutId: lay.id, indicadoresPrevios: estado.indicadores, indicadores: indicadoresDe(lay),
@@ -153,25 +185,34 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
   const AZ = { A: 36, B: 66, C: 40 };
   const POL = { A: 0, B: 6, C: 0 }; // B: algo más cenital para ver por encima del muro largo cercano
   const ENCUADRES = (loc) => ({
-    general: { azimut: AZ[loc], polar: 52 + POL[loc], llenado: 0.9 },
+    general: { azimut: AZ[loc], polar: 52 + POL[loc], llenado: 0.78 },
     aereo: { azimut: AZ[loc] + 55, polar: 30, llenado: 0.42 },
     frente: { azimut: AZ[loc] - 10, polar: 56 + POL[loc], llenado: 0.9 },
     // movimiento por paso (giro de 45° a 90°): el encuadre final de cada paso está girado respecto al anterior
-    mobiliario: { azimut: AZ[loc] - 50, polar: 48 + POL[loc], llenado: 0.86 }, // paso 2: sigue el giro del paso 1
-    instalaciones: { azimut: AZ[loc] + 40, polar: 45 + POL[loc], llenado: 0.86 }, // paso 3: arco mientras se monta todo
-    traslado: { azimut: AZ[loc] + 44, polar: 52 + POL[loc], llenado: 0.86 }, // paso 4: baja girando desde el cenital
-    llegada: { azimut: AZ[loc] + (loc === 'B' ? 54 : loc === 'C' ? 20 : 40), polar: 52 + POL[loc], llenado: 0.86 }, // pasos 5-6: gira alrededor
-    cenital: { azimut: loc === 'B' ? 90 : 0, polar: 2, llenado: 0.82 }, // deja hueco al lado del plano para el contador
+    mobiliario: { azimut: AZ[loc] - 50, polar: 48 + POL[loc], llenado: 0.78 }, // paso 2: sigue el giro del paso 1
+    instalaciones: { azimut: AZ[loc] + 40, polar: 45 + POL[loc], llenado: 0.74 }, // paso 3: arco mientras se monta todo
+    traslado: { azimut: AZ[loc] + 44, polar: 52 + POL[loc], llenado: 0.78, abombar: 0.14 }, // paso 4: baja girando desde el cenital
+    llegada: { azimut: AZ[loc] + (loc === 'B' ? 54 : loc === 'C' ? 20 : 40), polar: 52 + POL[loc], llenado: 0.78 }, // pasos 5-6: gira alrededor
+    cenital: { azimut: loc === 'B' ? 90 : 0, polar: 2, llenado: 0.72 }, // deja hueco al lado del plano para el contador
     cierre: { azimut: AZ[loc] + 22, polar: 55 + POL[loc], llenado: 1.1, alto: 6.4, orbital: true }, // cabe en cualquier azimut de la órbita
   });
   /** Márgenes del plano de cierre: los de la interfaz y, abajo, la tarjeta del logotipo grande (fase 'cierre'). */
+  // Tarjeta del logotipo grande: se mide su caja real (getBoundingClientRect, también oculta: visibility no quita la
+  // caja) una vez por vista y tamaño de ventana o escala, no por cuadro.
+  const cacheLogo = new Map();
   function margenCierre() {
     const m = estado.interfaz ? margenesUI() : {};
     const capa = typeof document !== 'undefined' ? document.querySelector('#ui .ui-capa') : null;
     const modo = capa?.dataset?.modo;
     if (estado.interfaz && capa && modo !== 'oculta') {
       const sUI = parseFloat(document.getElementById('ui')?.style.getPropertyValue('--s')) || innerHeight / 1080;
-      m.abajo = Math.max(m.abajo || 0, ((modo === 'completa' ? 176 : 76) + 190 + 24) * sUI);
+      const clave = `${modo}|${innerWidth}|${innerHeight}|${sUI}`;
+      if (!cacheLogo.has(clave)) {
+        const el = capa.querySelector('.marca-grande'), r = el?.getBoundingClientRect();
+        // en reposo la tarjeta está 16 px × escala más abajo (entra subiendo): se mide su posición final
+        cacheLogo.set(clave, r && r.height > 2 ? innerHeight - (r.top - 16 * sUI) + 18 * sUI : ((modo === 'completa' ? 176 : 76) + 190 + 24) * sUI);
+      }
+      m.abajo = Math.max(m.abajo || 0, cacheLogo.get(clave));
     }
     return m;
   }
@@ -300,6 +341,13 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
           anim.seq([
             () => anim.all([ops.atenuar(ATEN_MEP, 900), zonas.mostrar(true, { nivel: 0.5, dur: 900 }), zonas.rotulos(false), cubierta.montar(LOCALES[estado.local])]),
             () => anim.all(CAPAS.map((c, i) => anim.seq([i * 2200, () => ops.trazar([c])]))),
+            // realce por capa (lo que se narra): cada una ≈ 1.8 s con las otras dos al 25 %, y al final las tres
+            ...(mep.realzar ? [
+              () => mep.realzar({ luz: 1, aire: 0.25, frio: 0.25 }, { dur: 450 }), 1850,
+              () => mep.realzar({ luz: 0.25, aire: 1, frio: 0.25 }, { dur: 450 }), 1850,
+              () => mep.realzar({ luz: 0.25, aire: 0.25, frio: 1 }, { dur: 450 }), 1850,
+              () => mep.realzar({ luz: 1, aire: 1, frio: 1 }, { dur: 550 }),
+            ] : []),
           ]),
         ]);
       },
@@ -315,7 +363,7 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
         return anim.seq([
           () => anim.all([mep.retraer(visibles), cubierta.desmontar(), ops.atenuar({ arq: 1, mob: 1 }, 700), zonas.rotulos(false)]),
           () => anim.all([ops.camara('cenital', { dur: 2700 }), zonas.mostrar(true, { nivel: 1.6, dur: 900 }), ops.atenuar(0.22, 900, ['mob'])]),
-          () => zonas.parpadeo(nuevo.candidatos.muestras, { evaluados: nuevo.candidatos.evaluados, elegido: nuevo, centro: [(bb.x0 + bb.x1) / 2, 0.5, bb.z0 - 1.4], caja: bb, margenes: camara.margenes }),
+          () => zonas.parpadeo(nuevo.candidatos.muestras, { cada: 380, evaluados: nuevo.candidatos.evaluados, elegido: nuevo, centro: [(bb.x0 + bb.x1) / 2, 0.5, bb.z0 - 1.4], caja: bb, margenes: camara.margenes }),
           () => { publicar(nuevo); return anim.wait(50); }, // el plan de instalaciones en su propio cuadro
           () => anim.all([cascaron.setInteriores(nuevo), ops.atenuar(1, 600, ['mob'])]),
           () => anim.all([
@@ -361,12 +409,13 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
         const capas = mep.capasVisibles().length > 0;
         const f7 = objetivoPaso(6, D) / 21; // reparto del paso 7 con D = 90: entrada 2 · recorrido ≈ 14 · salida 2.5 · órbita
         camara.margenes = estado.interfaz ? margenesUI() : {};
-        const loc = LOCALES[estado.local], VEL = 3.4;
-        const plan = mep.plan, ductos = [];
-        if (plan?.aire) for (const d of [...plan.aire.principal.filter((q) => !q.bajante), ...plan.aire.ramales]) for (let k = 1; k < d.puntos.length; k++) ductos.push([d.puntos[k - 1][0], d.puntos[k - 1][2], d.puntos[k][0], d.puntos[k][2]]);
-        const R = layout ? rutaRecorrido(loc, layout, { largoObj: 40 * f7, largoMax: Math.min(60, 46 * f7), velocidad: VEL, ductos }) : null;
-        const pasos = [() => anim.all([zonas.rotulos(false), ops.atenuar({ arq: 1, mob: 1 }, 500), zonas.mostrar(true, { nivel: 0.35, dur: 500 })])];
+        const VEL = VEL_RECORRIDO;
+        // la ruta ya viene precalculada en reposo desde que se fijó el layout (rutaDe); si no, se calcula aquí
+        const R = layout ? rutaDe(layout, true) : null;
+        const pasos = [];
+        const prep = () => anim.all([zonas.rotulos(false), ops.atenuar({ arq: 1, mob: 1 }, 500), zonas.mostrar(true, { nivel: 0.35, dur: 500 })]);
         camara.cerca = 0.3;
+        fase('recorrido'); // la interfaz desvanece los indicadores desde el descenso hasta la órbita de cierre
         const bb = cajaLocal();
         let azCierre = AZ[estado.local] + 22;
         if (R && R.n > 20) {
@@ -378,10 +427,37 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
           const pa = [0, 0, 0, 0];
           const mirarDesde = (sm, P, T) => { muestra(sm, pa); const cp = Math.cos(pa[3]); P.set(pa[0], OJOS, pa[1]); T.set(pa[0] + Math.sin(pa[2]) * cp * 3, OJOS + Math.sin(pa[3]) * 3, pa[1] + Math.cos(pa[2]) * cp * 3); };
           const durRec = (R.largo / VEL) * 1000;
-          const A = Math.min(0.08, 600 / durRec), norm = 1 - A / 2;               // rampa de arranque (fracción del tiempo)
-          const avance = (k) => (k < A ? (k * k) / (2 * A) : k - A / 2) / norm;    // 0..1 de la longitud
-          const ver = (k, P, T) => mirarDesde(avance(k) * R.largo, P, T);
+          // la marcha es uniforme: el descenso llega ya a la velocidad de la marcha
+          const ver = (k, P, T) => mirarDesde(k * R.largo, P, T);
           const V0 = new THREE_V(), T0 = new THREE_V(); mirarDesde(0, V0, T0);
+          // entrada (≈ 3 s): descenso continuo tipo dron desde la pose actual hasta la puerta, con el acceso en cuadro.
+          // Bézier cúbica en posición y en objetivo: sale con la velocidad de la deriva y llega con la de la marcha.
+          const durEnt = 3000 * f7, Te = durEnt / 1000;
+          const acc = LOCALES[estado.local].acceso, nA = acc.normal;
+          const puerta = [acc.centro[0] - nA[0] * 1.5, 1.4, acc.centro[1] - nA[1] * 1.5];
+          const muestra0 = [0, 0, 0, 0]; muestra(0.3, muestra0);
+          const uIni = [(muestra0[0] - V0.x) / 0.3, (muestra0[1] - V0.z) / 0.3];
+          const bz = (a, b, c, d2, t) => { const u = 1 - t; return u * u * u * a + 3 * u * u * t * b + 3 * u * t * t * c + t * t * t * d2; };
+          let EP = null, ET = null;
+          const prepararEntrada = () => {
+            const pc = [esc.camara.position.x, esc.camara.position.y, esc.camara.position.z], tc = camara.controles.target.toArray();
+            const vp = camara.velDeriva(pc, [0, 0, 0]), vt = camara.velDeriva(tc, [0, 0, 0]);
+            const p3 = [V0.x, V0.y, V0.z];
+            // pasa por un punto frente al acceso (10 m hacia la calle, 4.5 m de alto): el descenso llega de frente
+            const W = [acc.centro[0] + nA[0] * 10, 4.5, acc.centro[1] + nA[1] * 10];
+            const h1 = 0.55 * Te, h2 = 0.45 * Te;
+            const vW = [(p3[0] - W[0]) / h2 * 0.8, (p3[1] - W[1]) / h2 * 0.9, (p3[2] - W[2]) / h2 * 0.8];
+            EP = { p0: pc, m0: vp.map((v) => v * h1), w: W, mw1: vW.map((v) => v * h1), mw2: vW.map((v) => v * h2), p3, m3: [uIni[0] * VEL * h2, 0, uIni[1] * VEL * h2] };
+            const t3 = [T0.x, T0.y, T0.z];
+            ET = [tc, [tc[0] + vt[0] * Te / 3, tc[1], tc[2] + vt[2] * Te / 3], puerta, t3];
+            camara.pararDeriva();
+          };
+          const herm = (a, ma, b, mb, t, k) => { const t2 = t * t, t3 = t2 * t; return (2 * t3 - 3 * t2 + 1) * a[k] + (t3 - 2 * t2 + t) * ma[k] + (-2 * t3 + 3 * t2) * b[k] + (t3 - t2) * mb[k]; };
+          const entrar = (k, P, T) => {
+            if (k < 0.55) { const t = k / 0.55; P.set(herm(EP.p0, EP.m0, EP.w, EP.mw1, t, 0), herm(EP.p0, EP.m0, EP.w, EP.mw1, t, 1), herm(EP.p0, EP.m0, EP.w, EP.mw1, t, 2)); }
+            else { const t = (k - 0.55) / 0.45; P.set(herm(EP.w, EP.mw2, EP.p3, EP.m3, t, 0), herm(EP.w, EP.mw2, EP.p3, EP.m3, t, 1), herm(EP.w, EP.mw2, EP.p3, EP.m3, t, 2)); }
+            T.set(bz(ET[0][0], ET[1][0], ET[2][0], ET[3][0], k), bz(ET[0][1], ET[1][1], ET[2][1], ET[3][1], k), bz(ET[0][2], ET[1][2], ET[2][2], ET[3][2], k));
+          };
           // salida: sigue hacia la fachada de cristal más cercana a baja altura, la cruza y sube por fuera hasta el
           // plano de cierre (curva de Hermite con la velocidad de la marcha al inicio y la de la órbita al final)
           const fin = [0, 0, 0, 0]; muestra(R.largo, fin); muestra(R.largo - 0.3, pa);
@@ -405,7 +481,7 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
             P0 = [fin[0], OJOS, fin[1]];
             const T_s = durSal / 1000, h0 = t1 * T_s, h1 = (1 - t1) * T_s;
             // tangentes de Hermite (m = velocidad × duración del tramo)
-            M0 = [uMar[0] * VEL * h0, 0, uMar[1] * VEL * h0];
+            M0 = [(uMar[0] * 0.25 + sal[0] * 0.75) * VEL * h0 * 0.6, 0.4 * h0, (uMar[1] * 0.25 + sal[1] * 0.75) * VEL * h0 * 0.6];
             const vQ = [(cierre.pos[0] - P0[0]) / T_s, (cierre.pos[1] - P0[1]) / T_s * 0.5, (cierre.pos[2] - P0[2]) / T_s];
             const vs = Math.hypot(vQ[0], vQ[2]) || 1, vSal = Math.max(VEL, Math.hypot(Q[0] - P0[0], Q[2] - P0[2]) / h0);
             // en la fachada la cámara va hacia afuera (dirección de salida) y empieza a subir
@@ -432,14 +508,15 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
             else { const L = 3 + (dir1[2] - 3) * e; T.set(P.x + Math.sin(yw) * cpp * L, P.y + Math.sin(pt) * L, P.z + Math.cos(yw) * cpp * L); }
           };
           pasos.push(
-            () => { camara.pararDeriva(); return anim.all([camara.viajar(V0.toArray(), T0.toArray(), { dur: 2000 * f7, ease: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2) * 0.8 + (2 * t * t - t * t * t) * 0.2 }), camara.desplazar(1, { dur: 1600 * f7 }), cascaron.cortarTodo(true, { dur: 300, delay: 900 * f7 })]); },
-            () => { camara.cerca = 1.0; fase('recorrido'); return camara.trayecto(ver, { dur: durRec / norm }); },
-            () => { fase(''); prepararSalida(); return anim.all([camara.trayecto(salirH, { dur: durSal }), camara.desplazar(0, { dur: durSal }),
+            () => { prepararEntrada(); return anim.all([prep(), camara.trayecto(entrar, { dur: durEnt }), camara.desplazar(1, { dur: durEnt * 0.8 }), cascaron.cortarTodo(true, { dur: 400, delay: durEnt * 0.45 }),
+              anim.seq([durEnt * 0.85, () => { camara.cerca = 1.0; return anim.wait(0); }])]); },
+            () => { camara.cerca = 1.0; return camara.trayecto(ver, { dur: durRec }); },
+            () => { prepararSalida(); return anim.all([camara.trayecto(salirH, { dur: durSal }), camara.desplazar(0, { dur: durSal }),
               anim.seq([durSal * 0.55, () => { camara.cerca = 0.3; return anim.all([cascaron.cortarTodo(false, { dur: 700 }),
                 ops.atenuar(capas ? { arq: 0.7, mob: 1 } : { arq: 1, mob: 1 }, 1000, ['arq', 'mob']), zonas.mostrar(true, { nivel: capas ? 0.5 : 1, dur: 1000 })]); }])]); },
           );
         } else {
-          pasos.push(() => { camara.margenes = margenCierre(); return anim.all([ops.camara('cierre', { dur: 2000, ease: 'io', azimut: azCierre }), camara.desplazar(0, { dur: 1600 }),
+          pasos.push(prep, () => { camara.margenes = margenCierre(); return anim.all([ops.camara('cierre', { dur: 2000, ease: 'io', azimut: azCierre }), camara.desplazar(0, { dur: 1600 }),
             ops.atenuar(capas ? { arq: 0.7, mob: 1 } : { arq: 1, mob: 1 }, 1000, ['arq', 'mob']), zonas.mostrar(true, { nivel: capas ? 0.5 : 1, dur: 1000 })]); });
         }
         pasos.push(
@@ -525,9 +602,21 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
     if (n > 0 && (animarUltimo || !instantaneo)) {
       anim.ritmo = n < pasos.length ? ritmoPaso(n - 1, D) : 1; // el paso 7 reparte su tiempo él mismo
       try { const h = p.entrar(ops, { instantaneo: false }); await h?.done; } finally { anim.ritmo = 1; }
+      if (!estado.reproduciendo && n < pasos.length) remanso(4000, true);
     }
   }
 
+  /**
+   * Remanso de los pasos 1-6: la deriva sube a 4.5 °/s y la cámara se acerca un 13 % en `dur` ms. Con avance manual
+   * (dur = 4 s) al terminar el acercamiento la deriva baja a 3 °/s y sigue hasta que se avanza.
+   */
+  function remanso(dur, manualAvance = false) {
+    if (estado.paso < 1 || estado.paso >= pasos.length || camara.manual) return;
+    const sg = Math.sign(camara.deriva) || 1;
+    camara.deriva = sg * DERIVA_REMANSO;
+    const h = camara.acercar(ACERCAR, { dur: Math.max(300, dur) });
+    if (manualAvance) h.onDone(() => { if (!estado.ocupado && estado.paso < pasos.length) camara.deriva = sg * 3; });
+  }
   const acciones = {
     siguiente: () => accion('siguiente', () => (estado.paso < pasos.length ? irA(estado.paso + 1) : null)),
     anterior: () => accion('anterior', () => irA(Math.max(1, estado.paso - 1), { instantaneo: true })),
@@ -553,7 +642,11 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
         // cada paso dura su objetivo: lo que sobra tras la acción es remanso (la cámara sigue con la deriva)
         const i = estado.paso, t0 = reloj.ahora;
         await acciones.siguiente();
-        if (estado.reproduciendo && estado.paso < pasos.length) await anim.wait(Math.max(150, t0 + objetivoPaso(i, D) * 1000 - reloj.ahora)).done;
+        if (estado.reproduciendo && estado.paso < pasos.length) {
+          const resta = Math.max(150, t0 + objetivoPaso(i, D) * 1000 - reloj.ahora);
+          remanso(resta);
+          await anim.wait(resta).done;
+        }
       }
       set({ reproduciendo: false });
     },
