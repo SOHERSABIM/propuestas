@@ -57,6 +57,15 @@ const ritmoPaso = (i, D) => RITMO[i] * Math.min(1.7, D >= 60 ? Math.pow(D / 60, 
 const DERIVA = 2.5;
 /** En el remanso: deriva más viva y acercamiento suave (fracción de la distancia). */
 const DERIVA_REMANSO = 4.5, ACERCAR = 0.12;
+/**
+ * Espera manual (pasos 1-6): vaivén a 3 °/s alrededor del azimut en que terminó la acción. Por paso: amplitud (°) y fracción
+ * del acercamiento de 4 s (el encuadre de cada paso solo aguanta cierto giro; se ajustó midiendo márgenes). Primer tramo
+ * amp/3 s; después cada (2·amp + 7.2)/3 s (la inversión, a 2.5 °/s², pierde 7.2° de recorrido).
+ */
+const DERIVA_ESPERA = 3;
+const ESPERA = [null, { amp: 12, acercar: ACERCAR }, { amp: 12, acercar: 0.03 }, { amp: 12, acercar: 0.04 }, { amp: 10, acercar: 0.03 }, { amp: 12, acercar: 0.03 }, { amp: 12, acercar: 0.03 }];
+const vaivenPrimero = (paso) => (ESPERA[paso].amp / DERIVA_ESPERA) * 1000;
+const vaivenPeriodo = (paso) => ((2 * ESPERA[paso].amp + 7.2) / DERIVA_ESPERA) * 1000;
 
 /**
  * @param {{params:any, anim:any, reloj:any, cascaron:any, muebles:any, zonas:any, mep:any, camara:any, pasos:any[], esc:any, margenesUI?:()=>any}} d
@@ -341,13 +350,8 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
           anim.seq([
             () => anim.all([ops.atenuar(ATEN_MEP, 900), zonas.mostrar(true, { nivel: 0.5, dur: 900 }), zonas.rotulos(false), cubierta.montar(LOCALES[estado.local])]),
             () => anim.all(CAPAS.map((c, i) => anim.seq([i * 2200, () => ops.trazar([c])]))),
-            // realce por capa (lo que se narra): cada una ≈ 1.8 s con las otras dos al 25 %, y al final las tres
-            ...(mep.realzar ? [
-              () => mep.realzar({ luz: 1, aire: 0.25, frio: 0.25 }, { dur: 450 }), 1850,
-              () => mep.realzar({ luz: 0.25, aire: 1, frio: 0.25 }, { dur: 450 }), 1850,
-              () => mep.realzar({ luz: 0.25, aire: 0.25, frio: 1 }, { dur: 450 }), 1850,
-              () => mep.realzar({ luz: 1, aire: 1, frio: 1 }, { dur: 550 }),
-            ] : []),
+            // (R10) sin realce por capa: con iluminación o refrigeración solas la vista aérea se veía vacía; las tres
+            // capas quedan a plena opacidad mientras la cámara termina su arco. mep.realzar sigue disponible.
           ]),
         ]);
       },
@@ -582,6 +586,7 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
 
   /** Lleva la demo al paso n. Si n = actual+1 anima solo ese paso; si no, reconstruye 1..n-1 al instante. */
   async function irA(n, { instantaneo = false } = {}) {
+    ficha++; // mata cualquier vaivén anterior
     n = Math.max(0, Math.min(pasos.length, n));
     const animarUltimo = !instantaneo && n === estado.paso + 1;
     const p = n > 0 ? pasos[n - 1] : null;
@@ -598,7 +603,10 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
     }
     if (animarUltimo) set({ paso: n, pasoInfo: info }, 'paso');
     if (estado.paso !== pasos.length && estado.fase) fase('');
-    if (n > 0 && n < pasos.length) camara.deriva = camara.deriva || DERIVA; // deriva en espera (pasos 1-6)
+    if (n > 0 && n < pasos.length) {
+      if (estado.reproduciendo) camara.deriva = camara.deriva || DERIVA; // deriva en espera (pasos 1-6)
+      else if (instantaneo) { camara.deriva = (Math.sign(camara.deriva) || 1) * DERIVA_ESPERA; vaiven(ficha, n, vaivenPrimero(n)); }
+    }
     if (n > 0 && (animarUltimo || !instantaneo)) {
       anim.ritmo = n < pasos.length ? ritmoPaso(n - 1, D) : 1; // el paso 7 reparte su tiempo él mismo
       try { const h = p.entrar(ops, { instantaneo: false }); await h?.done; } finally { anim.ritmo = 1; }
@@ -607,15 +615,25 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
   }
 
   /**
-   * Remanso de los pasos 1-6: la deriva sube a 4.5 °/s y la cámara se acerca un 13 % en `dur` ms. Con avance manual
+   * Remanso de los pasos 1-6: la deriva sube a 4.5 °/s y la cámara se acerca un 12 % (3 % en el paso 2) en `dur` ms. Con avance manual
    * (dur = 4 s) al terminar el acercamiento la deriva baja a 3 °/s y sigue hasta que se avanza.
    */
+  /** Vaivén de espera: invierte el signo de la deriva cada medio periodo; muere si cambia la ficha, el paso, hay acción, reproducción o el usuario tomó la cámara. */
+  let ficha = 0;
+  function vaiven(f, paso, ms) {
+    anim.wait(ms).onDone(() => {
+      if (f !== ficha || paso !== estado.paso || estado.ocupado || estado.reproduciendo || camara.manual || paso >= pasos.length) return;
+      camara.deriva = -camara.deriva;
+      vaiven(f, paso, vaivenPeriodo(paso));
+    });
+  }
   function remanso(dur, manualAvance = false) {
     if (estado.paso < 1 || estado.paso >= pasos.length || camara.manual) return;
     const sg = Math.sign(camara.deriva) || 1;
-    camara.deriva = sg * DERIVA_REMANSO;
-    const h = camara.acercar(ACERCAR, { dur: Math.max(300, dur) });
-    if (manualAvance) h.onDone(() => { if (!estado.ocupado && estado.paso < pasos.length) camara.deriva = sg * 3; });
+    camara.deriva = sg * (manualAvance ? DERIVA_ESPERA : DERIVA_REMANSO); // en espera manual arranca el vaivén
+    // en el paso 2 el encuadre va más lleno: con 12 % la esquina del edificio tocaba el borde inferior
+    camara.acercar(manualAvance ? ESPERA[estado.paso].acercar : estado.paso === 2 ? 0.03 : ACERCAR, { dur: Math.max(300, dur) });
+    if (manualAvance) vaiven(ficha, estado.paso, vaivenPrimero(estado.paso));
   }
   const acciones = {
     siguiente: () => accion('siguiente', () => (estado.paso < pasos.length ? irA(estado.paso + 1) : null)),
@@ -637,6 +655,7 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
       return accion('capas', sincronizarCapas);
     },
     async reproducir(v = !estado.reproduciendo) {
+      ficha++;
       set({ reproduciendo: v });
       while (estado.reproduciendo && estado.paso < pasos.length) {
         // cada paso dura su objetivo: lo que sobra tras la acción es remanso (la cámara sigue con la deriva)
@@ -650,7 +669,7 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
       }
       set({ reproduciendo: false });
     },
-    reiniciar: () => { set({ reproduciendo: false }); camara.recuperar(); return accion('reiniciar', () => irA(0, { instantaneo: true })); },
+    reiniciar: () => { ficha++; set({ reproduciendo: false }); camara.recuperar(); return accion('reiniciar', () => irA(0, { instantaneo: true })); },
     interfaz(v = !estado.interfaz) {
       if (v !== estado.interfaz) set({ interfaz: v });
       // reencuadre suave para respetar (o liberar) los márgenes de la interfaz; se mide un instante después,
