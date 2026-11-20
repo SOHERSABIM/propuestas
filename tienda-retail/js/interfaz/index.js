@@ -71,6 +71,11 @@ export function crearInterfaz(raiz, app) {
   const escalar = (d) => { escala = Math.min(ESC_MAX, Math.max(ESC_MIN, Math.round((escala + d) * 100) / 100)); aplicarEscala(); };
   window.addEventListener('resize', aplicarEscala);
   aplicarEscala();
+  // ?datos=N: tamaño del panel de indicadores en % (100 por defecto; 50 a 160; 0 lo oculta)
+  const pd = parseFloat(new URLSearchParams(location.search).get('datos'));
+  const DATOS = Number.isFinite(pd) ? (pd <= 0 ? 0 : Math.min(160, Math.max(50, pd))) : 100;
+  raiz.querySelector('.panel-ind').style.setProperty('--d', String(DATOS / 100));
+  raiz.querySelector('.panel-ind').classList.toggle('sin-datos', DATOS === 0);
   const MARGEN_INF = 24;   // px x --s libres bajo el panel de indicadores en modo "solo"
   const $ = (s) => raiz.querySelector(s);
   const btn = (a) => $(`[data-a="${a}"]`);

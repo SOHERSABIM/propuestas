@@ -31,6 +31,7 @@ export function crearZonas({ escena, anim, reloj, camara, dom }) {
   const cont = new CSS2DObject(elCont); raiz.add(cont);
   /** Colocación del contador: al lado del plano, en el hueco más amplio del área libre (fuera de la planta). */
   let contCaja = null, contMargenes = null, contTam = null;
+  const tamCache = { k: '', w: 0, h: 0 };
   const ray = new THREE.Raycaster(), plano = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.3), pTmp = new THREE.Vector3(), ndc = new THREE.Vector2();
   function colocarContador(W, H) {
     if (!contCaja) return;
@@ -41,13 +42,15 @@ export function crearZonas({ escena, anim, reloj, camara, dom }) {
       pTmp.set(x, 0.3, z).project(camara); const sx = (pTmp.x * 0.5 + 0.5) * W, sy = (-pTmp.y * 0.5 + 0.5) * H;
       x0 = Math.min(x0, sx); x1 = Math.max(x1, sx); y0 = Math.min(y0, sy); y1 = Math.max(y1, sy);
     }
-    const { w, h } = contTam, sep = 22;
+    const { w, h } = contTam, sep = Math.max(14, 0.03 * H);
+    // a la derecha del plano si cabe; si no, abajo; si tampoco, el hueco más amplio (siempre dentro del área libre)
     const huecos = [
-      { g: x0 - L - w, x: x0 - sep - w / 2, y: (y0 + y1) / 2 }, { g: R - x1 - w, x: x1 + sep + w / 2, y: (y0 + y1) / 2 },
-      { g: (B - y1 - h) * 3, x: (x0 + x1) / 2, y: y1 + sep + h / 2 }, { g: (y0 - T - h) * 3, x: (x0 + x1) / 2, y: y0 - sep - h / 2 },
+      { g: R - x1 - sep - w, x: x1 + sep + w / 2, y: Math.min(B - h / 2, Math.max(T + h / 2, (y0 + y1) / 2)) },
+      { g: B - y1 - sep - h, x: Math.min(R - w / 2, Math.max(L + w / 2, (x0 + x1) / 2)), y: y1 + sep + h / 2 },
+      { g: x0 - L - sep - w - 1e3, x: x0 - sep - w / 2, y: (y0 + y1) / 2 }, { g: y0 - T - sep - h - 1e3, x: (x0 + x1) / 2, y: y0 - sep - h / 2 },
     ];
-    const mejor = huecos.reduce((a, b) => (b.g > a.g ? b : a));
-    ndc.set((Math.min(R - w / 2 - 8, Math.max(L + w / 2 + 8, mejor.x)) / W) * 2 - 1, -(Math.min(B - h / 2 - 8, Math.max(T + h / 2 + 8, mejor.y)) / H) * 2 + 1);
+    const mejor = huecos[0].g >= 0 ? huecos[0] : huecos[1].g >= 0 ? huecos[1] : huecos.reduce((a, b) => (b.g > a.g ? b : a));
+    ndc.set((Math.min(R - w / 2, Math.max(L + w / 2, mejor.x)) / W) * 2 - 1, -(Math.min(B - h / 2, Math.max(T + h / 2, mejor.y)) / H) * 2 + 1);
     ray.setFromCamera(ndc, camara);
     if (ray.ray.intersectPlane(plano, pTmp)) cont.position.copy(pTmp);
   }
@@ -221,6 +224,22 @@ export function crearZonas({ escena, anim, reloj, camara, dom }) {
       });
       pasos.push(900, () => anim.tween({ dur: 400, onUpdate: (k) => { elCont.style.opacity = String(1 - k); } }).onDone(() => { elCont.classList.remove('elegida'); contCaja = null; }));
       return anim.seq(pasos);
+    },
+    /**
+     * Tamaño (px) del contador del sorteo con su texto más largo, medido una vez por tamaño de ventana: el encuadre
+     * cenital le reserva sitio a la derecha del plano.
+     */
+    tamContador() {
+      const k = `${innerWidth}x${innerHeight}`;
+      if (tamCache.k !== k) {
+        const t0 = elT.textContent, r0 = elR.textContent;
+        elT.textContent = 'Elegida: alternativa 32'; elR.textContent = '100.0 pts'; elCont.classList.add('elegida');
+        let w = elCont.offsetWidth, h = elCont.offsetHeight;
+        elT.textContent = t0; elR.textContent = r0; elCont.classList.remove('elegida');
+        if (!(w > 20 && h > 10)) { const fs = Math.min(44, Math.max(14, 0.025 * innerHeight)); w = 13.5 * fs; h = 3.4 * fs; }
+        tamCache.k = k; tamCache.w = w; tamCache.h = h;
+      }
+      return { w: tamCache.w, h: tamCache.h };
     },
     stats() { return { rects: ZONAS.reduce((s, z) => s + pool[z].length, 0), fusionado: gFus.children.length > 0 }; },
   };

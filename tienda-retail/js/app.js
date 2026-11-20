@@ -55,15 +55,21 @@ export const objetivoPaso = (i, D) => (D >= 60 ? T60[i] + ((T90[i] - T60[i]) * (
 const ritmoPaso = (i, D) => RITMO[i] * Math.min(1.7, D >= 60 ? Math.pow(D / 60, E_ACCION[i]) : D / 60);
 /** Deriva de la cámara (°/s) en los pasos 1-6: con avance manual sigue mientras se habla. */
 const DERIVA = 2.5;
-/** En el remanso: deriva más viva y acercamiento suave (fracción de la distancia). */
-const DERIVA_REMANSO = 4.5, ACERCAR = 0.12;
+/** En el remanso: deriva más viva. */
+const DERIVA_REMANSO = 4.5;
+/**
+ * Llenado del área libre (R11): el edificio ocupa esta fracción del área libre en su dimensión limitante, con el azimut
+ * real de cada cuadro. Los arcos llegan a LLENO y el remanso sube a LLENO_REMANSO (es el antiguo acercamiento).
+ */
+const LLENO = 0.885, LLENO_REMANSO = 0.915, LLENO_CENITAL = 0.86;
 /**
  * Espera manual (pasos 1-6): vaivén a 3 °/s alrededor del azimut en que terminó la acción. Por paso: amplitud (°) y fracción
  * del acercamiento de 4 s (el encuadre de cada paso solo aguanta cierto giro; se ajustó midiendo márgenes). Primer tramo
  * amp/3 s; después cada (2·amp + 7.2)/3 s (la inversión, a 2.5 °/s², pierde 7.2° de recorrido).
  */
 const DERIVA_ESPERA = 3;
-const ESPERA = [null, { amp: 12, acercar: ACERCAR }, { amp: 12, acercar: 0.03 }, { amp: 12, acercar: 0.04 }, { amp: 10, acercar: 0.03 }, { amp: 12, acercar: 0.03 }, { amp: 12, acercar: 0.03 }];
+// (R11) el encuadre sigue al azimut: todos los pasos aguantan el mismo vaivén y el mismo remanso
+const ESPERA = [null, ...Array.from({ length: 6 }, () => ({ amp: 12, lleno: LLENO_REMANSO }))];
 const vaivenPrimero = (paso) => (ESPERA[paso].amp / DERIVA_ESPERA) * 1000;
 const vaivenPeriodo = (paso) => ((2 * ESPERA[paso].amp + 7.2) / DERIVA_ESPERA) * 1000;
 
@@ -118,12 +124,13 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
   // ---------- Ruta del recorrido (paso 7), precalculada en reposo ----------
   // Al fijar un layout se arma su ruta con un generador (escena/recorrido.js → rutaPasos) que avanza un trozo de pocos
   // ms por cuadro mientras corren los pasos 5-6: al pulsar el paso 7 la ruta ya está (sin cuadro largo).
-  const VEL_RECORRIDO = 3.5;
+  /** Marcha del recorrido (m/s): caminata tranquila (R11; antes 3.5). La ruta mide ≈ 25 m con D = 90. */
+  const VEL_RECORRIDO = 1.95;
   const rutas = new Map(); let rutaEnCurso = null;
   const opRuta = () => {
     const f7 = objetivoPaso(6, D) / 21, plan = mep.plan, ductos = [];
     if (plan?.aire) for (const d of [...plan.aire.principal.filter((q) => !q.bajante), ...plan.aire.ramales]) for (let k = 1; k < d.puntos.length; k++) ductos.push([d.puntos[k - 1][0], d.puntos[k - 1][2], d.puntos[k][0], d.puntos[k][2]]);
-    return { largoObj: 40 * f7, largoMax: Math.min(60, 44 * f7), velocidad: VEL_RECORRIDO, ductos };
+    return { largoObj: 25 * f7, largoMax: Math.min(40, 25.3 * f7), velocidad: VEL_RECORRIDO, ductos };
   };
   const claveRuta = (lay) => `${lay.localId}|${lay.id}|${lay.candidato}`;
   function prepararRuta(lay) {
@@ -188,46 +195,85 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
     em.emit('calificacion', estado);
   }
 
-  const cajaLocal = (id = estado.local) => caja(LOCALES[id].poligono);
+  const cajaLocal = (id = estado.local) => ({ ...caja(LOCALES[id].poligono), poligono: LOCALES[id].poligono });
   const dentroLocal = (x, z) => dentro(LOCALES[estado.local].poligono, [x, z]);
   /** Azimut base por local: el lado largo del local queda horizontal en pantalla. */
   const AZ = { A: 36, B: 66, C: 40 };
   const POL = { A: 0, B: 6, C: 0 }; // B: algo más cenital para ver por encima del muro largo cercano
   const ENCUADRES = (loc) => ({
-    general: { azimut: AZ[loc], polar: 52 + POL[loc], llenado: 0.78 },
-    aereo: { azimut: AZ[loc] + 55, polar: 30, llenado: 0.42 },
+    // alto: caja del encuadre (5.4 = pretil); desde el paso 3 se suman los equipos de azotea (equiposAzotea)
+    general: { azimut: AZ[loc], polar: 52 + POL[loc], llenado: LLENO, alto: 5.4 },
+    aereo: { azimut: AZ[loc] + 55, polar: 30, llenado: 0.6, alto: 5.4 },
     frente: { azimut: AZ[loc] - 10, polar: 56 + POL[loc], llenado: 0.9 },
     // movimiento por paso (giro de 45° a 90°): el encuadre final de cada paso está girado respecto al anterior
-    mobiliario: { azimut: AZ[loc] - 50, polar: 48 + POL[loc], llenado: 0.78 }, // paso 2: sigue el giro del paso 1
-    instalaciones: { azimut: AZ[loc] + 40, polar: 45 + POL[loc], llenado: 0.74 }, // paso 3: arco mientras se monta todo
-    traslado: { azimut: AZ[loc] + 44, polar: 52 + POL[loc], llenado: 0.78, abombar: 0.14 }, // paso 4: baja girando desde el cenital
-    llegada: { azimut: AZ[loc] + (loc === 'B' ? 54 : loc === 'C' ? 20 : 40), polar: 52 + POL[loc], llenado: 0.78 }, // pasos 5-6: gira alrededor
-    cenital: { azimut: loc === 'B' ? 90 : 0, polar: 2, llenado: 0.72 }, // deja hueco al lado del plano para el contador
-    cierre: { azimut: AZ[loc] + 22, polar: 55 + POL[loc], llenado: 1.1, alto: 6.4, orbital: true }, // cabe en cualquier azimut de la órbita
+    mobiliario: { azimut: AZ[loc] - 50, polar: 48 + POL[loc], llenado: LLENO, alto: 5.4 }, // paso 2: sigue el giro del paso 1
+    instalaciones: { azimut: AZ[loc] + 40, polar: 45 + POL[loc], llenado: LLENO, alto: 5.4 }, // paso 3: arco mientras se monta todo
+    traslado: { azimut: AZ[loc] + 44, polar: 52 + POL[loc], llenado: LLENO, alto: 5.4 }, // paso 4: baja girando desde el cenital (sin abombar: el encuadre ya no recorta)
+    llegada: { azimut: AZ[loc] + (loc === 'B' ? 54 : loc === 'C' ? 20 : 40), polar: 52 + POL[loc], llenado: LLENO, alto: 5.4 }, // pasos 5-6: gira alrededor
+    cenital: { azimut: loc === 'B' ? 90 : 0, polar: 2, llenado: LLENO_CENITAL, alto: 5.4, contador: true }, // a la derecha del plano, el contador
+    cierre: { azimut: AZ[loc] + 22, polar: 55 + POL[loc], llenado: LLENO, alto: 5.4 }, // la órbita sigue con el mismo llenado
   });
-  /** Márgenes del plano de cierre: los de la interfaz y, abajo, la tarjeta del logotipo grande (fase 'cierre'). */
-  // Tarjeta del logotipo grande: se mide su caja real (getBoundingClientRect, también oculta: visibility no quita la
-  // caja) una vez por vista y tamaño de ventana o escala, no por cuadro.
-  const cacheLogo = new Map();
-  function margenCierre() {
-    const m = estado.interfaz ? margenesUI() : {};
+  // ---------- Área libre (R11) ----------
+  // Ventana menos los rectángulos REALES de la interfaz visible (.marca, .panel-ind, .rotulo-paso; en el cierre
+  // .marca-grande en vez de .marca; en la vista completa también controles y herramientas), con 14 px × escala de
+  // separación y ≥ 2.5 % del alto contra los bordes. De los rectángulos libres se elige el que deja el edificio más
+  // grande. Se lee una vez por paso, modo, fase de cierre, escala, número de tarjetas o tamaño de ventana; nunca por cuadro.
+  const cacheLibre = new Map();
+  function areaLibre(cierre = false, aspecto = 1.75) {
+    const W = innerWidth, H = innerHeight, borde = Math.ceil(0.025 * H);
+    const base = { x0: borde, y0: borde, x1: W - borde, y1: H - borde };
     const capa = typeof document !== 'undefined' ? document.querySelector('#ui .ui-capa') : null;
     const modo = capa?.dataset?.modo;
-    if (estado.interfaz && capa && modo !== 'oculta') {
-      const sUI = parseFloat(document.getElementById('ui')?.style.getPropertyValue('--s')) || innerHeight / 1080;
-      const clave = `${modo}|${innerWidth}|${innerHeight}|${sUI}`;
-      if (!cacheLogo.has(clave)) {
-        const el = capa.querySelector('.marca-grande'), r = el?.getBoundingClientRect();
-        // en reposo la tarjeta está 16 px × escala más abajo (entra subiendo): se mide su posición final
-        cacheLogo.set(clave, r && r.height > 2 ? innerHeight - (r.top - 16 * sUI) + 18 * sUI : ((modo === 'completa' ? 176 : 76) + 190 + 24) * sUI);
+    if (!estado.interfaz || !capa || modo === 'oculta') return base;
+    const ui = document.getElementById('ui');
+    const sUI = parseFloat(ui?.style.getPropertyValue('--s')) || H / 1080;
+    const panel = capa.querySelector('.panel-ind'), rp = capa.querySelector('.rotulo-paso');
+    const clave = [modo, estado.paso, cierre, W, H, sUI, aspecto.toFixed(2), panel?.hidden, panel?.className, panel?.querySelectorAll('.tarjeta').length,
+      panel?.getAttribute('style'), ui?.getAttribute('style'), rp?.hidden, rp?.className].join('|');
+    if (!cacheLibre.has(clave)) {
+      const sep = 14 * sUI, rects = [];
+      const sels = ['.panel-ind', '.rotulo-paso', cierre ? '.marca-grande' : '.marca', ...(modo === 'solo' ? [] : ['.controles', '.herramientas'])];
+      for (const sel of sels) {
+        const el = capa.querySelector(sel); if (!el || el.hidden) continue;
+        const cs = getComputedStyle(el); if (cs.display === 'none' || (sel !== '.marca-grande' && cs.visibility === 'hidden')) continue;
+        const r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2) continue;
+        // posición de reposo: se descuenta el desplazamiento vertical de la transición de entrada (logotipo grande)
+        const mt = /matrix\(([^)]+)\)/.exec(cs.transform || ''), ty = sel === '.marca-grande' && mt ? +mt[1].split(',')[5] || 0 : 0;
+        rects.push({ x0: r.left - sep, y0: r.top - ty - sep, x1: r.right + sep, y1: r.bottom - ty + sep });
       }
-      m.abajo = Math.max(m.abajo || 0, cacheLogo.get(clave));
+      const xs0 = [base.x0, ...rects.map((r) => r.x1)], xs1 = [base.x1, ...rects.map((r) => r.x0)];
+      const ys0 = [base.y0, ...rects.map((r) => r.y1)], ys1 = [base.y1, ...rects.map((r) => r.y0)];
+      let mejor = base, pMejor = -1;
+      for (const x0 of xs0) for (const x1 of xs1) for (const y0 of ys0) for (const y1 of ys1) {
+        if (x0 < base.x0 || y0 < base.y0 || x1 > base.x1 || y1 > base.y1 || x1 - x0 < W * 0.3 || y1 - y0 < H * 0.3) continue;
+        if (rects.some((r) => r.x0 < x1 && r.x1 > x0 && r.y0 < y1 && r.y1 > y0)) continue;
+        const p = Math.min((x1 - x0) / aspecto, y1 - y0) + (x1 - x0) * (y1 - y0) * 1e-6;
+        if (p > pMejor) { pMejor = p; mejor = { x0, y0, x1, y1 }; }
+      }
+      cacheLibre.set(clave, mejor);
     }
-    return m;
+    return { ...cacheLibre.get(clave) };
+  }
+  /** Esquinas superiores de los equipos de azotea del plan vigente (unidades de aire y condensadoras). */
+  function equiposAzotea() {
+    const P = mep.plan; if (!P) return [];
+    const out = [];
+    const add = (q) => { const r = Math.max(q.ancho, q.fondo) / 2 + 0.1, y = q.p[1] + 0.3 + q.alto + 0.1; for (const sx of [-1, 1]) for (const sz of [-1, 1]) out.push([q.p[0] + sx * r, y, q.p[2] + sz * r]); };
+    for (const u of P.aire?.unidades || []) add(u);
+    for (const c of P.frio?.condensadoras || []) add(c);
+    return out;
+  }
+  const claveLibre = (r) => [r.x0, r.y0, r.x1, r.y1].map(Math.round).join(',');
+  /** Paso 4: el plano cenital deja a su derecha (o abajo) una columna libre para el contador del sorteo. */
+  function libreCenital(lib) {
+    const t = zonas.tamContador ? zonas.tamContador() : { w: 260, h: 70 }, sep = Math.max(14, 0.03 * innerHeight);
+    const der = { ...lib, x1: lib.x1 - t.w - 2 * sep }, abajo = { ...lib, y1: lib.y1 - t.h - 2 * sep };
+    // el plano es casi cuadrado: se queda con el recorte que lo deja más grande
+    const esc = (r) => Math.min(r.x1 - r.x0, (r.y1 - r.y0) * 1.25);
+    return esc(der) >= esc(abajo) * 0.97 ? der : abajo;
   }
   const niveles = { arq: 1, mob: 1 };
-  let ultimoEncuadre = 'general', margenesUsadas = '';
-  const claveM = (m) => ['arriba', 'abajo', 'izq', 'der'].map((k) => Math.round(m[k] || 0)).join(',');
+  let ultimoEncuadre = 'general', libreUsada = '';
   const ATEN_MEP = { arq: 0.4, mob: 0.78 };
 
   /** Zonas del layout en el orden de las oleadas del paso 2 (las que tienen muebles o tinte). */
@@ -301,10 +347,13 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
         return camara.mirar([x0 + 0.6, 1.65, zIni], [x1, 1.3, Math.min(z1 + 2, (z0 + z1) / 2)], op);
       }
       const enCierre = nombre === 'cierre' && estado.paso === pasos.length;
-      camara.margenes = enCierre ? margenCierre() : estado.interfaz ? margenesUI() : {};
-      margenesUsadas = claveM(estado.interfaz ? margenesUI() : {});
+      const lib = areaLibre(enCierre);
+      camara.libre = lib;
+      libreUsada = claveLibre(lib);
       if (!op.local || op.local === estado.local || nombre === 'llegada') ultimoEncuadre = nombre;
       const enc = { ...(ENCUADRES(op.local || estado.local)[nombre] || {}), ...op };
+      if (enc.contador) enc.libre = libreCenital(lib);
+      else if (estado.paso >= 3 && nombre !== 'aereo') enc.extras = equiposAzotea();
       // arco principal del paso: la deriva toma el sentido del giro (así al final del arco la cámara sigue igual)
       if (op.arco && !anim.instantaneo && enc.azimut != null) {
         const dAz = ((enc.azimut - camara.azimutActual() + 540) % 360) - 180;
@@ -397,7 +446,10 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
               muebles.transitar(nuevo, { modo: 'local', localAnterior: locA, localNuevo: LOCALES[id] }),
               cascaron.transformarA(LOCALES[id], nuevo, { delay: t.subida, dur: t.vuelo }),
               zonas.transformar(nuevo, { delay: t.subida, dur: t.vuelo }),
-              ops.camara('llegada', { local: id, delay: 300, dur: t.subida + t.vuelo + t.bajada, ease: 'io', arco: true }),
+              // pico: los muebles vuelan en formación sobre el pretil (5.8 m + su alto, casi nunca en las orillas: se
+              // toman los vértices 1.5 m hacia el centro a 7.2 m, medido en pantalla); el encuadre los deja caber
+              ops.camara('llegada', { local: id, delay: 300, dur: t.subida + t.vuelo + t.bajada, ease: 'io', arco: true, pico: 7.2, extrasAlFinal: true,
+                mezcla: [(t.subida - 300 + 150) / (t.subida + t.vuelo + t.bajada), (t.subida + t.vuelo - 300) / (t.subida + t.vuelo + t.bajada)] }),
               zonas.rotulos(estado.rotulos, { delay: t.subida + t.vuelo + t.bajada + 400, cada: 120 }),
             ]);
           },
@@ -412,7 +464,7 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
       cierre() {
         const capas = mep.capasVisibles().length > 0;
         const f7 = objetivoPaso(6, D) / 21; // reparto del paso 7 con D = 90: entrada 2 · recorrido ≈ 14 · salida 2.5 · órbita
-        camara.margenes = estado.interfaz ? margenesUI() : {};
+        camara.libre = areaLibre();
         const VEL = VEL_RECORRIDO;
         // la ruta ya viene precalculada en reposo desde que se fijó el layout (rutaDe); si no, se calcula aquí
         const R = layout ? rutaDe(layout, true) : null;
@@ -421,7 +473,7 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
         camara.cerca = 0.3;
         fase('recorrido'); // la interfaz desvanece los indicadores desde el descenso hasta la órbita de cierre
         const bb = cajaLocal();
-        let azCierre = AZ[estado.local] + 22;
+        let azCierre = AZ[estado.local] + 22, fijarCierre = false;
         if (R && R.n > 20) {
           const OJOS = 1.65, n = R.n;
           // primera persona a 1.65 m por la ruta con la mirada precalculada (escena/recorrido.js). Arranca con una
@@ -436,7 +488,7 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
           const V0 = new THREE_V(), T0 = new THREE_V(); mirarDesde(0, V0, T0);
           // entrada (≈ 3 s): descenso continuo tipo dron desde la pose actual hasta la puerta, con el acceso en cuadro.
           // Bézier cúbica en posición y en objetivo: sale con la velocidad de la deriva y llega con la de la marcha.
-          const durEnt = 3000 * f7, Te = durEnt / 1000;
+          const durEnt = 2800 * f7, Te = durEnt / 1000;
           const acc = LOCALES[estado.local].acceso, nA = acc.normal;
           const puerta = [acc.centro[0] - nA[0] * 1.5, 1.4, acc.centro[1] - nA[1] * 1.5];
           const muestra0 = [0, 0, 0, 0]; muestra(0.3, muestra0);
@@ -473,13 +525,14 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
           const Q = [fin[0] + sal[0] * (dFach + 2.5), 2.3, fin[1] + sal[1] * (dFach + 2.5)];
           azCierre = 0.6 * (Math.atan2(-(Q[0] - cx), Q[2] - cz) / DEG_) + 0.4 * (AZ[estado.local] + 22);
           let cierre = null; // se calcula al empezar la salida (márgenes vigentes)
-          const durSal = 3200 * f7, t1 = 0.36; // fracción en la que cruza la fachada
+          const durSal = 3000 * f7, t1 = 0.36; // fracción en la que cruza la fachada
           const tgtIni = [0, 0, 0], dir0 = [0, 0], dir1 = [0, 0, 1]; let dYaw = 0;
           const hermite = (p0, m0, p1, m1, t, k) => { const t2 = t * t, t3 = t2 * t; return (2 * t3 - 3 * t2 + 1) * p0[k] + (t3 - 2 * t2 + t) * m0[k] + (-2 * t3 + 3 * t2) * p1[k] + (t3 - t2) * m1[k]; };
           let M0, M1, M2, P0;
           const prepararSalida = () => {
-            camara.margenes = margenCierre();
-            const c = camara.ajustar(bb, { ...ENCUADRES(estado.local).cierre, azimut: azCierre, orbital: true });
+            camara.libre = areaLibre(true);
+            const c = camara.poseEncuadre(cajaLocal(), { ...ENCUADRES(estado.local).cierre, azimut: azCierre, extras: equiposAzotea() });
+            fijarCierre = true;
             cierre = c;
             camara.pivote.set(cx, (ENCUADRES(estado.local).cierre.alto ?? 5.4) * 0.25, cz);
             P0 = [fin[0], OJOS, fin[1]];
@@ -520,11 +573,14 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
                 ops.atenuar(capas ? { arq: 0.7, mob: 1 } : { arq: 1, mob: 1 }, 1000, ['arq', 'mob']), zonas.mostrar(true, { nivel: capas ? 0.5 : 1, dur: 1000 })]); }])]); },
           );
         } else {
-          pasos.push(prep, () => { camara.margenes = margenCierre(); return anim.all([ops.camara('cierre', { dur: 2000, ease: 'io', azimut: azCierre }), camara.desplazar(0, { dur: 1600 }),
-            ops.atenuar(capas ? { arq: 0.7, mob: 1 } : { arq: 1, mob: 1 }, 1000, ['arq', 'mob']), zonas.mostrar(true, { nivel: capas ? 0.5 : 1, dur: 1000 })]); });
+          pasos.push(prep, () => anim.all([ops.camara('cierre', { dur: 2000, ease: 'io', azimut: azCierre }), camara.desplazar(0, { dur: 1600 }),
+            ops.atenuar(capas ? { arq: 0.7, mob: 1 } : { arq: 1, mob: 1 }, 1000, ['arq', 'mob']), zonas.mostrar(true, { nivel: capas ? 0.5 : 1, dur: 1000 })]));
         }
         pasos.push(
-          () => { ultimoEncuadre = 'cierre'; margenesUsadas = claveM(estado.interfaz ? margenesUI() : {}); ops.orbita(true); camara.arrancarOrbita(); fase('cierre'); cascaron.cortarTodo(false, { dur: 0 });
+          () => { ultimoEncuadre = 'cierre'; libreUsada = claveLibre(areaLibre(true));
+            // la salida llegó a la pose del encuadre de cierre: desde aquí la órbita gira con el encuadre por parámetros
+            if (fijarCierre) camara.fijarEncuadre(cajaLocal(), { ...ENCUADRES(estado.local).cierre, azimut: azCierre, extras: equiposAzotea() });
+            ops.orbita(true); camara.arrancarOrbita(); fase('cierre'); cascaron.cortarTodo(false, { dur: 0 });
             // la órbita sigue sola; el paso termina cuando se cumple su duración objetivo
             return anim.wait(anim.instantaneo ? 0 : Math.max(1500, objetivoPaso(6, D) * 1000 - (reloj.ahora - tInicio))); },
         );
@@ -546,9 +602,10 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
    */
   function reencuadrar(dur = 900) {
     if (estado.paso < 1 || estado.ocupado || camara.manual) return;
-    const m = estado.interfaz ? margenesUI() : {};
-    if (claveM(m) === margenesUsadas) return;
-    ops.camara(ultimoEncuadre, estado.orbita ? { dur, azimut: camara.azimutActual(), orbital: true } : { dur });
+    const lib = areaLibre(ultimoEncuadre === 'cierre' && estado.paso === pasos.length);
+    if (claveLibre(lib) === libreUsada) return;
+    // se reajusta el mismo encuadre desde el azimut actual (sin volver atrás lo que giró la deriva)
+    ops.camara(ultimoEncuadre, { dur, azimut: camara.azimutActual() });
   }
 
   // ---------- Cola con bloqueo ----------
@@ -632,7 +689,9 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
     const sg = Math.sign(camara.deriva) || 1;
     camara.deriva = sg * (manualAvance ? DERIVA_ESPERA : DERIVA_REMANSO); // en espera manual arranca el vaivén
     // en el paso 2 el encuadre va más lleno: con 12 % la esquina del edificio tocaba el borde inferior
-    camara.acercar(manualAvance ? ESPERA[estado.paso].acercar : estado.paso === 2 ? 0.03 : ACERCAR, { dur: Math.max(300, dur) });
+    // el llenado sube a lo más 0.012 por segundo: un remanso corto (fin de una acción larga) apenas se acerca
+    const objetivo = manualAvance ? ESPERA[estado.paso].lleno : LLENO_REMANSO, f0 = camara.llenado;
+    camara.llenar(Math.min(objetivo, Math.max(f0, f0 + 0.012 * Math.max(300, dur) / 1000)), { dur: Math.max(300, dur) });
     if (manualAvance) vaiven(ficha, estado.paso, vaivenPrimero(estado.paso));
   }
   const acciones = {
