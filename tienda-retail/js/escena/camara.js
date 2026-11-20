@@ -91,7 +91,7 @@ export function crearCamara({ camara, dom, anim, reloj }) {
     on: false, az: 0, pol: 52, fill: 0.88, alto: 5.4, nA: 0, nB: 0, w: 0, // w: mezcla de la planta A hacia la B
     cA: [0, 0], cB: [0, 0], L: -0.9, R: 0.9, B: -0.9, T: 0.9, // área libre en NDC
   };
-  const resA = new Float64Array(7), resB = new Float64Array(7); // d, tx, ty, tz, px, py, pz
+  const resA = new Float64Array(8), resB = new Float64Array(8); // d, tx, ty, tz, px, py, pz
   /** Puntos extra (equipos de azotea: x, y de su tope, z). Su altura se mezcla desde el pretil con E.wExt (sin saltos). */
   const MAXE = 128, ext = new Float64Array(MAXE * 3); let nExt = 0;
   E.wExt = 0;
@@ -111,7 +111,7 @@ export function crearCamara({ camara, dom, anim, reloj }) {
    * Pose para los parámetros dados (planta xz con n vértices, centro c), escrita en out. Cada vértice cuenta como un
    * cuadrado de ±HOL (muro y losa) a dos alturas. Bisección en la distancia y centrado en el plano de la imagen.
    */
-  function resolver(xz, n, c, az, pol, fill, alto, aspect, out) {
+  function resolver(xz, n, c, az, pol, fill, alto, aspect, out, iters = 5) {
     const po = Math.max(2, pol) * DEG, a = az * DEG;
     const dx = -Math.sin(po) * Math.sin(a), dy = Math.cos(po), dz = Math.sin(po) * Math.cos(a);
     const rl = Math.hypot(dz, dx) || 1, rx = dz / rl, rz = -dx / rl; // derecha = arriba × dir
@@ -144,7 +144,7 @@ export function crearCamara({ camara, dom, anim, reloj }) {
     const cMed = cSum / m, ky = fovTan, kx = fovTan * aspect;
     const Wn = (E.R - E.L) * fill, Hn = (E.T - E.B) * fill, cxN = (E.L + E.R) / 2, cyN = (E.B + E.T) / 2;
     let ox = 0, oy = 0, d = 0;
-    for (let it = 0; it < 5; it++) {
+    for (let it = 0; it < iters; it++) {
       let lo = cMax + 0.4, hi = cMax + 600;
       for (let b = 0; b < 28; b++) {
         d = (lo + hi) / 2;
@@ -158,6 +158,7 @@ export function crearCamara({ camara, dom, anim, reloj }) {
       ox += ((x0 + x1) / 2 / kx - cxN) * (d - cMed) * kx; oy += ((y0 + y1) / 2 / ky - cyN) * (d - cMed) * ky;
     }
     const tx = cx + rx * ox + ux * oy, ty = cy + uy * oy, tz = cz + rz * ox + uz * oy;
+    { let y0 = Infinity, y1 = -Infinity; for (let j = 0; j < m; j++) { const y = (pC[3 * j + 1] - oy) / (d - pC[3 * j + 2]) / ky; if (y < y0) y0 = y; if (y > y1) y1 = y; } out[7] = y1 - y0; }
     out[0] = d; out[1] = tx; out[2] = ty; out[3] = tz; out[4] = tx + dx * d; out[5] = ty + dy * d; out[6] = tz + dz * d;
     return out;
   }
@@ -171,16 +172,48 @@ export function crearCamara({ camara, dom, anim, reloj }) {
       resolver(plB, E.nB, E.cB, az, E.pol, E.fill, E.alto, asp, resB);
       for (let k = 0; k < 7; k++) resA[k] += (resB[k] - resA[k]) * E.w;
     }
+    // distancia mínima (R12): envolvente de la ventana de azimuts que recorrerá la deriva y, al cambiar de local, la
+    // envolvente monótona del viaje. Sigue a su objetivo a ≤ 15 %/s; la solución exacta siempre es el piso (nunca recorta)
+    let dObj = 0;
+    if (E.vOn && E.wVen > 0 && (E.w === 0 || E.w >= 1)) {
+      const pl = E.w >= 1 ? plB : plA, np = E.w >= 1 ? E.nB : E.nA, cc = E.w >= 1 ? E.cB : E.cA;
+      let a0 = E.v0, a1 = E.v1;
+      if (E.vDir !== 0 && (az - a0) * E.vDir > 0) { a0 = az; if ((a1 - a0) * E.vDir < 0) a1 = a0; }
+      const nS = Math.min(14, Math.ceil(Math.abs(a1 - a0) / 3));
+      let dv = 0;
+      for (let i = 0; i <= nS; i++) { const ai = nS ? a0 + ((a1 - a0) * i) / nS : a0; resolver(pl, np, cc, ai, E.pol, E.fill, E.alto, asp, pB3, 3); if (pB3[0] > dv) dv = pB3[0]; }
+      dObj = dv > resA[0] ? resA[0] + (dv - resA[0]) * E.wVen : 0; // entra mezclando desde la distancia exacta
+    }
+    if (envLleg && E.kTw >= 0) { const f = Math.min(1, E.kTw) * (envLleg.length - 1), i = Math.min(envLleg.length - 2, Math.floor(f)); dObj = Math.max(dObj, envLleg[i] + (envLleg[i + 1] - envLleg[i]) * (f - i)); }
+    const t = reloj.ahora, dt = Math.max(0, Math.min(0.2, (t - E.tUlt) / 1000)); E.tUlt = t;
+    const LIM = 0.25; // fracción de la distancia por segundo
+    if (E.dMin < 0 || anim.instantaneo) E.dMin = dObj;
+    else if (dObj >= E.dMin) E.dMin = dObj; // sube en el acto (su objetivo ya es continuo); baja despacio (acercamiento suave)
+    else E.dMin = Math.max(dObj, E.dMin - LIM * resA[0] * dt);
+    if (E.dMin > resA[0] + 1e-6) {
+      // se aleja sobre la recta que pasa por el centro del área libre: lo encuadrado se contrae hacia ese centro
+      const d = resA[0], ddx = (resA[4] - resA[1]) / d, ddy = (resA[5] - resA[2]) / d, ddz = (resA[6] - resA[3]) / d;
+      const rl = Math.hypot(ddz, ddx) || 1, rx = ddz / rl, rz = -ddx / rl, ux = ddy * rz, uy = ddz * rx - ddx * rz, uz = -ddy * rx;
+      const sx = ((E.L + E.R) / 2) * fovTan * asp * d, sy = ((E.B + E.T) / 2) * fovTan * d;
+      const pcx = resA[1] + rx * sx + ux * sy, pcy = resA[2] + uy * sy, pcz = resA[3] + rz * sx + uz * sy, f = E.dMin / d;
+      const nx = pcx + (resA[4] - pcx) * f, ny = pcy + (resA[5] - pcy) * f, nz = pcz + (resA[6] - pcz) * f;
+      resA[1] += nx - resA[4]; resA[2] += ny - resA[5]; resA[3] += nz - resA[6]; resA[4] = nx; resA[5] = ny; resA[6] = nz;
+    }
     camara.position.set(resA[4], resA[5], resA[6]); controles.target.set(resA[1], resA[2], resA[3]);
     camara.lookAt(controles.target);
     // pivote (para la velocidad de la deriva y el azimut actual): centro de la planta a la altura de encuadre
     pivote.set(E.cA[0] + (E.cB[0] - E.cA[0]) * E.w, E.alto * 0.25, E.cA[1] + (E.cB[1] - E.cA[1]) * E.w);
   }
+  /** Ventana de azimuts (absolutos) de la deriva que viene: v0..v1; vDir ±1 = se recorre en ese sentido, 0 = fija (vaivén). */
+  E.vOn = false; E.v0 = 0; E.v1 = 0; E.vDir = 0; E.dMin = -1; E.tUlt = 0; E.kTw = -1; E.wVen = 0;
+  const pB3 = new Float64Array(8);
+  let envLleg = null;
+  function ponerVentana(v, w = 1) { E.wVen = w; if (!v) { E.vOn = false; return; } E.vOn = true; E.v0 = v.desde; E.v1 = v.hasta; E.vDir = v.dir || 0; }
   /** Área libre en px → NDC. */
   let libre = null; // {x0,y0,x1,y1} px
   function libreNdc(lb, out) {
     const W = dom.clientWidth || innerWidth, H = dom.clientHeight || innerHeight;
-    const r = lb || { x0: 0.025 * H, y0: 0.025 * H, x1: W - 0.025 * H, y1: 0.975 * H };
+    const r = lb || { x0: 0.02 * H, y0: 0.02 * H, x1: W - 0.02 * H, y1: 0.98 * H };
     out.L = (2 * r.x0) / W - 1; out.R = (2 * r.x1) / W - 1; out.T = 1 - (2 * r.y0) / H; out.B = 1 - (2 * r.y1) / H;
     return out;
   }
@@ -201,12 +234,37 @@ export function crearCamara({ camara, dom, anim, reloj }) {
     Object.assign(E, { L: g.L, R: g.R, B: g.B, T: g.T, wExt: g.wExt });
     return { pos: [r[4], r[5], r[6]], obj: [r[1], r[2], r[3]] };
   }
+  /** Alto aparente (NDC) del edificio en el encuadre `op` con otro azimut (para elegir hacia dónde deriva un remanso). */
+  function altoAparente(caja, op, az) {
+    const plTmp = new Float64Array(MAXV * 2), n = cargarPlanta(plTmp, caja), c = [(caja.x0 + caja.x1) / 2, (caja.z0 + caja.z1) / 2];
+    const g = { L: E.L, R: E.R, B: E.B, T: E.T, wExt: E.wExt }, lib = libreNdc(op.libre || libre, tmpNdc); Object.assign(E, { L: lib.L, R: lib.R, B: lib.B, T: lib.T, wExt: 0 });
+    const W = dom.clientWidth || innerWidth, H = dom.clientHeight || innerHeight; fovTan = Math.tan((camara.fov * DEG) / 2);
+    const r = resolver(plTmp, n, c, az, op.polar ?? 52, op.llenado ?? 0.88, op.alto ?? 5.4, W / H, new Float64Array(8), 3);
+    Object.assign(E, g);
+    return r[7];
+  }
+  /** Distancia máxima que pide el encuadre `op` a lo largo de los azimuts az0..az1 (elige el sentido de un remanso). */
+  function distanciaMax(caja, op, az0, az1) {
+    const plTmp = new Float64Array(MAXV * 2), n = cargarPlanta(plTmp, caja), c = [(caja.x0 + caja.x1) / 2, (caja.z0 + caja.z1) / 2];
+    const g = { L: E.L, R: E.R, B: E.B, T: E.T }, lib = libreNdc(op.libre || libre, tmpNdc); Object.assign(E, { L: lib.L, R: lib.R, B: lib.B, T: lib.T });
+    const W = dom.clientWidth || innerWidth, H = dom.clientHeight || innerHeight; fovTan = Math.tan((camara.fov * DEG) / 2);
+    const extG = ext.slice(0, 3 * nExt), nG = nExt, wG = E.wExt;
+    if (op.extras && op.extras.length) { cargarExtras(op.extras); E.wExt = 1; } else E.wExt = 0;
+    const r = new Float64Array(8), nS = Math.max(1, Math.ceil(Math.abs(az1 - az0) / 3)), ds = [], hs = []; let dm = 0;
+    for (let i = 0; i <= nS; i++) { resolver(plTmp, n, c, az0 + ((az1 - az0) * i) / nS, op.polar ?? 52, op.llenado ?? 0.88, op.alto ?? 5.4, W / H, r, 3); dm = Math.max(dm, r[0]); ds.push(r[0]); hs.push(r[7]); }
+    ext.set(extG); nExt = nG; E.wExt = wG; Object.assign(E, g);
+    // alto aparente a lo largo del giro con la envolvente que usará el remanso (máximo de lo que falta por girar; el
+    // alto escala ≈ 1/distancia): el mínimo decide el sentido
+    let hMin = Infinity, suf = 0; for (let i = nS; i >= 0; i--) { suf = Math.max(suf, ds[i]); hMin = Math.min(hMin, (hs[i] * ds[i]) / suf); }
+    return { d: dm, hMin };
+  }
   /** Fija los parámetros del encuadre sin animar (la pose sale de ellos en el acto). */
   function fijarParams(caja, op) {
     E.nA = cargarPlanta(plA, caja); E.cA[0] = (caja.x0 + caja.x1) / 2; E.cA[1] = (caja.z0 + caja.z1) / 2; E.w = 0; E.nB = 0;
     const lib = libreNdc(op.libre || libre, tmpNdc);
     Object.assign(E, { on: true, az: op.azimut ?? 38, pol: op.polar ?? 52, fill: op.llenado ?? 0.88, alto: op.alto ?? 5.4, L: lib.L, R: lib.R, B: lib.B, T: lib.T });
     if (op.extras && op.extras.length) { cargarExtras(op.extras); E.wExt = 1; } else E.wExt = 0;
+    ponerVentana(op.ventana); envLleg = null; E.kTw = -1; E.dMin = -1;
     phi = 0; componerEncuadre(); bPos.copy(camara.position); bObj.copy(controles.target);
   }
   /** Viaje entre encuadres interpolando parámetros (azimut por el camino corto). Desde una pose libre: mezcla de poses. */
@@ -234,22 +292,55 @@ export function crearCamara({ camara, dom, anim, reloj }) {
     const a = { az: E.az, pol: E.pol, fill: E.fill, alto: E.alto, L: E.L, R: E.R, B: E.B, T: E.T, wExt: E.wExt }, wExt1 = conExt ? 1 : 0;
     let dAz = dst.az - a.az; dAz = ((dAz + 180) % 360 + 360) % 360 - 180;
     const abombar = op.abombar || 0;
+    // parámetros del viaje en el avance k (lineal), escritos en E (los usa el tween y la envolvente del cambio de local)
+    const curva = EASE[op.ease ?? 'io'] || EASE_IO;
+    const aplicar = (k) => {
+      const e = curva(k);
+      if (yPico) E.wPico = ss(k / 0.4) * (1 - ss((k - 0.7) / 0.28));
+      E.az = a.az + dAz * e; E.pol = a.pol + (dst.pol - a.pol) * e; E.alto = a.alto + (dst.alto - a.alto) * e;
+      E.fill = (a.fill + (dst.fill - a.fill) * e) / (1 + abombar * Math.sin(Math.PI * e));
+      E.L = a.L + (dst.lib.L - a.L) * e; E.R = a.R + (dst.lib.R - a.R) * e; E.B = a.B + (dst.lib.B - a.B) * e; E.T = a.T + (dst.lib.T - a.T) * e;
+      if (cambia) E.w = op.mezcla ? EASE_IO(Math.min(1, Math.max(0, (k - op.mezcla[0]) / (op.mezcla[1] - op.mezcla[0])))) : e;
+      if (extPendientes && k >= 0.5) { cargarExtras(op.extras); extPendientes = false; }
+      E.wExt = op.extrasAlFinal ? Math.max(a.wExt * (1 - ss(k / 0.15)), ss((k - 0.8) / 0.2)) : a.wExt + (wExt1 - a.wExt) * e;
+      return e;
+    };
+    envLleg = null; E.kTw = -1;
+    if (cambia && !anim.instantaneo) {
+      // cambio de local (R12): distancia del viaje simulada en 41 puntos (con la deriva prevista) y envolvente monótona:
+      // si en algún momento hace falta alejarse más que al empezar, no decreciente; si no, no creciente. Sin pulsos.
+      const asp = (dom.clientWidth || innerWidth) / (dom.clientHeight || innerHeight), N = 40, req = new Float64Array(N + 1);
+      const extG = ext.slice(0, 3 * nExt), nExtG = nExt, pend = extPendientes, durS = ((op.dur ?? 1400) * anim.ritmo) / 1000;
+      for (let i = 0; i <= N; i++) {
+        aplicar(i / N);
+        const azi = E.az + omegaObj * durS * (i / N);
+        resolver(plA, E.nA, E.cA, azi, E.pol, E.fill, E.alto, asp, resA, 3);
+        if (E.w > 0) { resolver(plB, E.nB, E.cB, azi, E.pol, E.fill, E.alto, asp, resB, 3); resA[0] += (resB[0] - resA[0]) * E.w; }
+        req[i] = resA[0];
+      }
+      ext.set(extG); nExt = nExtG; extPendientes = pend;
+      // arranca desde la distancia efectiva de ese momento (la del remanso anterior puede ser mayor): sin acercarse antes
+      if (E.dMin > req[0]) req[0] = E.dMin;
+      let pico = 0; for (let i = 0; i <= N; i++) pico = Math.max(pico, req[i]);
+      if (pico > req[0] * 1.002) for (let i = 1; i <= N; i++) req[i] = Math.max(req[i], req[i - 1]);
+      else for (let i = N - 1; i >= 0; i--) req[i] = Math.max(req[i], req[i + 1]);
+      envLleg = req;
+      Object.assign(E, { az: a.az, pol: a.pol, fill: a.fill, alto: a.alto, L: a.L, R: a.R, B: a.B, T: a.T, wExt: a.wExt, w: 0, wPico: 0 });
+    }
+    // la ventana entra en el último 40 % del viaje (a mitad de un arco no frena el tamaño)
+    const rampaVen = op.ventana && !op.ventana.mantener, wVen0 = rampaVen ? 0 : E.wVen;
+    ponerVentana(op.ventana, wVen0);
     return anim.tween({
       dur: op.dur ?? 1400, delay: op.delay ?? 0, ease: op.ease ?? 'io',
-      onUpdate: (e, k) => {
+      onUpdate: (e0, k) => {
         if (manual) return;
-        // entra y sale con rampas largas: cuando el pico manda, la distancia sigue a su peso
-        if (yPico) E.wPico = ss(k / 0.4) * (1 - ss((k - 0.7) / 0.28));
-        E.az = a.az + dAz * e; E.pol = a.pol + (dst.pol - a.pol) * e; E.alto = a.alto + (dst.alto - a.alto) * e;
-        E.fill = (a.fill + (dst.fill - a.fill) * e) / (1 + abombar * Math.sin(Math.PI * e));
-        E.L = a.L + (dst.lib.L - a.L) * e; E.R = a.R + (dst.lib.R - a.R) * e; E.B = a.B + (dst.lib.B - a.B) * e; E.T = a.T + (dst.lib.T - a.T) * e;
-        // mezcla de plantas: con `mezcla` [k0, k1] sigue la transformación del cascarón (misma curva 'io'); si no, el viaje
-        if (cambia) E.w = op.mezcla ? EASE_IO(Math.min(1, Math.max(0, (k - op.mezcla[0]) / (op.mezcla[1] - op.mezcla[0])))) : e;
-        // con `extrasAlFinal` (cambio de local: los equipos se retiran y se vuelven a trazar al final) los equipos salen
-        // del cuadro al empezar y vuelven en el último 20 % del viaje
-        if (extPendientes && k >= 0.5) { cargarExtras(op.extras); extPendientes = false; }
-        E.wExt = op.extrasAlFinal ? Math.max(a.wExt * (1 - ss(k / 0.15)), ss((k - 0.8) / 0.2)) : a.wExt + (wExt1 - a.wExt) * e;
+        // pico de muebles: rampas largas; mezcla de plantas con `mezcla` [k0, k1] (curva del cascarón); con
+        // `extrasAlFinal` los equipos salen al empezar y vuelven en el último 20 % del viaje
+        const e = aplicar(k);
+        if (rampaVen) E.wVen = ss((k - 0.6) / 0.4);
+        E.kTw = envLleg ? k : -1;
         componerEncuadre();
+        if (k >= 1) { envLleg = null; E.kTw = -1; }
         if (libre0 && e < 1) { // mezcla desde la pose libre de partida
           const k = 1 - e; camara.position.set(camara.position.x * e + p0[0] * k, camara.position.y * e + p0[1] * k, camara.position.z * e + p0[2] * k);
           controles.target.set(controles.target.x * e + t0[0] * k, controles.target.y * e + t0[1] * k, controles.target.z * e + t0[2] * k); camara.lookAt(controles.target);
@@ -293,8 +384,11 @@ export function crearCamara({ camara, dom, anim, reloj }) {
       if (op.llenado) {
         // la deriva sumará omegaObj durante el viaje: el azimut de destino se descuenta de antemano
         const adelanto = op.anticipar !== false && !anim.instantaneo ? (omegaObj * ((op.dur ?? 1400) + (op.delay ?? 0)) * anim.ritmo) / 1000 : 0;
-        if (anim.instantaneo || (op.dur ?? 1400) === 0) { fijarParams(caja, { ...op, azimut: (op.azimut ?? 38) - adelanto }); tween = anim.wait(0); return tween; }
-        tween = viajeParams(caja, { ...op, azimut: (op.azimut ?? 38) - adelanto });
+        // ventana de la deriva que viene, relativa al azimut pedido → absoluta
+        const az0 = op.azimut ?? 38, v = op.ventana === 'mantener' ? (E.vOn ? { desde: E.v0, hasta: E.v1, dir: E.vDir, mantener: true } : null)
+          : op.ventana ? { desde: az0 + op.ventana.desde, hasta: az0 + op.ventana.hasta, dir: op.ventana.dir || 0 } : null;
+        if (anim.instantaneo || (op.dur ?? 1400) === 0) { fijarParams(caja, { ...op, azimut: az0 - adelanto, ventana: v }); tween = anim.wait(0); return tween; }
+        tween = viajeParams(caja, { ...op, azimut: az0 - adelanto, ventana: v });
         return tween;
       }
       const { pos, obj } = plano(caja, op);
@@ -353,9 +447,9 @@ export function crearCamara({ camara, dom, anim, reloj }) {
     set cerca(v) { if (camara.near !== v) { camara.near = v; camara.updateProjectionMatrix(); } },
     get cerca() { return camara.near; },
     /** Posición y objetivo de un encuadre sin moverse (para componer planos). */
-    plano, poseEncuadre,
+    plano, poseEncuadre, altoAparente, distanciaMax,
     /** Fija un encuadre (parámetros) sin animar: la pose sale de ellos y desde ahí sigue la deriva u órbita. */
-    fijarEncuadre(caja, op) { tween?.cancel(); bb = caja; fijarParams(caja, op); },
+    fijarEncuadre(caja, op) { tween?.cancel(); bb = caja; const az0 = op.azimut ?? 38; fijarParams(caja, { ...op, ventana: op.ventana ? { desde: az0 + op.ventana.desde, hasta: az0 + op.ventana.hasta, dir: op.ventana.dir || 0 } : null }); },
     /**
      * Área libre de la interfaz en px {x0, y0, x1, y1} (null = ventana con 2.5 % de borde). La miden la app y la
      * interfaz una vez por paso, modo, escala o tamaño; el encuadre la usa para los viajes que arrancan después.

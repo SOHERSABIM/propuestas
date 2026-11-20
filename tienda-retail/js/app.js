@@ -57,11 +57,13 @@ const ritmoPaso = (i, D) => RITMO[i] * Math.min(1.7, D >= 60 ? Math.pow(D / 60, 
 const DERIVA = 2.5;
 /** En el remanso: deriva más viva. */
 const DERIVA_REMANSO = 4.5;
+/** (R12) Pasos 4-6 (nuevo layout y cambios de local): al girar el edificio pasa a mandar el ancho; deriva más lenta. */
+const DERIVA_REMANSO_LENTA = 2.2;
 /**
  * Llenado del área libre (R11): el edificio ocupa esta fracción del área libre en su dimensión limitante, con el azimut
  * real de cada cuadro. Los arcos llegan a LLENO y el remanso sube a LLENO_REMANSO (es el antiguo acercamiento).
  */
-const LLENO = 0.885, LLENO_REMANSO = 0.915, LLENO_CENITAL = 0.86;
+const LLENO = 0.94, LLENO_REMANSO = 0.97, LLENO_CENITAL = 0.92; // R12: el encuadre es exacto al píxel
 /**
  * Espera manual (pasos 1-6): vaivén a 3 °/s alrededor del azimut en que terminó la acción. Por paso: amplitud (°) y fracción
  * del acercamiento de 4 s (el encuadre de cada paso solo aguanta cierto giro; se ajustó midiendo márgenes). Primer tramo
@@ -130,7 +132,9 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
   const opRuta = () => {
     const f7 = objetivoPaso(6, D) / 21, plan = mep.plan, ductos = [];
     if (plan?.aire) for (const d of [...plan.aire.principal.filter((q) => !q.bajante), ...plan.aire.ramales]) for (let k = 1; k < d.puntos.length; k++) ductos.push([d.puntos[k - 1][0], d.puntos[k - 1][2], d.puntos[k][0], d.puntos[k][2]]);
-    return { largoObj: 25 * f7, largoMax: Math.min(40, 25.3 * f7), velocidad: VEL_RECORRIDO, ductos };
+    // techo para la mirada hacia arriba: difusores (peso 2) y luminarias (peso 1)
+    const techo = [...(plan?.aire?.difusores || []).map((d) => [d.p[0], d.p[2], d.p[1], 2]), ...(plan?.luz?.luminarias || []).map((l) => [l.p[0], l.p[2], l.p[1], 1])];
+    return { largoObj: 25 * f7, largoMax: Math.min(40, 25.3 * f7), velocidad: VEL_RECORRIDO, ductos, techo };
   };
   const claveRuta = (lay) => `${lay.localId}|${lay.id}|${lay.candidato}`;
   function prepararRuta(lay) {
@@ -211,7 +215,7 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
     traslado: { azimut: AZ[loc] + 44, polar: 52 + POL[loc], llenado: LLENO, alto: 5.4 }, // paso 4: baja girando desde el cenital (sin abombar: el encuadre ya no recorta)
     llegada: { azimut: AZ[loc] + (loc === 'B' ? 54 : loc === 'C' ? 20 : 40), polar: 52 + POL[loc], llenado: LLENO, alto: 5.4 }, // pasos 5-6: gira alrededor
     cenital: { azimut: loc === 'B' ? 90 : 0, polar: 2, llenado: LLENO_CENITAL, alto: 5.4, contador: true }, // a la derecha del plano, el contador
-    cierre: { azimut: AZ[loc] + 22, polar: 55 + POL[loc], llenado: LLENO, alto: 5.4 }, // la órbita sigue con el mismo llenado
+    cierre: { azimut: AZ[loc] + 22, polar: 55 + POL[loc], llenado: 0.94, alto: 5.4 }, // la órbita sigue con el mismo llenado
   });
   // ---------- Área libre (R11) ----------
   // Ventana menos los rectángulos REALES de la interfaz visible (.marca, .panel-ind, .rotulo-paso; en el cierre
@@ -220,7 +224,7 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
   // grande. Se lee una vez por paso, modo, fase de cierre, escala, número de tarjetas o tamaño de ventana; nunca por cuadro.
   const cacheLibre = new Map();
   function areaLibre(cierre = false, aspecto = 1.75) {
-    const W = innerWidth, H = innerHeight, borde = Math.ceil(0.025 * H);
+    const W = innerWidth, H = innerHeight, borde = Math.ceil(0.02 * H);
     const base = { x0: borde, y0: borde, x1: W - borde, y1: H - borde };
     const capa = typeof document !== 'undefined' ? document.querySelector('#ui .ui-capa') : null;
     const modo = capa?.dataset?.modo;
@@ -239,7 +243,8 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
         const r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2) continue;
         // posición de reposo: se descuenta el desplazamiento vertical de la transición de entrada (logotipo grande)
         const mt = /matrix\(([^)]+)\)/.exec(cs.transform || ''), ty = sel === '.marca-grande' && mt ? +mt[1].split(',')[5] || 0 : 0;
-        rects.push({ x0: r.left - sep, y0: r.top - ty - sep, x1: r.right + sep, y1: r.bottom - ty + sep });
+        const sp = sel === '.rotulo-paso' ? 10 * sUI : sep; // rótulo del paso: 10 px × escala; panel y logos: 14
+        rects.push({ x0: r.left - sp, y0: r.top - ty - sp, x1: r.right + sp, y1: r.bottom - ty + sp });
       }
       const xs0 = [base.x0, ...rects.map((r) => r.x1)], xs1 = [base.x1, ...rects.map((r) => r.x0)];
       const ys0 = [base.y0, ...rects.map((r) => r.y1)], ys1 = [base.y1, ...rects.map((r) => r.y0)];
@@ -258,11 +263,15 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
   function equiposAzotea() {
     const P = mep.plan; if (!P) return [];
     const out = [];
-    const add = (q) => { const r = Math.max(q.ancho, q.fondo) / 2 + 0.1, y = q.p[1] + 0.3 + q.alto + 0.1; for (const sx of [-1, 1]) for (const sz of [-1, 1]) out.push([q.p[0] + sx * r, y, q.p[2] + sz * r]); };
+    const add = (q) => { const r = Math.max(q.ancho, q.fondo) / 2, y = q.p[1] + 0.3 + q.alto + 0.05; for (const sx of [-1, 1]) for (const sz of [-1, 1]) out.push([q.p[0] + sx * r, y, q.p[2] + sz * r]); };
     for (const u of P.aire?.unidades || []) add(u);
     for (const c of P.frio?.condensadoras || []) add(c);
     return out;
   }
+  const VISTAS_REMANSO = ['general', 'mobiliario', 'instalaciones', 'traslado', 'llegada'];
+  const INVERTIR_A = { mobiliario: true, instalaciones: false, traslado: true };
+  let tPaso = 0; // inicio (reloj) del paso que se anima
+  const remansoLento = () => estado.paso >= 4 && estado.paso <= 6;
   const claveLibre = (r) => [r.x0, r.y0, r.x1, r.y1].map(Math.round).join(',');
   /** Paso 4: el plano cenital deja a su derecha (o abajo) una columna libre para el contador del sorteo. */
   function libreCenital(lib) {
@@ -359,7 +368,31 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
         const dAz = ((enc.azimut - camara.azimutActual() + 540) % 360) - 180;
         if (Math.abs(dAz) > 3) camara.deriva = Math.sign(dAz) * DERIVA;
       }
-      return camara.encuadrar(cajaLocal(op.local), enc);
+      // (R12) ventana de la deriva que sigue al encuadre final del paso: el edificio llega ya con el tamaño que resiste
+      // ese giro y en el remanso no se encoge (con reproducción: lo que falta del paso a ≈ 4 °/s en el sentido de la
+      // deriva; en espera manual: el vaivén ±12° más lo que gira hasta que termina la acción)
+      let tras = null; // sentido de la deriva al terminar el arco (si el del arco encoge el edificio, el contrario)
+      if (VISTAS_REMANSO.includes(nombre) && !op.ventana) {
+        let sg = Math.sign(camara.deriva) || 1;
+        if (estado.reproduciendo && !anim.instantaneo && enc.azimut != null && op.arco) {
+          // la deriva del remanso va hacia el lado que pide menos distancia (si el del arco obliga a alejarse)
+          // (criterio: el alto aparente más bajo que dejará la envolvente en cada sentido)
+          const cj = cajaLocal(op.local), mS = camara.distanciaMax(cj, enc, enc.azimut, enc.azimut + sg * 18), mO = camara.distanciaMax(cj, enc, enc.azimut, enc.azimut - sg * 18);
+          // primero el sentido que pide menos distancia; si ese encoge el alto > 3 % y el otro no, el otro
+          // se invierte si el otro sentido deja un alto aparente mínimo claramente mayor
+          // medido en pantalla en el local A (la caja del cascarón no depende de la semilla): mobiliario y traslado
+          // invierten, instalaciones sigue; para lo demás, la estimación
+          const tabla = (op.local || estado.local) === 'A' ? INVERTIR_A[nombre] : undefined;
+          if (tabla ?? mO.hMin > mS.hMin * 1.01) { sg = -sg; tras = sg; }
+        }
+        if (estado.reproduciendo && !anim.instantaneo) {
+          const resta = (tPaso + objetivoPaso(estado.paso - 1, D) * 1000 - (reloj.ahora + ((enc.delay || 0) + (enc.dur || 0)) * anim.ritmo)) / 1000;
+          enc.ventana = { desde: tras ? -sg * 1.5 : 0, hasta: sg * (Math.max(6, resta * (remansoLento() ? 2.4 : 4)) + 4), dir: sg }; // al invertir, cubre lo que se pasa antes de volver
+        } // en espera manual no hay ventana: el vaivén conserva el llenado (el alto respira con el giro, como en R11)
+      }
+      const h = camara.encuadrar(cajaLocal(op.local), enc);
+      if (tras) h.onDone(() => { if (!camara.manual && estado.reproduciendo) camara.deriva = tras * DERIVA; });
+      return h;
     },
     orbita(v) { camara.orbita = v; set({ orbita: v }); },
     localDelPaso,
@@ -448,7 +481,7 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
               zonas.transformar(nuevo, { delay: t.subida, dur: t.vuelo }),
               // pico: los muebles vuelan en formación sobre el pretil (5.8 m + su alto, casi nunca en las orillas: se
               // toman los vértices 1.5 m hacia el centro a 7.2 m, medido en pantalla); el encuadre los deja caber
-              ops.camara('llegada', { local: id, delay: 300, dur: t.subida + t.vuelo + t.bajada, ease: 'io', arco: true, pico: 7.2, extrasAlFinal: true,
+              ops.camara('llegada', { local: id, delay: 300, dur: t.subida + t.vuelo + t.bajada, ease: 'io', arco: true, pico: 7.8, extrasAlFinal: true,
                 mezcla: [(t.subida - 300 + 150) / (t.subida + t.vuelo + t.bajada), (t.subida + t.vuelo - 300) / (t.subida + t.vuelo + t.bajada)] }),
               zonas.rotulos(estado.rotulos, { delay: t.subida + t.vuelo + t.bajada + 400, cada: 120 }),
             ]);
@@ -605,7 +638,7 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
     const lib = areaLibre(ultimoEncuadre === 'cierre' && estado.paso === pasos.length);
     if (claveLibre(lib) === libreUsada) return;
     // se reajusta el mismo encuadre desde el azimut actual (sin volver atrás lo que giró la deriva)
-    ops.camara(ultimoEncuadre, { dur, azimut: camara.azimutActual() });
+    ops.camara(ultimoEncuadre, { dur, azimut: camara.azimutActual(), ventana: 'mantener', llenado: camara.llenado });
   }
 
   // ---------- Cola con bloqueo ----------
@@ -666,6 +699,7 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
     }
     if (n > 0 && (animarUltimo || !instantaneo)) {
       anim.ritmo = n < pasos.length ? ritmoPaso(n - 1, D) : 1; // el paso 7 reparte su tiempo él mismo
+      tPaso = reloj.ahora;
       try { const h = p.entrar(ops, { instantaneo: false }); await h?.done; } finally { anim.ritmo = 1; }
       if (!estado.reproduciendo && n < pasos.length) remanso(4000, true);
     }
@@ -687,7 +721,7 @@ export function crearApp({ params, anim, reloj, cascaron, cubierta, muebles, zon
   function remanso(dur, manualAvance = false) {
     if (estado.paso < 1 || estado.paso >= pasos.length || camara.manual) return;
     const sg = Math.sign(camara.deriva) || 1;
-    camara.deriva = sg * (manualAvance ? DERIVA_ESPERA : DERIVA_REMANSO); // en espera manual arranca el vaivén
+    camara.deriva = sg * (manualAvance ? DERIVA_ESPERA : remansoLento() ? DERIVA_REMANSO_LENTA : DERIVA_REMANSO); // en espera manual arranca el vaivén
     // en el paso 2 el encuadre va más lleno: con 12 % la esquina del edificio tocaba el borde inferior
     // el llenado sube a lo más 0.012 por segundo: un remanso corto (fin de una acción larga) apenas se acerca
     const objetivo = manualAvance ? ESPERA[estado.paso].lleno : LLENO_REMANSO, f0 = camara.llenado;
