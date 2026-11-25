@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sohersa BIM | Diagnóstico de madurez BIM · Grupo Hermosillo</title>
+<meta name="description" content="Propuesta interactiva de Sohersa BIM para Grupo Hermosillo: diagnóstico de madurez BIM alineado con la serie ISO 19650 y el modelo de Succar, y hoja de ruta estratégica. Método, áreas de evaluación, plan de trabajo, entregables, equipo e inversión.">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0B1340">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Sohersa BIM | Diagnóstico de madurez BIM · Grupo Hermosillo">
+<meta property="og:description" content="Diagnóstico de madurez BIM con evidencia y hoja de ruta estratégica: seis semanas en tres fases, en modalidad 100 % remota.">
+<link rel="icon" type="image/png" href="logo-sohersa.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* VOICE propuesta técnica y económica para el área de estándares VDC: sobria, precisa y verificable
+   IDEA la propuesta impresa de Sohersa convertida en tablero: la madurez como escalera y el servicio como ruta de seis semanas
+   PICTURE la ruta de seis semanas con fases, hitos y sincronizaciones en el hero; la escalera de cinco niveles en el método
+   COLOUR identidad Sohersa: azul marino #0B1340 dominante, verde #5DB531 de acento, papel #F4F6F2 y blanco
+   TYPE Barlow para títulos, IBM Plex Sans para texto, IBM Plex Mono para cifras y semanas
+   LAYOUT hero marino a todo el ancho con la ruta; secciones alternadas papel, blanco y marino; en teléfono, una columna */
+:root{
+  color-scheme:light;
+  --navy:#0B1340;--navy-2:#182055;--navy-3:#232C6B;--navy-tint:#E9EBF6;
+  --green:#5DB531;--green-deep:#2F7D2B;--green-ink:#237A1E;--green-tint:#E6F4DF;
+  --bg:#F4F6F2;--surface:#FFFFFF;--surface-2:#EEF1EA;--line:#D8DED3;--line-2:#C3CBBD;
+  --fg:#121735;--fg-2:#454C6B;--muted:#5E6684;--on-navy:#FFFFFF;--on-navy-2:#C7CDE8;
+  --navy-line:rgba(255,255,255,.22);--navy-tile:rgba(255,255,255,.07);
+  --l0:#DCE0F0;--l1:#AAB5DF;--l2:#5466B3;--l3:#2F4192;--l4:#0B1340;
+  --radius:14px;--radius-sm:8px;--radius-xs:4px;--shadow:0 12px 32px rgba(11,19,64,.10);
+  --fd:'Barlow',system-ui,sans-serif;--fb:'IBM Plex Sans',system-ui,sans-serif;--fm:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --gutter:24px;--sec-pad:96px;--topbar-h:64px;--dur:200ms;
+  --focus:0 0 0 2px #fff,0 0 0 4px var(--navy);
+}
+@media (max-width:639px){:root{--gutter:16px;--sec-pad:56px;--topbar-h:56px}}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;scroll-padding-top:calc(var(--topbar-h) + 12px)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--fb);font-size:16px;line-height:1.55;overflow-x:clip;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+h1,h2,h3,h4{font-family:var(--fd);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance;font-weight:700}
+p,figure,dl,dd{margin:0}
+ul,ol{margin:0;padding-left:1.2em}
+li{margin:4px 0}
+img,svg{max-width:100%}
+img{display:block;height:auto}
+a{color:var(--navy);text-underline-offset:3px;text-decoration-thickness:1px}
+a:hover{text-decoration-thickness:2px}
+button,input{font:inherit;color:inherit}
+button{background:none;border:0;padding:0;cursor:pointer;text-align:left}
+table{border-collapse:collapse;width:100%}
+[hidden]{display:none!important}
+:focus:not(:focus-visible){outline:none}
+:focus-visible{outline:2px solid transparent;box-shadow:var(--focus);border-radius:4px}
+::selection{background:var(--navy-tint)}
+main{display:block}
+main:focus{outline:none}
+.ico{flex:0 0 auto;display:inline-block;vertical-align:middle;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.mono{font-family:var(--fm);font-variant-numeric:tabular-nums}
+.nw{white-space:nowrap}
+.wrap{max-width:1200px;margin-inline:auto;padding-left:max(var(--gutter),env(safe-area-inset-left,0px));padding-right:max(var(--gutter),env(safe-area-inset-right,0px))}
+.eyebrow{font-family:var(--fm);font-size:12.5px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--green-ink)}
+.skip{position:absolute;left:12px;top:-60px;z-index:100;background:var(--navy);color:#fff;padding:10px 16px;border-radius:var(--radius-sm);font-weight:600;text-decoration:none}
+.skip:focus{top:12px}
+
+.topbar{position:sticky;top:0;z-index:50;background:var(--surface);border-bottom:1px solid var(--line)}
+.topbar-in{display:flex;align-items:center;gap:16px;height:var(--topbar-h);max-width:1248px;margin-inline:auto;padding-left:max(var(--gutter),env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+.brand{flex:0 0 auto;display:flex;align-items:center;border-radius:var(--radius-sm);padding:2px 4px}
+.brand img{height:40px;width:auto}
+.nav{flex:1 1 auto;min-width:0;position:relative;display:flex;justify-content:flex-end}
+.nav-scroll{min-width:0;overflow-x:auto;scrollbar-width:none;--fl:0px;--fr:0px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 var(--fl),#000 calc(100% - var(--fr)),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 var(--fl),#000 calc(100% - var(--fr)),transparent 100%)}
+.nav-scroll::-webkit-scrollbar{display:none}
+.nav-scroll.fade-l{--fl:40px}
+.nav-scroll.fade-r{--fr:40px}
+.nav-list{display:flex;gap:2px;list-style:none;margin:0;padding:6px 4px;width:max-content}
+.nav-list li,.nav-menu-list li{margin:0}
+.nav-link{display:flex;align-items:center;min-height:40px;white-space:nowrap;text-decoration:none;color:var(--fg-2);font-family:var(--fd);font-weight:600;font-size:15px;padding:6px 9px;border-radius:var(--radius-sm);transition:background var(--dur),color var(--dur)}
+.nav-link:hover{background:var(--surface-2);color:var(--fg)}
+.nav-link.is-active{color:var(--green-ink);background:var(--green-tint)}
+.nav-toggle{display:none;align-items:center;gap:8px;min-height:44px;padding:6px 12px;border:1px solid var(--line-2);border-radius:var(--radius-sm);background:var(--surface);color:var(--navy);font-family:var(--fd);font-weight:600;font-size:15px}
+.nav-toggle:hover{background:var(--navy-tint);border-color:var(--navy)}
+.nav-chev{transition:transform var(--dur)}
+.nav-toggle[aria-expanded=true] .nav-chev{transform:rotate(180deg)}
+.nav-menu{position:absolute;right:0;top:calc(100% + 10px);width:min(300px,calc(100vw - 32px));max-height:calc(100vh - var(--topbar-h) - 24px);overflow-y:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:6px;z-index:60}
+.nav-menu-list{list-style:none;margin:0;padding:0}
+.nav-menu-link{display:flex;align-items:center;min-height:44px;padding:8px 12px;border-radius:var(--radius-sm);text-decoration:none;color:var(--fg);font-family:var(--fd);font-weight:600;font-size:16px}
+.nav-menu-link:hover{background:var(--surface-2)}
+.nav-menu-link.is-active{color:var(--green-ink);background:var(--green-tint)}
+@media (max-width:1280px){.nav-link{font-size:14px;padding:6px 7px}.nav-list{gap:0}}
+@media (max-width:1099px){.nav-scroll{display:none}.nav-toggle{display:inline-flex}.topbar-in{padding-right:max(var(--gutter),env(safe-area-inset-right,0px))}}
+@media (max-width:639px){.brand img{height:32px}}
+
+.hero{position:relative;background:var(--navy);color:var(--on-navy);overflow:hidden;isolation:isolate}
+.hero-art{position:absolute;top:0;left:0;width:clamp(410px,30vw,500px);height:auto;z-index:-1}
+.hero-stripes{position:absolute;top:0;right:0;width:min(520px,42vw);height:auto;z-index:-1}
+.hero-cut{position:absolute;right:0;bottom:0;width:min(680px,55vw);height:auto;z-index:-1}
+.hero-in{position:relative;padding-top:28px;padding-bottom:48px}
+.hero-copy{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,410px);column-gap:56px;align-items:end}
+.hero-copy>.hero-logo,.hero-copy>.hero-eyebrow{grid-column:1/-1;justify-self:start}
+.hero-logo{display:inline-flex;background:#fff;border-radius:var(--radius-sm);padding:6px 12px;margin-bottom:16px;box-shadow:0 6px 18px rgba(11,19,64,.25)}
+.hero-logo img{height:48px;width:auto}
+.hero-eyebrow{font-family:var(--fm);font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--green);font-weight:500}
+.hero-eyebrow span{white-space:nowrap}
+.hero h1{font-size:clamp(40px,5.2vw,64px);font-weight:800;line-height:1.02;letter-spacing:-.015em;margin-top:12px;color:var(--on-navy)}
+.hero h1 small{display:block;color:var(--green);font-weight:600;font-size:clamp(20px,2.4vw,28px);letter-spacing:0;margin-top:10px;line-height:1.2}
+.hero-lead{color:var(--on-navy-2);max-width:62ch;font-size:17px;margin-top:20px}
+@media (min-width:1100px){.hero-lead{margin:0 0 4px;padding-left:20px;border-left:3px solid var(--green)}}
+@media (max-width:1099px){.hero-copy{grid-template-columns:minmax(0,1fr)}.hero-copy>*{max-width:800px}}
+@media (max-width:899px){.hero-logo{display:none}.hero-art{width:300px}.hero-in{padding-top:88px}}
+@media (max-width:639px){.hero-art{width:220px}.hero-stripes{width:118px}.hero-in{padding-top:66px;padding-bottom:40px}.hero-eyebrow{letter-spacing:.08em}}
+
+.route{margin-top:36px;background:var(--surface);color:var(--fg);border-radius:var(--radius);padding:22px 24px 18px;box-shadow:0 18px 40px rgba(0,0,0,.22)}
+.route-cap{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px 20px;margin-bottom:6px}
+.route-t{font-family:var(--fd);font-weight:700;font-size:19px}
+.route-legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13.5px;color:var(--fg-2)}
+.rk{display:inline-flex;align-items:center;gap:7px}
+.rk::before{content:"";display:inline-block}
+.rk--fase::before{width:18px;height:8px;border-radius:4px;background:var(--navy)}
+.rk--hito::before{width:9px;height:9px;transform:rotate(45deg);background:var(--green)}
+.rk--sync::before{width:10px;height:10px;border-radius:50%;border:2px solid var(--green-deep);background:#fff}
+.rt{display:grid;grid-template-columns:minmax(150px,210px) minmax(0,1fr);align-items:center;column-gap:16px}
+.rt-lab{font-size:13.5px;color:var(--fg-2);line-height:1.25;padding-block:6px}
+.rt-lab b{display:block;color:var(--fg);font-family:var(--fd);font-weight:700;font-size:15px}
+.rt-track{position:relative;align-self:stretch;min-height:44px;border-left:1px solid var(--line);background:repeating-linear-gradient(90deg,transparent 0 calc(16.6667% - 1px),var(--line) calc(16.6667% - 1px) 16.6667%)}
+.rt-flags{height:66px;border-left:0;background:none}
+.flag{position:absolute;top:var(--t);bottom:0;right:calc((1 - var(--x)) * 100%);padding-right:8px;border-right:2px solid var(--navy);font-size:13.5px;font-weight:600;line-height:1.2;white-space:nowrap;text-align:right;color:var(--fg)}
+.flag small{display:block;font-family:var(--fm);font-weight:400;font-size:12px;color:var(--muted)}
+.flag--l{right:auto;left:calc(var(--x) * 100%);border-right:0;border-left:2px solid var(--navy);padding-right:0;padding-left:8px;text-align:left}
+.rt-weeks{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));align-items:end;border-bottom:2px solid var(--navy);background:var(--surface-2)}
+.rt-weeks>span{display:flex;flex-direction:column;align-items:center;font-family:var(--fm);font-size:12.5px;color:var(--fg-2);padding:6px 2px;line-height:1.25;text-align:center}
+.rt-weeks b{font-weight:500;color:var(--fg)}
+.rt-weeks small{font-size:12px;color:var(--green-ink)}
+.rt-weeks small:empty{display:none}
+.dia{position:absolute;bottom:-7px;left:calc(var(--x) * 100%);width:12px;height:12px;background:var(--green);border:2px solid #fff;transform:translateX(-50%) rotate(45deg)}
+.rt-bar{position:absolute;top:8px;bottom:8px;left:calc(var(--a) * 100% + 3px);width:calc((var(--b) - var(--a)) * 100% - 6px);display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--navy);color:#fff;font-family:var(--fm);font-size:12.5px;text-decoration:none;white-space:nowrap;overflow:hidden;transition:background var(--dur)}
+.rt-bar:hover{background:var(--navy-3)}
+.rt-bar:focus-visible{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--green-deep)}
+.rt-sync i{position:absolute;top:50%;left:calc(var(--x) * 100%);width:13px;height:13px;border-radius:50%;border:2px solid var(--green-deep);background:#fff;transform:translate(-50%,-50%)}
+.rt-hitos{display:none}
+.route-hint{margin-top:14px;font-size:13.5px;color:var(--fg-2)}
+@media (max-width:639px){
+.route{padding:18px 16px 14px;margin-top:28px}
+.rt{grid-template-columns:minmax(0,1fr)}
+.rt-lab{padding:12px 0 6px}
+.rt-lab b{display:inline;font-size:14.5px;margin-right:6px}
+.rt-lab--flags,.rt-flags{display:none}
+.rt-lab--axis{display:none}
+.rt-hitos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;list-style:none;margin:16px 0 0;padding:12px 0 0;border-top:1px solid var(--line);font-size:13.5px}
+.rt-hitos li{margin:0;display:flex;gap:8px;align-items:baseline}
+.rt-hitos b{font-family:var(--fm);font-weight:500;color:var(--green-ink)}
+}
+
+.hero-figs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:28px;border-top:1px solid var(--navy-line)}
+.hero-fig{padding:14px 20px 4px 0;min-width:0}
+.hero-fig+.hero-fig{padding-left:20px;border-left:1px solid var(--navy-line)}
+.hero-fig dt{font-family:var(--fd);font-weight:800;font-size:clamp(30px,3vw,40px);line-height:1;letter-spacing:-.01em;color:var(--on-navy);white-space:nowrap}
+.hero-fig dt small{font-size:.5em;font-weight:600;color:var(--green);letter-spacing:0;margin-left:5px}
+.hero-fig dt small.pre{margin:0 6px 0 0}
+.hero-fig dd{font-size:14px;line-height:1.4;color:var(--on-navy-2);margin-top:8px;max-width:26ch}
+@media (max-width:899px){.hero-figs{grid-template-columns:repeat(2,minmax(0,1fr))}.hero-fig,.hero-fig+.hero-fig{padding:16px 12px 14px 0;border-left:0}.hero-fig:nth-child(even){padding-left:16px;border-left:1px solid var(--navy-line)}.hero-fig:nth-child(n+3){border-top:1px solid var(--navy-line)}}
+
+.sec{padding-block:var(--sec-pad);position:relative}
+.sec--paper{background:var(--bg)}
+.sec--white{background:var(--surface);border-block:1px solid var(--line)}
+.sec--navy{background:var(--navy);color:var(--on-navy)}
+.sec--navy .eyebrow{color:var(--green)}
+.sec--navy .sec-head p{color:var(--on-navy-2)}
+.sec-head{max-width:76ch;margin-bottom:40px}
+.sec-head .eyebrow{display:block}
+.sec-head h2{font-size:clamp(28px,3.6vw,44px);font-weight:800;line-height:1.06;margin-top:10px}
+.sec-head p{margin-top:14px;font-size:17px;color:var(--fg-2);max-width:68ch;text-wrap:pretty}
+.blk-h{font-family:var(--fd);font-size:24px;font-weight:700;line-height:1.15;letter-spacing:-.01em}
+.blk-p{margin-top:6px;color:var(--fg-2);max-width:68ch}
+.sub{margin-top:56px}
+.sub-h{margin-bottom:18px}
+.sec-end{display:block;height:14px;margin-top:56px;width:min(280px,60%);background:repeating-linear-gradient(-60deg,var(--green) 0 10px,transparent 10px 22px)}
+.panel{background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:var(--radius);padding:24px;min-width:0}
+.panel--paper{background:var(--bg)}
+.pnl-h{font-family:var(--fd);font-size:20px;font-weight:700;line-height:1.2;letter-spacing:-.005em}
+.lbl{display:block;font-size:13.5px;font-weight:600;color:var(--muted);margin:16px 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:3px 9px;border-radius:var(--radius-sm);background:var(--surface-2);color:var(--fg-2);font-size:13.5px;font-weight:500;line-height:1.35}
+.chip--navy{background:var(--navy);color:#fff}
+.chip--green{background:var(--green-tint);color:var(--green-ink)}
+.chip--tint{background:var(--navy-tint);color:var(--fg)}
+.tag{display:inline-flex;align-items:center;gap:4px;font-family:var(--fm);font-size:12.5px;font-weight:500;line-height:1.2;padding:3px 8px;border-radius:var(--radius-xs);border:1px solid var(--line-2);background:var(--surface);color:var(--navy);white-space:nowrap;text-decoration:none;transition:background var(--dur),border-color var(--dur)}
+a.tag:hover{background:var(--navy-tint);border-color:var(--navy)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:9px 18px;border-radius:var(--radius-sm);border:1.5px solid transparent;font-family:var(--fd);font-weight:600;font-size:15.5px;line-height:1.15;text-decoration:none;white-space:nowrap;cursor:pointer;transition:background var(--dur),color var(--dur),border-color var(--dur)}
+.btn--sm{min-height:40px;padding:6px 12px;font-size:14px}
+.btn--light{background:var(--on-navy);color:var(--navy)}
+.btn--light:hover{background:var(--navy-tint)}
+.btn--outline-light{background:transparent;border-color:var(--on-navy-2);color:var(--on-navy)}
+.btn--outline-light:hover{background:var(--navy-2)}
+.btn.is-done{background:var(--green-tint);border-color:var(--green-deep);color:var(--green-ink)}
+.is-flash{animation:flash 1.6s ease-out}
+@keyframes flash{0%{box-shadow:0 0 0 0 rgba(93,181,49,0)}12%{box-shadow:0 0 0 5px var(--green)}100%{box-shadow:0 0 0 0 rgba(93,181,49,0)}}
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+.life{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+.life li{margin:0;display:flex;align-items:center;justify-content:center;min-height:54px;padding:8px 20px;background:var(--navy-2);color:#fff;font-family:var(--fd);font-weight:600;font-size:16px;text-align:center;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%,14px 50%)}
+.life li:first-child{clip-path:polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%);border-radius:8px 0 0 8px}
+.life li:last-child{clip-path:polygon(0 0,100% 0,100% 100%,0 100%,14px 50%);border-radius:0 8px 8px 0;background:var(--navy)}
+.life-cap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13.5px;color:var(--muted);margin-bottom:10px}
+.gets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.get{display:flex;flex-direction:column;gap:10px}
+.get-i{flex:0 0 44px;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--navy);color:var(--green)}
+.get h3{font-size:20px}
+.get p{color:var(--fg-2);font-size:15.5px}
+.gets-foot{margin-top:18px;color:var(--fg-2);max-width:80ch}
+.prem{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.prem .panel{display:flex;flex-direction:column;gap:10px;padding:22px}
+.prem-i{color:var(--green-ink)}
+.prem h3{font-size:18.5px}
+.prem p{font-size:15px;color:var(--fg-2)}
+.noinc{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:16px 32px;align-items:start}
+.noinc-l{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 24px}
+.noinc-l li{margin:0;display:flex;gap:10px;align-items:flex-start;color:var(--fg-2)}
+.noinc-l .ico{color:#B42318;margin-top:2px}
+@media (max-width:1099px){.prem{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:899px){.gets{grid-template-columns:minmax(0,1fr)}.get{flex-direction:row;align-items:flex-start;gap:16px}.noinc{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:899px){.life{grid-template-columns:minmax(0,1fr);gap:3px}.life li,.life li:first-child,.life li:last-child{clip-path:none;border-radius:6px;min-height:44px;justify-content:flex-start}.life li:first-child{border-radius:8px 8px 6px 6px}.life li:last-child{border-radius:6px 6px 8px 8px}}
+@media (max-width:639px){.prem{grid-template-columns:minmax(0,1fr)}.noinc-l{grid-template-columns:minmax(0,1fr)}}
+
+.met{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:stretch}
+.met p{color:var(--fg-2)}
+.iso{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:8px}
+.iso li{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--bg)}
+.iso b{font-family:var(--fm);font-weight:500;font-size:13px;color:var(--navy);background:var(--navy-tint);padding:3px 8px;border-radius:var(--radius-xs);white-space:nowrap}
+.chain{list-style:none;padding:0;margin:14px 0 0;counter-reset:c}
+.chain li{counter-increment:c;margin:0;position:relative;padding:0 0 16px 46px}
+.chain li::before{content:counter(c);position:absolute;left:0;top:0;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--navy);color:#fff;font-family:var(--fm);font-size:13px}
+.chain li::after{content:"";position:absolute;left:14px;top:32px;bottom:2px;width:2px;background:var(--line-2)}
+.chain li:last-child{padding-bottom:0}
+.chain li:last-child::after{display:none}
+.chain b{display:block;font-family:var(--fd);font-size:17px;color:var(--fg);line-height:1.3}
+.chain span{display:block;font-size:15px;color:var(--fg-2)}
+.stairs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));column-gap:12px;margin-top:8px}
+.st-step{grid-row:1;align-self:end;height:calc(72px + var(--n) * 30px);display:flex;flex-direction:column;justify-content:flex-end;gap:2px;padding:12px 14px;border-radius:10px 10px 0 0;background:var(--c);color:var(--k)}
+.st-step span{font-family:var(--fm);font-size:12.5px;opacity:.9}
+.st-step b{font-family:var(--fd);font-size:21px;font-weight:700;line-height:1.1}
+.st-txt{grid-row:2;padding:14px 2px 0;border-top:3px solid var(--c);font-size:15px;color:var(--fg-2)}
+@media (max-width:899px){.met{grid-template-columns:minmax(0,1fr)}.stairs{display:flex;flex-direction:column;gap:0}.st-step{order:var(--o);align-self:flex-start;justify-content:flex-start;height:auto;width:calc(44% + var(--n) * 14%);flex-direction:row;align-items:baseline;gap:10px;border-radius:8px 8px 0 0;margin-top:18px}.st-txt{order:calc(var(--o) + 1);padding-top:10px}}
+
+.ar-list{list-style:none;padding:0;margin:0;border-top:2px solid var(--navy)}
+.ar-head,.ar{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.45fr) minmax(0,1.2fr);gap:24px;padding:18px 4px;border-bottom:1px solid var(--line)}
+.ar-head{padding-block:10px;font-size:13.5px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--line-2)}
+.ar{margin:0}
+.ar-n{display:flex;gap:12px;align-items:flex-start}
+.ar-n i{font-style:normal;flex:0 0 auto;width:32px;height:32px;border-radius:8px;display:grid;place-items:center;background:var(--navy);color:#fff;font-family:var(--fm);font-size:13.5px}
+.ar-n b{font-family:var(--fd);font-size:19px;line-height:1.2;padding-top:3px}
+.ar-t{color:var(--fg-2);font-size:15.5px}
+.ar .lbl{display:none}
+@media (max-width:899px){.ar-head{display:none}.ar{grid-template-columns:minmax(0,1fr);gap:8px;padding:20px 0}.ar .lbl{display:block;margin:8px 0 4px}}
+
+.mu{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr);gap:4px;margin-top:4px}
+.mu-z{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px 14px 16px;display:flex;flex-direction:column;gap:12px}
+.mu-z h3{font-size:16.5px;line-height:1.2}
+.mu-z h3 small{display:block;font-family:var(--fb);font-weight:400;font-size:13.5px;color:var(--muted);margin-top:2px}
+.mu-ps{display:flex;gap:10px;flex-wrap:wrap}
+.mu-p{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:var(--navy);color:#fff;font-family:var(--fm);font-size:13px}
+.mu-p .ico{color:var(--green)}
+.mu-crit{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:28px}
+.mu-crit h3{font-size:18.5px;margin-bottom:6px}
+.mu-crit p{font-size:15px;color:var(--fg-2)}
+@media (max-width:899px){.mu-crit{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:639px){.mu{grid-template-columns:minmax(0,1fr)}}
+
+.cal{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 32px;padding:18px 20px;margin-bottom:24px;border:1px solid var(--navy-line);border-radius:var(--radius);background:var(--navy-2)}
+.cal label{display:block;font-size:14px;font-weight:600;color:var(--on-navy);margin-bottom:8px}
+.cal-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.cal input{min-height:44px;padding:8px 12px;font-size:16px;border-radius:var(--radius-sm);border:1px solid var(--on-navy-2);background:#fff;color:var(--fg);min-width:200px}
+.cal-st{flex:1 1 320px;max-width:62ch;font-size:14.5px;color:var(--on-navy-2)}
+.fases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;align-items:stretch}
+.fase{display:flex;flex-direction:column;gap:14px;padding:22px 22px 24px;scroll-margin-top:calc(var(--topbar-h) + 16px)}
+.fase-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.fase-w{font-family:var(--fm);font-size:13px;color:var(--fg-2)}
+.fase-d{display:block;font-family:var(--fm);font-size:13px;color:var(--green-ink);margin-top:2px}
+.ruler{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
+.ruler i{height:8px;border-radius:2px;background:var(--surface-2)}
+.ruler i.on{background:var(--navy)}
+.fase h3{font-size:21px}
+.fase .lbl{margin:2px 0 0}
+.fase ul{list-style:none;padding:0}
+.fase li{position:relative;padding-left:16px;font-size:15px;color:var(--fg-2)}
+.fase li::before{content:"";position:absolute;left:0;top:.6em;width:7px;height:7px;border-radius:2px;background:var(--navy)}
+.fase .ent-p li::before{background:var(--green);border-radius:50%}
+.prg-sub{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;margin-top:20px}
+.hitos td,.hitos th{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:15px}
+.hitos thead th{white-space:nowrap;font-size:13px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--line-2)}
+.hitos tbody th{font-weight:600;color:var(--fg)}
+.hitos td{color:var(--fg-2)}
+.hitos td.f{font-family:var(--fm);font-size:13.5px;white-space:nowrap;color:var(--green-ink)}
+.hitos small{display:block;font-weight:400;color:var(--muted);font-size:13px}
+.seg p{color:var(--fg-2);font-size:15px;margin-top:8px}
+.seg ul{margin-top:8px;color:var(--fg-2);font-size:15px}
+.seg-dots{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin-top:16px}
+.seg-dots span{display:flex;flex-direction:column;align-items:center;gap:4px;font-family:var(--fm);font-size:12.5px;color:var(--fg-2)}
+.seg-dots span::before{content:"";width:14px;height:14px;border-radius:50%;border:2px solid var(--green-deep);background:#fff}
+.seg-dots small{font-size:11.5px;color:var(--green-ink)}
+.seg-dots small:empty{display:none}
+@media (max-width:1023px){.fases{grid-template-columns:minmax(0,1fr)}.prg-sub{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:639px){.cal{padding:16px}.cal input{min-width:0;width:100%}.cal-row{width:100%}.hitos thead{display:none}.hitos tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:10px 0;border-bottom:1px solid var(--line)}.hitos td,.hitos th{border:0;padding:0}.hitos tbody th{grid-column:1/-1}}
+
+.ent{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;align-items:stretch}
+.ent .panel{display:flex;flex-direction:column;gap:12px;scroll-margin-top:calc(var(--topbar-h) + 16px)}
+.ent-i{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:var(--green-tint);color:var(--green-ink)}
+.ent h3{font-size:21px}
+.ent p{font-size:15px;color:var(--fg-2)}
+.ent-when{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);font-family:var(--fm);font-size:13px;color:var(--fg-2)}
+@media (max-width:1023px){.ent{grid-template-columns:minmax(0,1fr)}}
+
+.firm{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:80ch;color:var(--fg-2)}
+.team-h{margin-bottom:0}
+.team{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:18px;align-items:stretch}
+.pro{display:flex;flex-direction:column;gap:4px;border-top:5px solid var(--navy);padding:26px}
+.pro h3{font-size:24px;line-height:1.15}
+.pro-t{color:var(--fg-2);font-weight:500}
+.pro-role{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.ded{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:center;margin-top:14px}
+.ded-bar{height:12px;border-radius:6px;background:var(--surface-2);overflow:hidden}
+.ded-bar i{display:block;height:100%;width:calc(var(--b) * 1%);background:linear-gradient(90deg,var(--navy) 0 calc(var(--a) / var(--b) * 100%),transparent 0),repeating-linear-gradient(-60deg,var(--navy) 0 2px,var(--navy-tint) 2px 6px)}
+.ded-v{font-family:var(--fm);font-size:14px;color:var(--fg);white-space:nowrap}
+.ded-k{grid-column:1/-1;font-size:13px;color:var(--muted)}
+.pro p{color:var(--fg-2);font-size:15px}
+.pro p+p{margin-top:8px}
+.pro ul{font-size:15px;color:var(--fg-2)}
+.raci th,.raci td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:15px}
+.raci thead th{font-size:13.5px;font-weight:600;color:var(--muted);border-bottom:2px solid var(--navy)}
+.raci tbody th{font-family:var(--fd);font-size:16.5px;font-weight:700;color:var(--fg);width:32%}
+.raci td{color:var(--fg-2)}
+.raci td b{color:var(--fg)}
+@media (max-width:899px){.team{grid-template-columns:minmax(0,1fr)}.pro{padding:22px 18px}}
+@media (max-width:639px){.raci thead{display:none}.raci tr{display:grid;padding:12px 0;border-bottom:1px solid var(--line)}.raci th,.raci td,.raci tbody th{border:0;padding:3px 0;width:auto}.raci td::before{content:attr(data-l);display:block;font-size:13px;font-weight:600;color:var(--muted)}}
+
+.cmp{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.cmp-i{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);align-content:start;gap:6px 14px;padding:20px 22px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);transition:border-color var(--dur),background var(--dur)}
+.cmp-i.is-ok{border-color:var(--green-deep);background:#FAFDF8}
+.cmp-c{display:flex;align-items:center;justify-content:center;width:44px;height:44px;margin:-6px 0 0 -6px;cursor:pointer;border-radius:10px}
+.cmp-c input{width:22px;height:22px;accent-color:var(--green-deep);cursor:pointer;margin:0}
+.cmp-i h3{font-size:19px;line-height:1.25}
+.cmp-i p{grid-column:2;color:var(--fg-2);font-size:15.5px}
+.cmp-dl{grid-column:2;display:inline-block;margin-top:6px;font-family:var(--fm);font-size:13.5px;color:var(--green-ink)}
+.cmp-n{margin-top:14px;font-size:14px;color:var(--muted)}
+@media (max-width:899px){.cmp{grid-template-columns:minmax(0,1fr)}}
+
+.inv-sum{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:24px 48px;align-items:center;padding:28px 32px}
+.inv-k{font-family:var(--fm);font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.inv-tot{font-family:var(--fd);font-weight:800;font-size:clamp(38px,5vw,60px);line-height:1;letter-spacing:-.015em;color:var(--navy);margin-top:10px;white-space:nowrap}
+.inv-iva{margin-top:10px;color:var(--fg-2)}
+.inv-bar{display:flex;gap:3px;height:54px}
+.inv-bar a{display:flex;align-items:center;justify-content:center;flex:var(--p) 1 0;min-width:0;border-radius:6px;background:var(--navy);color:#fff;font-family:var(--fd);font-weight:700;font-size:17px;text-decoration:none;transition:background var(--dur)}
+.inv-bar a:nth-child(2){background:var(--navy-3)}
+.inv-bar a:nth-child(3){background:var(--l2)}
+.inv-bar a:hover{background:var(--green-deep)}
+.inv-bar-k{display:flex;gap:3px;margin-top:6px;font-family:var(--fm);font-size:13px;color:var(--fg-2)}
+.inv-bar-k span{flex:var(--p) 1 0;min-width:0;text-align:center}
+.inv-bar-n{margin-top:10px;font-size:14px;color:var(--muted)}
+.inv-tab{margin-top:8px}
+.inv-tab th,.inv-tab td{padding:14px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:15px}
+.inv-tab thead th{font-size:13.5px;font-weight:600;color:var(--muted);border-bottom:2px solid var(--navy)}
+.inv-tab tbody th{font-family:var(--fd);font-size:17px;font-weight:700;color:var(--fg)}
+.inv-tab tbody th small{display:block;font-family:var(--fm);font-weight:400;font-size:12.5px;color:var(--muted);margin-top:3px}
+.inv-tab td{color:var(--fg-2)}
+.inv-tab thead th.n{font-family:var(--fb)}
+.inv-tab .n{text-align:right;font-family:var(--fm);font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--fg)}
+.inv-tab tfoot th,.inv-tab tfoot td{border-bottom:0;border-top:2px solid var(--navy);font-weight:600;color:var(--fg)}
+.inv-tab tfoot th{font-family:var(--fd);font-size:18px}
+.inv-tab tfoot .n{font-size:17px;font-weight:500}
+.inv-tab tr{scroll-margin-top:calc(var(--topbar-h) + 16px)}
+.pay-bar{display:flex;gap:3px;margin-top:4px}
+.pay-bar span{flex:var(--p) 1 0;min-width:0;height:14px;border-radius:4px;background:var(--navy)}
+.pay-bar span:nth-child(1){background:var(--green-deep)}
+.pay-bar span:nth-child(2){background:var(--navy)}
+.pay-bar span:nth-child(3){background:var(--navy-3)}
+.pay-bar span:nth-child(4){background:var(--l2)}
+.pay{list-style:none;padding:0;margin:14px 0 0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.pay li{margin:0;display:flex;flex-direction:column;gap:6px;padding:18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.pay-p{font-family:var(--fd);font-weight:800;font-size:30px;line-height:1;color:var(--navy)}
+.pay-p small{font-size:.55em;font-weight:700;margin-left:3px}
+.pay h4{font-size:17px}
+.pay-m{font-family:var(--fm);font-size:14.5px;color:var(--fg);white-space:nowrap}
+.pay p{font-size:14.5px;color:var(--fg-2)}
+.pay-w{margin-top:auto;padding-top:10px;border-top:1px solid var(--line);font-family:var(--fm);font-size:13px;color:var(--fg-2)}
+.pay-w span{display:block;color:var(--green-ink)}
+.terms{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.terms .panel{padding:22px}
+.terms h3{font-size:18.5px;margin-bottom:6px}
+.terms p{font-size:15px;color:var(--fg-2)}
+@media (max-width:1023px){.pay{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:899px){.inv-sum{grid-template-columns:minmax(0,1fr);padding:24px 20px}.terms{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:639px){.pay{grid-template-columns:minmax(0,1fr)}.inv-bar a{font-size:15px}.inv-tab thead{display:none}.inv-tab tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:6px 12px;padding:14px 0;border-bottom:1px solid var(--line)}.inv-tab th,.inv-tab td{border:0;padding:0}.inv-tab tbody th,.inv-tab tfoot th{grid-column:1/-1}.inv-tab td.d{grid-column:1/-1}.inv-tab td::before{content:attr(data-l);display:block;font-family:var(--fb);font-size:12.5px;font-weight:600;color:var(--muted)}.inv-tab td.d::before{display:none}.inv-tab .n{text-align:left}.inv-tab td:last-child{text-align:right}.inv-tab tfoot tr{border-top:2px solid var(--navy);border-bottom:0}.inv-tab tfoot th,.inv-tab tfoot td{border-top:0}}
+
+.cob{columns:2 400px;column-gap:20px}
+.cob-g{break-inside:avoid;margin:0 0 20px;padding:20px 22px}
+.cob-g h3{font-size:18.5px;margin-bottom:6px}
+.cob-l{list-style:none;padding:0;margin:0}
+.cob-l li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px;margin:0;padding:12px 0;border-top:1px solid var(--line)}
+.cob-l li:first-child{border-top:0}
+.cob-l .ico{color:var(--green-ink);margin-top:2px}
+.cob-r{font-weight:600;color:var(--fg);font-size:15px;line-height:1.35}
+.cob-a{grid-column:2;font-size:14.5px;color:var(--fg-2)}
+.cob-a .tag{margin-left:6px;vertical-align:1px}
+
+.ctc{overflow:hidden}
+.ctc-stripes{position:absolute;top:0;right:0;width:min(400px,50vw);height:auto;opacity:.9}
+.ctc-in{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:32px 56px;align-items:start}
+.ctc .sec-head{margin-bottom:0}
+.ctc .ctc-name{font-family:var(--fd);font-weight:600;font-size:22px;color:var(--on-navy);margin-top:18px}
+.ctc .ctc-role{color:var(--on-navy-2);margin-top:2px;font-size:16px}
+.ctc .ctc-cta{margin-top:20px}
+.ctc-cta .btn{white-space:normal;overflow-wrap:anywhere;text-align:center}
+.ctc-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--navy-line)}
+.ctc-row{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:4px 16px;align-items:center;margin:0;padding:16px 0;border-bottom:1px solid var(--navy-line)}
+.ctc-ico{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;background:var(--navy-2);color:var(--green)}
+.ctc-k{display:block;font-size:13.5px;color:var(--on-navy-2)}
+.ctc-v{display:inline-block;font-size:17px;font-weight:500;color:var(--on-navy);overflow-wrap:anywhere;line-height:1.35}
+.ctc-copy{background:transparent;border-color:var(--navy-line);color:var(--on-navy)}
+.ctc-copy:hover{background:var(--navy-2);border-color:var(--on-navy-2)}
+.ctc-nota{grid-column:1/-1;font-size:13.5px;line-height:1.5;color:var(--on-navy-2);max-width:80ch}
+@media (max-width:899px){.ctc-in{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:639px){.ctc-row{grid-template-columns:36px minmax(0,1fr)}.ctc-ico{width:36px;height:36px}.ctc-copy{grid-column:2;justify-self:start;margin-top:6px}.ctc-v{font-size:16px}}
+
+.foot{background:var(--navy);color:var(--on-navy-2);padding-bottom:env(safe-area-inset-bottom,0px)}
+.foot-strip{height:28px;background:var(--navy-2);overflow:hidden}
+.foot-strip svg{width:100%;height:28px;display:block}
+.foot-in{padding-block:32px;display:flex;flex-wrap:wrap;gap:20px 44px;align-items:center;justify-content:space-between}
+.foot-logo{background:#fff;border-radius:var(--radius-sm);padding:4px 10px;display:inline-flex}
+.foot-logo img{height:36px;width:auto}
+.foot-col{font-size:13.5px;line-height:1.55}
+.foot-col b{color:var(--on-navy);font-weight:600}
+@media (max-width:639px){.foot-in{flex-direction:column;align-items:flex-start;gap:16px}}
+
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}.is-flash{outline:3px solid var(--green);outline-offset:3px}}
+@media print{.topbar,.skip,.route-hint,.cal,.ctc-copy,.cmp-c{display:none!important}.hero,.sec--navy,.foot{-webkit-print-color-adjust:exact;print-color-adjust:exact}.sec{padding-block:32px;break-inside:avoid-page}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-remota" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
+  <symbol id="i-foco" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></symbol>
+  <symbol id="i-neutral" viewBox="0 0 24 24"><path d="M12 4v16M7 20h10M5 8h14"/><path d="M5 8l-3 6a3 3 0 0 0 6 0zM19 8l-3 6a3 3 0 0 0 6 0z"/></symbol>
+  <symbol id="i-tabla" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/></symbol>
+  <symbol id="i-base" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-evidencia" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5.5 5.5M8 10.5l2 2 3.5-4"/></symbol>
+  <symbol id="i-ruta" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6"/></symbol>
+  <symbol id="i-sesion" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M12 16v4M8 20h8M7 12l3-3 2 2 4-4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+  <symbol id="i-proy" viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6M3 20h18"/></symbol>
+  <symbol id="i-tel" viewBox="0 0 24 24"><path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></symbol>
+  <symbol id="i-correo" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
+  <symbol id="i-dir" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+  <symbol id="i-copiar" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+</svg>
+<a class="skip" href="#contenido">Saltar al contenido</a>
+
+<div class="topbar" id="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="#top" aria-label="Sohersa BIM, inicio de la propuesta"><img src="logo-sohersa.png" alt="Sohersa BIM" width="1000" height="440"></a>
+    <nav class="nav" aria-label="Secciones de la propuesta">
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav-menu">Secciones <svg class="ico nav-chev" width="18" height="18" aria-hidden="true"><use href="#i-chev"/></svg></button>
+      <div class="nav-scroll" id="nav-scroll">
+        <ul class="nav-list">
+          <li><a class="nav-link" href="#requerimiento">Requerimiento</a></li>
+          <li><a class="nav-link" href="#metodo">Método</a></li>
+          <li><a class="nav-link" href="#areas">Áreas</a></li>
+          <li><a class="nav-link" href="#muestra">Muestra</a></li>
+          <li><a class="nav-link" href="#programa">Plan de trabajo</a></li>
+          <li><a class="nav-link" href="#entregables">Entregables</a></li>
+          <li><a class="nav-link" href="#equipo">Equipo</a></li>
+          <li><a class="nav-link" href="#compromisos">Compromisos</a></li>
+          <li><a class="nav-link" href="#inversion">Inversión</a></li>
+          <li><a class="nav-link" href="#cobertura">Cobertura</a></li>
+          <li><a class="nav-link" href="#contacto">Contacto</a></li>
+        </ul>
+      </div>
+      <div class="nav-menu" id="nav-menu" hidden>
+        <ul class="nav-menu-list">
+          <li><a class="nav-menu-link" href="#requerimiento">Requerimiento</a></li>
+          <li><a class="nav-menu-link" href="#metodo">Método</a></li>
+          <li><a class="nav-menu-link" href="#areas">Áreas de evaluación</a></li>
+          <li><a class="nav-menu-link" href="#muestra">Muestra de proyectos</a></li>
+          <li><a class="nav-menu-link" href="#programa">Plan de trabajo</a></li>
+          <li><a class="nav-menu-link" href="#entregables">Entregables</a></li>
+          <li><a class="nav-menu-link" href="#equipo">Equipo</a></li>
+          <li><a class="nav-menu-link" href="#compromisos">Compromisos</a></li>
+          <li><a class="nav-menu-link" href="#inversion">Inversión</a></li>
+          <li><a class="nav-menu-link" href="#cobertura">Cobertura de la solicitud</a></li>
+          <li><a class="nav-menu-link" href="#contacto">Contacto</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+</div>
+
+<header class="hero" id="top">
+  <svg class="hero-art" viewBox="0 0 640 150" aria-hidden="true" focusable="false"><polygon points="0,0 560,0 446,150 0,150" fill="#5DB531"/><polygon points="560,0 640,0 526,150 446,150" fill="#2F7D2B"/></svg>
+  <svg class="hero-stripes" viewBox="0 0 520 96" preserveAspectRatio="xMaxYMin meet" aria-hidden="true" focusable="false"><g fill="#5DB531" opacity=".9"><polygon points="4,96 36,96 100,0 68,0"/><polygon points="64,96 96,96 160,0 128,0"/><polygon points="124,96 156,96 220,0 188,0"/><polygon points="184,96 216,96 280,0 248,0"/><polygon points="244,96 276,96 340,0 308,0"/><polygon points="304,96 336,96 400,0 368,0"/><polygon points="364,96 396,96 460,0 428,0"/><polygon points="424,96 456,96 520,0 488,0"/></g></svg>
+  <svg class="hero-cut" viewBox="0 0 680 390" preserveAspectRatio="xMaxYMax meet" aria-hidden="true" focusable="false"><polygon points="0,390 680,390 680,0" fill="#182055"/></svg>
+  <div class="wrap hero-in">
+    <div class="hero-copy">
+      <div class="hero-logo"><img src="logo-sohersa.png" alt="Sohersa BIM" width="1000" height="440"></div>
+      <p class="hero-eyebrow"><span>Propuesta técnica y económica ·</span> <span>Grupo Hermosillo ·</span> <span>Noviembre de 2026 ·</span> <span>Confidencial</span></p>
+      <h1>Diagnóstico de madurez BIM<small>y hoja de ruta estratégica para Grupo Hermosillo</small></h1>
+      <p class="hero-lead">Proponemos determinar con evidencia el nivel actual de madurez BIM de Grupo Hermosillo y estructurar una hoja de ruta priorizada para consolidar y dar continuidad a la implementación del proceso BIM.</p>
+    </div>
+
+    <figure class="route" aria-labelledby="ruta-t">
+      <figcaption class="route-cap">
+        <span class="route-t" id="ruta-t">La ruta: seis semanas en tres fases</span>
+        <span class="route-legend" aria-hidden="true"><span class="rk rk--fase">Fase</span><span class="rk rk--hito">Hito</span><span class="rk rk--sync">Sincronización semanal</span></span>
+      </figcaption>
+      <div class="rt">
+        <div class="rt-lab rt-lab--flags" aria-hidden="true"></div>
+        <div class="rt-track rt-flags" aria-hidden="true">
+          <span class="flag flag--l" style="--x:0;--t:34px">Kick-off<small>Inicio S1</small></span>
+          <span class="flag" style="--x:.5;--t:0px">Evidencia auditada<small>Fin S3</small></span>
+          <span class="flag" style="--x:.8333;--t:34px">Diagnóstico entregado<small>Fin S5</small></span>
+          <span class="flag" style="--x:1;--t:0px">Sesión ejecutiva<small>Fin S6</small></span>
+        </div>
+        <div class="rt-lab rt-lab--axis">Semana</div>
+        <div class="rt-track rt-weeks">
+          <span><b>S1</b><small data-wkd="1"></small></span><span><b>S2</b><small data-wkd="2"></small></span><span><b>S3</b><small data-wkd="3"></small></span><span><b>S4</b><small data-wkd="4"></small></span><span><b>S5</b><small data-wkd="5"></small></span><span><b>S6</b><small data-wkd="6"></small></span>
+          <i class="dia" style="--x:0" aria-hidden="true"></i><i class="dia" style="--x:.5" aria-hidden="true"></i><i class="dia" style="--x:.8333" aria-hidden="true"></i><i class="dia" style="--x:1" aria-hidden="true"></i>
+        </div>
+        <div class="rt-lab"><b>Fase 1</b><span>Levantamiento y auditoría</span></div>
+        <div class="rt-track"><a class="rt-bar" href="#fase-1" style="--a:0;--b:.5" aria-label="Fase 1, semanas 1 a 3: ver detalle">S1 – S3</a></div>
+        <div class="rt-lab"><b>Fase 2</b><span>Diagnóstico y matriz</span></div>
+        <div class="rt-track"><a class="rt-bar" href="#fase-2" style="--a:.3333;--b:.8333" aria-label="Fase 2, semanas 3 a 5: ver detalle">S3 – S5</a></div>
+        <div class="rt-lab"><b>Fase 3</b><span>Hoja de ruta y sesión</span></div>
+        <div class="rt-track"><a class="rt-bar" href="#fase-3" style="--a:.6667;--b:1" aria-label="Fase 3, semanas 5 y 6: ver detalle">S5 – S6</a></div>
+        <div class="rt-lab"><b>Seguimiento</b><span>30 min cada semana</span></div>
+        <div class="rt-track rt-sync" aria-label="Una sesión de sincronización por semana"><i style="--x:.0833"></i><i style="--x:.25"></i><i style="--x:.4167"></i><i style="--x:.5833"></i><i style="--x:.75"></i><i style="--x:.9167"></i></div>
+      </div>
+      <ol class="rt-hitos">
+        <li><b>S1</b> Kick-off</li>
+        <li><b>S3</b> Evidencia auditada</li>
+        <li><b>S5</b> Diagnóstico entregado</li>
+        <li><b>S6</b> Sesión ejecutiva</li>
+      </ol>
+      <p class="route-hint">Cada fase abre su detalle en el plan de trabajo, donde también puede elegirse una fecha de inicio para ver el calendario.</p>
+    </figure>
+
+    <dl class="hero-figs" aria-label="Cifras clave de la propuesta">
+      <div class="hero-fig"><dt>6<small>semanas</small></dt><dd>Duración total del servicio, en tres fases</dd></div>
+      <div class="hero-fig"><dt>7<small>áreas</small></dt><dd>Evaluadas con evidencia verificable</dd></div>
+      <div class="hero-fig"><dt><small class="pre">hasta</small>4<small>proyectos</small></dt><dd>Muestra representativa de la cartera</dd></div>
+      <div class="hero-fig"><dt>100<small>% remota</small></dt><dd>Sin gastos de traslado ni hospedaje</dd></div>
+    </dl>
+  </div>
+</header>
+
+<main id="contenido" tabindex="-1">
+
+<section id="requerimiento" class="sec sec--paper" aria-labelledby="requerimiento-t">
+  <div class="wrap">
+    <header class="sec-head">
+      <span class="eyebrow">01 · El requerimiento</span>
+      <h2 id="requerimiento-t">Evaluar la gestión del proceso BIM, no el dominio del software</h2>
+      <p>Grupo Hermosillo, empresa referente en diseño y construcción (Design-Build) y contratación general, requiere evaluar con rigor técnico el estado real de adopción de la metodología BIM en su operación: la madurez de la gestión del proceso y la consistencia del flujo de información a lo largo del ciclo de vida de sus proyectos.</p>
+    </header>
+
+    <div id="req-ciclo">
+      <p class="life-cap"><span>Fases del ciclo de vida que recorre el diagnóstico</span></p>
+      <ol class="life" aria-label="Ciclo de vida del proyecto">
+        <li>Diseño</li><li>Preconstrucción</li><li>Compras</li><li>Construcción</li><li>Entrega</li>
+      </ol>
+    </div>
+
+    <div class="sub">
+      <h3 class="blk-h sub-h">Lo que obtiene Grupo Hermosillo</h3>
+      <div class="gets">
+        <div class="get"><span class="get-i"><svg class="ico" width="22" height="22" aria-hidden="true"><use href="#i-base"/></svg></span><div><h3>Línea base cuantitativa</h3><p>Calificación general y por área en una escala definida, como punto de partida para medir el avance en evaluaciones posteriores.</p></div></div>
+        <div class="get"><span class="get-i"><svg class="ico" width="22" height="22" aria-hidden="true"><use href="#i-evidencia"/></svg></span><div><h3>Prácticas auditadas con evidencia</h3><p>Fortalezas y brechas identificadas a partir de evidencia verificable, con el análisis de sus causas.</p></div></div>
+        <div class="get"><span class="get-i"><svg class="ico" width="22" height="22" aria-hidden="true"><use href="#i-ruta"/></svg></span><div><h3>Plan de acción viable y priorizado</h3><p>Iniciativas a 6, 12 y 24 meses, con responsables, dependencias e indicadores.</p></div></div>
+      </div>
+      <p class="gets-foot">Con ello, Grupo Hermosillo puede consolidar sus estándares operativos, mitigar reprocesos interdisciplinarios y maximizar la rentabilidad de sus proyectos.</p>
+    </div>
+
+    <div class="sub" id="req-premisas">
+      <h3 class="blk-h sub-h">Premisas del servicio</h3>
+      <div class="prem">
+        <div class="panel"><svg class="ico prem-i" width="26" height="26" aria-hidden="true"><use href="#i-remota"/></svg><h3>Modalidad 100&nbsp;% remota</h3><p>Entrevistas y talleres por videoconferencia, acceso digital seguro a los repositorios CDE y revisión técnica de modelos y documentación. El formato optimiza tiempos, respeta las agendas de los colaboradores y elimina gastos de viáticos.</p></div>
+        <div class="panel"><svg class="ico prem-i" width="26" height="26" aria-hidden="true"><use href="#i-foco"/></svg><h3>Foco en la gestión del proceso</h3><p>Se evalúan la gobernanza de la información, los flujos colaborativos, la estandarización de criterios y la asignación de responsabilidades.</p></div>
+        <div class="panel"><svg class="ico prem-i" width="26" height="26" aria-hidden="true"><use href="#i-neutral"/></svg><h3>Neutralidad tecnológica</h3><p>El análisis tecnológico verifica la interoperabilidad, la consistencia de los datos y la continuidad del intercambio de información. Las necesidades tecnológicas que se detecten se registran como observaciones, con su impacto.</p></div>
+        <div class="panel"><svg class="ico prem-i" width="26" height="26" aria-hidden="true"><use href="#i-tabla"/></svg><h3>Instrumento editable</h3><p>Los resultados se entregan en herramientas estructuradas y editables, que Grupo Hermosillo puede reutilizar en autoevaluaciones periódicas y auditorías de avance.</p></div>
+      </div>
+    </div>
+
+    <div class="sub panel noinc" id="req-noinc">
+      <div><h3 class="pnl-h">Alcance no incluido</h3></div>
+      <ul class="noinc-l">
+        <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-x"/></svg><span>Producción de modelos BIM en cualquier disciplina.</span></li>
+        <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-x"/></svg><span>Elaboración de planos y cuantificación presupuestal.</span></li>
+        <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-x"/></svg><span>Resolución de interferencias entre disciplinas.</span></li>
+        <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-x"/></svg><span>Compra, instalación o configuración de software, y recomendaciones de compra.</span></li>
+      </ul>
+    </div>
+    <span class="sec-end" aria-hidden="true"></span>
+  </div>
+</section>
+
+<section id="metodo" class="sec sec--white" aria-labelledby="metodo-t">
+  <div class="wrap">
+    <header class="sec-head">
+      <span class="eyebrow">02 · Marco metodológico</span>
+      <h2 id="metodo-t">Modelo de madurez de Succar, alineado con la serie ISO 19650</h2>
+      <p>El diagnóstico se fundamenta en el Modelo de Madurez y Capacidad BIM de Bilal Succar, articulado de manera directa con los principios de gestión de la información de la serie ISO 19650.</p>
+    </header>
+    <div class="met">
+      <div class="panel panel--paper">
+        <h3 class="pnl-h">Por qué este modelo</h3>
+        <p style="margin-top:10px">Mide lo que determina la madurez de una organización Design-Build: el grado de estandarización corporativa, la gobernanza del intercambio de datos en el entorno común de datos (CDE), la trazabilidad contractual con subcontratistas y consultores de diseño, y la eficacia en la toma de decisiones a lo largo del ciclo de vida del proyecto. No se limita a qué software se utiliza ni a la complejidad geométrica de los modelos.</p>
+        <span class="lbl">Partes de la serie ISO 19650 que articulan la evaluación</span>
+        <ul class="iso">
+          <li><b>ISO 19650-1</b><span>Conceptos y principios</span></li>
+          <li><b>ISO 19650-2</b><span>Fase de desarrollo de los activos</span></li>
+          <li><b>ISO 19650-4</b><span>Intercambio de información</span></li>
+        </ul>
+      </div>
+      <div class="panel" id="met-cadena">
+        <h3 class="pnl-h">Cómo se obtiene cada calificación</h3>
+        <ol class="chain">
+          <li><b>Evidencia</b><span>Cuestionarios de autodiagnóstico, entrevistas, auditoría de los repositorios CDE y revisión de modelos, minutas y contratos de la muestra.</span></li>
+          <li><b>Calificación por área</b><span>Cada una de las siete áreas se califica conforme a la escala de madurez, con la fuente que la respalda.</span></li>
+          <li><b>Calibración y validación</b><span>Las calificaciones asignadas se calibran y validan técnicamente antes de consolidarse.</span></li>
+          <li><b>Indicador agregado de madurez</b><span>La calificación general de Grupo Hermosillo se calcula a partir de las siete áreas.</span></li>
+          <li><b>Brechas y causa raíz</b><span>Las brechas detectadas se analizan hasta su causa y dan origen a las iniciativas de la hoja de ruta.</span></li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="sub" id="met-escala">
+      <h3 class="blk-h">Criterios de la escala de madurez</h3>
+      <div class="stairs" style="margin-top:22px">
+        <div class="st-step" style="--n:0;--o:0;--c:var(--l0);--k:var(--navy)"><span>Nivel 0</span><b>Inicial</b></div>
+        <div class="st-step" style="--n:1;--o:2;--c:var(--l1);--k:var(--navy)"><span>Nivel 1</span><b>Definido</b></div>
+        <div class="st-step" style="--n:2;--o:4;--c:var(--l2);--k:#fff"><span>Nivel 2</span><b>Gestionado</b></div>
+        <div class="st-step" style="--n:3;--o:6;--c:var(--l3);--k:#fff"><span>Nivel 3</span><b>Integrado</b></div>
+        <div class="st-step" style="--n:4;--o:8;--c:var(--l4);--k:#fff"><span>Nivel 4</span><b>Optimizado</b></div>
+        <p class="st-txt" style="--o:0;--c:var(--l0)">Inexistencia de estándares formales. Procesos dependientes exclusivamente de iniciativas individuales de modeladores o coordinadores. Flujos de información desarticulados entre diseño y obra.</p>
+        <p class="st-txt" style="--o:2;--c:var(--l1)">Directrices básicas y guías documentadas por disciplina. Uso de herramientas de modelado de forma aislada (silos de información). La colaboración interdisciplinaria es reactiva y manual.</p>
+        <p class="st-txt" style="--o:4;--c:var(--l2)">Procedimientos y planes de ejecución estandarizados y aplicados sistemáticamente en proyectos. Control formal de información estructurada y coordinación interdisciplinaria de interferencias.</p>
+        <p class="st-txt" style="--o:6;--c:var(--l3)">Gestión colaborativa integral en todo el ciclo de vida Design-Build. Intercambio de datos gobernado en un Entorno Común de Datos (CDE) y protocolos openBIM. Requisitos contractuales obligatorios para subcontratistas y proveedores.</p>
+        <p class="st-txt" style="--o:8;--c:var(--l4)">Medición continua de desempeño mediante indicadores clave (KPIs). Gestión proactiva de riesgos de información. Mejora continua institucionalizada y retroalimentación sistemática hacia los estándares corporativos.</p>
+      </div>
+    </div>
+    <span class="sec-end" aria-hidden="true"></span>
+  </div>
+</section>
+
+<section id="areas" class="sec sec--paper" aria-labelledby="areas-t">
+  <div class="wrap">
+    <header class="sec-head">
+      <span class="eyebrow">03 · Áreas de evaluación y fuentes de evidencia</span>
+      <h2 id="areas-t">Siete áreas, cada calificación con su evidencia</h2>
+      <p>Cada calificación se sustenta en evidencia recopilada en entrevistas, registros de plataformas y el análisis de los proyectos muestra. La documentación de Grupo Hermosillo que se revisa en todas las áreas queda registrada en la bitácora de evidencias.</p>
+    </header>
+    <div class="ar-head" aria-hidden="true"><span>Área evaluada</span><span>Alcance y foco de la auditoría</span><span>Fuente de evidencia verificable</span></div>
+    <ol class="ar-list">
+      <li class="ar">
+        <div class="ar-n"><i>1</i><b>Procesos y estándares</b></div>
+        <div><span class="lbl">Alcance y foco de la auditoría</span><p class="ar-t">Manuales, directrices, plantillas y protocolos VDC/BIM existentes, y comprobación de su grado real de adopción y cumplimiento en los proyectos en curso.</p></div>
+        <div><span class="lbl">Fuente de evidencia verificable</span><div class="chips"><span class="chip">Manuales internos</span><span class="chip">Guías de modelado</span><span class="chip">Plantillas de software (.rte, .dwg)</span><span class="chip">Actas de inicio de proyectos</span></div></div>
+      </li>
+      <li class="ar">
+        <div class="ar-n"><i>2</i><b>Gestión de la información</b></div>
+        <div><span class="lbl">Alcance y foco de la auditoría</span><p class="ar-t">Arquitectura y administración del entorno común de datos (CDE), codificación y nomenclatura de archivos, estados de aprobación de los contenedores (WIP, compartido y publicado), control de cambios y trazabilidad de versiones.</p></div>
+        <div><span class="lbl">Fuente de evidencia verificable</span><div class="chips"><span class="chip">Carpetas y permisos en plataformas CDE activas</span><span class="chip">Metadatos</span><span class="chip">Registros de cambios</span><span class="chip">Matrices de aprobación</span></div></div>
+      </li>
+      <li class="ar">
+        <div class="ar-n"><i>3</i><b>Gestión del diseño (Design-Build)</b></div>
+        <div><span class="lbl">Alcance y foco de la auditoría</span><p class="ar-t">Integración y coordinación de consultores externos de diseño, formulación de los requisitos de intercambio de información (EIR), control de calidad interdisciplinario y asignación de responsabilidades ante interferencias.</p></div>
+        <div><span class="lbl">Fuente de evidencia verificable</span><div class="chips"><span class="chip">Requerimientos EIR emitidos</span><span class="chip">Minutas de coordinación interdisciplinaria</span><span class="chip">Reportes de interferencias (BCF, Navisworks)</span><span class="chip">Matrices de resolución</span></div></div>
+      </li>
+      <li class="ar">
+        <div class="ar-n"><i>4</i><b>Compras y contratación</b></div>
+        <div><span class="lbl">Alcance y foco de la auditoría</span><p class="ar-t">Especificaciones técnicas y anexos contractuales BIM en licitaciones y contratos con subcontratistas, proveedores y proyectistas; definición de entregables y derechos sobre la información.</p></div>
+        <div><span class="lbl">Fuente de evidencia verificable</span><div class="chips"><span class="chip">Bases de licitación</span><span class="chip">Contratos marco de subcontratación</span><span class="chip">Adendas técnicas BIM</span><span class="chip">Cláusulas de propiedad intelectual de modelos</span></div></div>
+      </li>
+      <li class="ar">
+        <div class="ar-n"><i>5</i><b>Entrega (handover)</b></div>
+        <div><span class="lbl">Alcance y foco de la auditoría</span><p class="ar-t">Procedimientos de integración, revisión y cierre del modelo conforme a obra; fidelidad geométrica y consistencia de los atributos alfanuméricos; transferencia de datos para la operación.</p></div>
+        <div><span class="lbl">Fuente de evidencia verificable</span><div class="chips"><span class="chip">Modelos finales de entrega</span><span class="chip">Hojas de datos técnicos de equipos y espacios</span><span class="chip">Protocolos y actas de entrega-recepción con clientes</span></div></div>
+      </li>
+      <li class="ar">
+        <div class="ar-n"><i>6</i><b>Herramientas e interoperabilidad</b></div>
+        <div><span class="lbl">Alcance y foco de la auditoría</span><p class="ar-t">Ecosistema tecnológico en diseño, costos y obra; fluidez en el intercambio de datos e identificación de pérdidas de información.</p></div>
+        <div><span class="lbl">Fuente de evidencia verificable</span><div class="chips"><span class="chip">Pruebas de exportación e importación</span><span class="chip">Consistencia de tablas de propiedades</span><span class="chip">Mapeo de parámetros entre plataformas</span></div></div>
+      </li>
+      <li class="ar">
+        <div class="ar-n"><i>7</i><b>Personas y competencias</b></div>
+        <div><span class="lbl">Alcance y foco de la auditoría</span><p class="ar-t">Estructura organizativa VDC/BIM, descripción de roles y perfiles operativos, brechas de competencia del personal clave, y pertinencia y cobertura de los planes de capacitación interna.</p></div>
+        <div><span class="lbl">Fuente de evidencia verificable</span><div class="chips"><span class="chip">Entrevistas a profundidad</span><span class="chip">Cuestionarios de competencias técnicas y de gestión</span><span class="chip">Matrices de responsabilidades (RACI)</span></div></div>
+      </li>
+    </ol>
+    <span class="sec-end" aria-hidden="true"></span>
+  </div>
+</section>
+
+<section id="muestra" class="sec sec--white" aria-labelledby="muestra-t">
+  <div class="wrap">
+    <header class="sec-head">
+      <span class="eyebrow">04 · Muestra de proyectos</span>
+      <h2 id="muestra-t">Hasta cuatro proyectos que recorren el ciclo completo</h2>
+      <p>La auditoría se realiza sobre una muestra concertada de hasta cuatro proyectos representativos de la cartera de Grupo Hermosillo, para que el diagnóstico refleje con fidelidad su operación real. La selección final se acuerda en el kick-off.</p>
+    </header>
+    <p class="life-cap"><span>Composición recomendada de la muestra</span></p>
+    <div class="mu">
+      <div class="mu-z"><h3>Diseño o preconstrucción<small>1 proyecto</small></h3><div class="mu-ps"><span class="mu-p"><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-proy"/></svg>P1</span></div></div>
+      <div class="mu-z"><h3>Ejecución activa de obra<small>2 proyectos</small></h3><div class="mu-ps"><span class="mu-p"><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-proy"/></svg>P2</span><span class="mu-p"><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-proy"/></svg>P3</span></div></div>
+      <div class="mu-z"><h3>Entrega final<small>1 proyecto</small></h3><div class="mu-ps"><span class="mu-p"><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-proy"/></svg>P4</span></div></div>
+    </div>
+    <div class="mu-crit">
+      <div><h3>Diversidad de fases</h3><p>La muestra cubre el ciclo de vida completo, conforme a la composición recomendada.</p></div>
+      <div><h3>Representatividad</h3><p>Proyectos representativos del portafolio estratégico de Grupo Hermosillo.</p></div>
+      <div><h3>Disponibilidad de datos</h3><p>Acceso a repositorios CDE, modelos nativos o IFC, minutas de coordinación y contratos que sustenten la auditoría en evidencia.</p></div>
+    </div>
+    <span class="sec-end" aria-hidden="true"></span>
+  </div>
+</section>
+
+<section id="programa" class="sec sec--navy" aria-labelledby="programa-t">
+  <div class="wrap">
+    <header class="sec-head">
+      <span class="eyebrow">05 · Plan de trabajo y cronograma</span>
+      <h2 id="programa-t">Seis semanas continuas en tres fases</h2>
+      <p>Las fases comparten las semanas 3 y 5, en las que cierra una fase y arranca la siguiente. Las entrevistas se concentran en la fase 1 y la presentación de resultados cierra la fase 3.</p>
+    </header>
+
+    <div class="cal">
+      <div>
+        <label for="prg-inicio">Fecha de inicio del servicio (kick-off)</label>
+        <div class="cal-row">
+          <input type="date" id="prg-inicio" name="prg-inicio">
+          <button type="button" class="btn btn--sm btn--outline-light" id="prg-limpiar" hidden>Quitar fecha</button>
+        </div>
+      </div>
+      <p class="cal-st" id="prg-estado" aria-live="polite">Sin fecha de inicio, el calendario se expresa en semanas.</p>
+    </div>
+
+    <div class="fases">
+      <article class="panel fase" id="fase-1" aria-labelledby="fase-1-t">
+        <div class="fase-top"><span class="chip chip--navy mono">Fase 1</span><span class="fase-w">Semanas 1 a 3<span class="fase-d" data-fr="1-3" hidden></span></span></div>
+        <div class="ruler" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
+        <h3 id="fase-1-t">Levantamiento, entrevistas y auditoría de evidencias</h3>
+        <div><span class="lbl">Actividades</span>
+          <ul>
+            <li>Firma del acuerdo de confidencialidad (NDA) y reunión de kick-off con el equipo líder VDC.</li>
+            <li>Selección concertada de hasta cuatro proyectos muestra.</li>
+            <li>Despliegue y análisis de cuestionarios de autodiagnóstico.</li>
+            <li>Entrevistas estratégicas con directores y gerentes de área.</li>
+            <li>Entrevistas operativas y talleres de competencias técnicas.</li>
+            <li>Auditoría remota de repositorios CDE y revisión técnica de modelos.</li>
+          </ul>
+        </div>
+        <div><span class="lbl">Entregables parciales</span>
+          <ul class="ent-p">
+            <li>Acta de kick-off y muestra final.</li>
+            <li>Cuestionarios analizados.</li>
+            <li>Minutas de entrevistas.</li>
+            <li>Bitácora de evidencias examinadas.</li>
+            <li>Reporte de hallazgos en modelos y CDE.</li>
+          </ul>
+        </div>
+      </article>
+      <article class="panel fase" id="fase-2" aria-labelledby="fase-2-t">
+        <div class="fase-top"><span class="chip chip--navy mono">Fase 2</span><span class="fase-w">Semanas 3 a 5<span class="fase-d" data-fr="3-5" hidden></span></span></div>
+        <div class="ruler" aria-hidden="true"><i></i><i></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+        <h3 id="fase-2-t">Diagnóstico de madurez y matriz cuantitativa</h3>
+        <div><span class="lbl">Actividades</span>
+          <ul>
+            <li>Procesamiento sistemático de la evidencia de las siete áreas.</li>
+            <li>Análisis de causa raíz de las brechas detectadas.</li>
+            <li>Cálculo del indicador agregado de madurez (escala 1 a 5).</li>
+            <li>Calibración y validación técnica de las calificaciones asignadas.</li>
+            <li>Construcción y formulación de la herramienta en Excel editable.</li>
+            <li>Redacción y consolidación del informe ejecutivo de diagnóstico en PDF.</li>
+          </ul>
+        </div>
+        <div><span class="lbl">Entregables parciales</span>
+          <ul class="ent-p">
+            <li>Borrador de la matriz cuantitativa.</li>
+            <li>Herramienta de diagnóstico en Excel editable y formulada.</li>
+            <li>Informe ejecutivo de diagnóstico en PDF.</li>
+          </ul>
+        </div>
+      </article>
+      <article class="panel fase" id="fase-3" aria-labelledby="fase-3-t">
+        <div class="fase-top"><span class="chip chip--navy mono">Fase 3</span><span class="fase-w">Semanas 5 y 6<span class="fase-d" data-fr="5-6" hidden></span></span></div>
+        <div class="ruler" aria-hidden="true"><i></i><i></i><i></i><i></i><i class="on"></i><i class="on"></i></div>
+        <h3 id="fase-3-t">Hoja de ruta estratégica y sesión ejecutiva</h3>
+        <div><span class="lbl">Actividades</span>
+          <ul>
+            <li>Formulación y priorización de iniciativas a 6, 12 y 24 meses: acciones, dependencias, KPI organizacionales y notas de interoperabilidad.</li>
+            <li>Elaboración del material gráfico para la presentación ejecutiva.</li>
+            <li>Preparación, coordinación y conducción de la sesión ejecutiva virtual de sustentación ante la Dirección General y Proyectos Estratégicos.</li>
+          </ul>
+        </div>
+        <div><span class="lbl">Entregables parciales</span>
+          <ul class="ent-p">
+            <li>Hoja de ruta estratégica priorizada.</li>
+            <li>Material gráfico de presentación ejecutiva (PPTX y PDF).</li>
+            <li>Sesión ejecutiva de sustentación.</li>
+          </ul>
+        </div>
+      </article>
+    </div>
+
+    <div class="prg-sub">
+      <div class="panel">
+        <h3 class="pnl-h">Hitos de control</h3>
+        <div class="scroll-x" style="margin-top:8px">
+          <table class="hitos">
+            <thead><tr><th scope="col">Hito</th><th scope="col">Momento</th><th scope="col">Fecha estimada</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Kick-off y muestra final</th><td>Inicio de la semana 1</td><td class="f" data-when="ini" data-vacio="—">—</td></tr>
+              <tr><th scope="row">Accesos de lectura a repositorios CDE<small>Compromiso de Grupo Hermosillo</small></th><td>Hasta 5 días hábiles después del kick-off</td><td class="f" data-when="cde" data-vacio="—">—</td></tr>
+              <tr><th scope="row">Cierre de fase 1<small>Evidencia auditada</small></th><td>Fin de la semana 3</td><td class="f" data-when="fin-3" data-vacio="—">—</td></tr>
+              <tr><th scope="row">Cierre de fase 2<small>Diagnóstico entregado</small></th><td>Fin de la semana 5</td><td class="f" data-when="fin-5" data-vacio="—">—</td></tr>
+              <tr><th scope="row">Cierre de fase 3<small>Hoja de ruta y sesión ejecutiva</small></th><td>Fin de la semana 6</td><td class="f" data-when="fin-6" data-vacio="—">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel seg" id="prg-seg">
+        <h3 class="pnl-h">Seguimiento continuo: sincronización semanal de 30 minutos</h3>
+        <p>Reunión virtual entre la coordinación del servicio de Sohersa BIM y Julia Pacheco, Coordinadora de Estándares VDC, durante las seis semanas del servicio, para:</p>
+        <ul>
+          <li>Revisar el cumplimiento del calendario semanal.</li>
+          <li>Coordinar las agendas de entrevistas.</li>
+          <li>Resolver inquietudes puntuales.</li>
+        </ul>
+        <div class="seg-dots" aria-label="Una sesión en cada una de las seis semanas">
+          <span>S1<small data-wkd="1"></small></span><span>S2<small data-wkd="2"></small></span><span>S3<small data-wkd="3"></small></span><span>S4<small data-wkd="4"></small></span><span>S5<small data-wkd="5"></small></span><span>S6<small data-wkd="6"></small></span>
+        </div>
+      </div>
+    </div>
+    <span class="sec-end" aria-hidden="true"></span>
+  </div>
+</section>
+
+<section id="entregables" class="sec sec--paper" aria-labelledby="entregables-t">
+  <div class="wrap">
+    <header class="sec-head">
+      <span class="eyebrow">06 · Entregables</span>
+      <h2 id="entregables-t">Tres productos definitivos, con el diagnóstico en formato editable</h2>
+      <p>Al concluir el servicio, Sohersa BIM entrega a Grupo Hermosillo los siguientes productos.</p>
+    </header>
+    <div class="ent">
+      <article class="panel" id="ent-1">
+        <span class="ent-i"><svg class="ico" width="24" height="24" aria-hidden="true"><use href="#i-tabla"/></svg></span>
+        <h3>Herramienta de diagnóstico de madurez BIM</h3>
+        <div class="chips"><span class="chip chip--green">Excel editable y formulado</span><span class="chip chip--green">Informe ejecutivo en PDF</span></div>
+        <p>Definición documentada de la escala y los criterios por nivel; calificación general y desglosada por cada una de las siete áreas evaluadas; inventario de la evidencia documental y de campo examinada, con la justificación de cada puntaje.</p>
+        <p>Se entrega editable para que Grupo Hermosillo la reutilice en mediciones internas periódicas de seguimiento.</p>
+        <p class="ent-when">Cierre de fase 2 · semana 5</p>
+      </article>
+      <article class="panel" id="ent-2">
+        <span class="ent-i"><svg class="ico" width="24" height="24" aria-hidden="true"><use href="#i-ruta"/></svg></span>
+        <h3>Hoja de ruta estratégica</h3>
+        <div class="chips"><span class="chip chip--green">6 meses</span><span class="chip chip--green">12 meses</span><span class="chip chip--green">Visión a 24 meses</span></div>
+        <p>Matriz priorizada de iniciativas por horizonte. Para cada acción identifica objetivos específicos, impacto esperado, roles y responsabilidades internas, dependencias operativas, indicadores clave de desempeño (KPI) para medir el progreso y el plan de capacitación requerido.</p>
+        <p>Incluye las observaciones técnicas sobre interoperabilidad y flujos de datos, con los puntos por validar.</p>
+        <p class="ent-when">Cierre de fase 3 · semana 6</p>
+      </article>
+      <article class="panel" id="ent-3">
+        <span class="ent-i"><svg class="ico" width="24" height="24" aria-hidden="true"><use href="#i-sesion"/></svg></span>
+        <h3>Sesión ejecutiva de presentación de resultados</h3>
+        <div class="chips"><span class="chip chip--green">Sesión virtual</span><span class="chip chip--green">PPTX y PDF</span></div>
+        <p>Sesión de sustentación estratégica dirigida al Comité de Dirección y Proyectos Estratégicos de Grupo Hermosillo, respaldada por un documento visual que sintetiza los hallazgos críticos, la ruta de implementación y las decisiones inmediatas requeridas.</p>
+        <p class="ent-when">Cierre de fase 3 · semana 6</p>
+      </article>
+    </div>
+    <span class="sec-end" aria-hidden="true"></span>
+  </div>
+</section>
+
+<section id="equipo" class="sec sec--white" aria-labelledby="equipo-t">
+  <div class="wrap">
+    <header class="sec-head">
+      <span class="eyebrow">07 · Equipo consultor</span>
+      <h2 id="equipo-t">Dos especialistas de Sohersa BIM a cargo del diagnóstico</h2>
+    </header>
+    <div class="firm">
+      <p>Sohersa BIM cuenta con una sólida trayectoria brindando servicios especializados de consultoría técnica y transformación digital en la industria de la arquitectura, ingeniería y construcción (AEC). A lo largo de su ejercicio profesional, la firma ha desarrollado diagnósticos de madurez y capacidad BIM para diversas organizaciones y proyectos, evaluando con rigor metodológico sus procesos, flujos de información y competencias técnicas, y entregando análisis de brechas precisos y hojas de ruta estratégicas de alta viabilidad. Asimismo, Sohersa BIM cuenta con una amplia experiencia práctica en servicios integrales de implementación BIM y estandarización corporativa, diseñando estándares bajo la serie ISO 19650, gestionando el cambio organizacional, capacitando al personal clave y brindando acompañamiento técnico en proyectos piloto.</p>
+      <p>El servicio será ejecutado directamente por especialistas de Sohersa BIM con gran trayectoria en consultoría metodológica, estandarización bajo normas internacionales y gestión de proyectos de construcción.</p>
+    </div>
+
+    <h3 class="blk-h sub team-h">Equipo asignado</h3>
+    <div class="team">
+      <article class="panel pro" aria-labelledby="pro-1">
+        <h3 id="pro-1">Arq. Abraham Misael Palomera Aréchiga</h3>
+        <p class="pro-t">Arquitecto · Gerente de Calidad, Estandarización e Implementación BIM</p>
+        <div class="pro-role"><span class="chip chip--navy">Líder de diagnóstico</span></div>
+        <div class="ded"><span class="ded-bar" role="img" aria-label="Dedicación estimada de 35 a 40 por ciento"><i style="--a:35;--b:40"></i></span><span class="ded-v">35–40&nbsp;%</span><span class="ded-k">Dedicación estimada durante las seis semanas</span></div>
+        <span class="lbl">En este servicio</span>
+        <p>Conduce el kick-off y las entrevistas estratégicas con directores y gerentes de área, supervisa el rigor metodológico, calibra y valida las calificaciones, define la hoja de ruta y lidera la sesión ejecutiva ante el Comité de Dirección.</p>
+        <span class="lbl">Trayectoria</span>
+        <p>Arquitecto por la Universidad de Guadalajara, con experiencia en consultoría, coordinación e implementación BIM. Como Gerente de Calidad, Estandarización e Implementación BIM en Sohersa BIM desarrolla estándares, plantillas y procedimientos para la gestión de la información y el control de calidad de los entregables.</p>
+        <p>Ha realizado diagnósticos de madurez BIM e implementaciones de Autodesk Forma para empresas inmobiliarias, constructoras y equipos de diseño arquitectónico. Su trabajo abarca el análisis de procesos para identificar brechas y definir prioridades de implementación, la capacitación, el acompañamiento técnico y el seguimiento a la adopción de nuevas herramientas y flujos de trabajo. También realiza auditorías de modelos BIM, entregables y cumplimiento de procedimientos.</p>
+        <p>Como Coordinador BIM ha elaborado planes de ejecución BIM (BEP), integrado modelos federados y coordinado la detección y el seguimiento de interferencias entre disciplinas, y ha conducido reuniones de coordinación para dar seguimiento a los acuerdos y a la resolución de incidencias con los equipos de proyecto.</p>
+        <span class="lbl">Plataformas</span>
+        <div class="chips"><span class="chip">Revit: arquitectura, estructuras y MEP</span><span class="chip">Navisworks</span><span class="chip">Autodesk Forma</span></div>
+        <p style="margin-top:8px;font-size:14.5px">En Autodesk Forma: administración de cuentas y proyectos, Data Management, Design Collaboration, Model Coordination, Build, herramientas de preconstrucción, Cost Management, Insight y BuildingConnected.</p>
+        <span class="lbl">Formación</span>
+        <ul>
+          <li>Licenciatura en Arquitectura, Centro Universitario de Arte, Arquitectura y Diseño (CUAAD), Universidad de Guadalajara, 2016–2021.</li>
+          <li>Diplomado en Instalaciones en Edificaciones, Instituto Enzo Levi, septiembre de 2023.</li>
+        </ul>
+      </article>
+      <article class="panel pro" aria-labelledby="pro-2">
+        <h3 id="pro-2">Ing. Lizeth Carolina Sánchez Martínez</h3>
+        <p class="pro-t">Ingeniera en Biotecnología · Ingeniera de Procesos y Calidad</p>
+        <div class="pro-role"><span class="chip chip--navy">Consultora de diagnóstico y análisis de información</span></div>
+        <div class="ded"><span class="ded-bar" role="img" aria-label="Dedicación estimada de 60 a 65 por ciento"><i style="--a:60;--b:65"></i></span><span class="ded-v">60–65&nbsp;%</span><span class="ded-k">Dedicación estimada durante las seis semanas</span></div>
+        <span class="lbl">En este servicio</span>
+        <p>Despliega y analiza los cuestionarios de autodiagnóstico, conduce las entrevistas técnicas y operativas con el personal clave, audita de forma remota los repositorios CDE y los modelos muestra, construye la herramienta en Excel formulada, redacta el informe ejecutivo y da soporte técnico en la hoja de ruta.</p>
+        <span class="lbl">Trayectoria</span>
+        <p>Ingeniera en Biotecnología por la Universidad Autónoma de Guadalajara, con experiencia en sistemas de gestión de calidad, análisis de procesos y documentación de procedimientos, con enfoque en la mejora continua. Desde febrero de 2026 se desempeña como Ingeniera de Procesos y Calidad en el área de Estandarización y Calidad de Sohersa BIM.</p>
+        <p>Ha participado en la ejecución de diagnósticos de madurez BIM para empresas inmobiliarias, constructoras y despachos de diseño arquitectónico: aplicación de cuestionarios, realización de entrevistas, análisis de la información recabada y elaboración de entregables de diagnóstico, para evaluar cómo cada organización integra BIM en sus procesos operativos, cómo gestiona la información de sus proyectos y dónde existen oportunidades de mejora.</p>
+        <p>En Sohersa BIM participa también en la elaboración y actualización de procedimientos internos y en el proyecto de implementación de la norma ISO 19650 en los procesos operativos de la empresa.</p>
+        <span class="lbl">Habilidades y herramientas</span>
+        <div class="chips"><span class="chip">Análisis de datos</span><span class="chip">Gestión documental</span><span class="chip">Redacción técnica</span><span class="chip">Microsoft Office</span><span class="chip">Autodesk Forma</span></div>
+        <span class="lbl">Formación y certificaciones</span>
+        <ul>
+          <li>Certificación Lean Six Sigma Yellow Belt, International Lean Six Sigma, octubre de 2026.</li>
+          <li>Licenciatura en Ingeniería en Biotecnología, Universidad Autónoma de Guadalajara, 2017–2021.</li>
+        </ul>
+      </article>
+    </div>
+
+    <div class="sub">
+      <h3 class="blk-h sub-h">Responsabilidades por fase</h3>
+      <div class="scroll-x">
+        <table class="raci">
+          <thead><tr><th scope="col">Fase</th><th scope="col">Arq. Misael Palomera</th><th scope="col">Ing. Lizeth Sánchez</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Fase 1 · Levantamiento, entrevistas y auditoría de evidencias</th><td data-l="Arq. Misael Palomera"><b>Lidera:</b> entrevistas estratégicas y supervisión</td><td data-l="Ing. Lizeth Sánchez"><b>Ejecuta:</b> levantamiento y revisión de CDE</td></tr>
+            <tr><th scope="row">Fase 2 · Diagnóstico de madurez y matriz cuantitativa</th><td data-l="Arq. Misael Palomera"><b>Lidera y valida:</b> validación y dictamen</td><td data-l="Ing. Lizeth Sánchez"><b>Ejecuta:</b> herramienta en Excel y redacción</td></tr>
+            <tr><th scope="row">Fase 3 · Hoja de ruta estratégica y sesión ejecutiva</th><td data-l="Arq. Misael Palomera"><b>Lidera y expone:</b> estrategia y sustentación</td><td data-l="Ing. Lizeth Sánchez"><b>Apoya:</b> KPI, cronograma y soporte</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <span class="sec-end" aria-hidden="true"></span>
+  </div>
+</section>
+
+<section id="compromisos" class="sec sec--paper" aria-labelledby="compromisos-t">
+  <div class="wrap">
+    <header class="sec-head">
+      <span class="eyebrow">08 · Supuestos y compromisos</span>
+      <h2 id="compromisos-t">Lo que Grupo Hermosillo aporta para cumplir las seis semanas</h2>
+      <p>El cumplimiento del cronograma y la profundidad de los hallazgos dependen de tres compromisos operativos de Grupo Hermosillo.</p>
+    </header>
+    <ul class="cmp">
+      <li class="cmp-i">
+        <label class="cmp-c" for="cmp-1"><input type="checkbox" id="cmp-1"><span class="sr-only">Marcar como confirmado</span></label>
+        <h3>Contraparte técnica designada</h3>
+        <p>Confirmación de Julia Pacheco, Coordinadora de Estándares VDC, o del enlace que se designe, como responsable de coordinar las convocatorias internas y validar las solicitudes de información.</p>
+      </li>
+      <li class="cmp-i">
+        <label class="cmp-c" for="cmp-2"><input type="checkbox" id="cmp-2"><span class="sr-only">Marcar como confirmado</span></label>
+        <h3>Disponibilidad de agendas</h3>
+        <p>Participación puntual del personal clave en las entrevistas virtuales, estimadas en 60 minutos por líder de área, conforme al calendario acordado en el kick-off.</p>
+      </li>
+      <li class="cmp-i">
+        <label class="cmp-c" for="cmp-3"><input type="checkbox" id="cmp-3"><span class="sr-only">Marcar como confirmado</span></label>
+        <h3>Accesos de lectura a los repositorios CDE</h3>
+        <p>Carpetas de proyectos, modelos nativos o IFC, minutas y contratos de la muestra, a más tardar cinco días hábiles después de la reunión de kick-off.</p>
+        <span class="cmp-dl" data-when="cde" data-pre="Fecha límite estimada: " hidden></span>
+      </li>
+    </ul>
+    <p class="cmp-n" id="cmp-n" aria-live="polite">Cada compromiso puede marcarse conforme Grupo Hermosillo lo confirme.</p>
+    <span class="sec-end" aria-hidden="true"></span>
+  </div>
+</section>
+
+<section id="inversion" class="sec sec--white" aria-labelledby="inversion-t">
+  <div class="wrap inv">
+    <header class="sec-head">
+      <span class="eyebrow">09 · Propuesta económica</span>
+      <h2 id="inversion-t">Inversión por fase y pago contra hitos verificables</h2>
+      <p>Honorarios profesionales por la ejecución integral del servicio de diagnóstico y hoja de ruta, en modalidad 100&nbsp;% remota.</p>
+    </header>
+    <div class="panel inv-sum">
+      <div>
+        <p class="inv-k">Total del servicio</p>
+        <p class="inv-tot">$163,200.00</p>
+        <p class="inv-iva">Pesos mexicanos, más IVA</p>
+      </div>
+      <div>
+        <p class="pnl-h" style="font-size:16.5px;margin-bottom:12px">Peso de cada fase sobre el total</p>
+        <div class="inv-bar">
+          <a href="#inv-f1" style="--p:40" aria-label="Fase 1: 40 por ciento">F1</a>
+          <a href="#inv-f2" style="--p:35" aria-label="Fase 2: 35 por ciento">F2</a>
+          <a href="#inv-f3" style="--p:25" aria-label="Fase 3: 25 por ciento">F3</a>
+        </div>
+        <div class="inv-bar-k" aria-hidden="true"><span style="--p:40">40&nbsp;%</span><span style="--p:35">35&nbsp;%</span><span style="--p:25">25&nbsp;%</span></div>
+        <p class="inv-bar-n">Cada segmento lleva a su fase en el desglose.</p>
+      </div>
+    </div>
+
+    <div class="sub">
+      <h3 class="blk-h sub-h">Desglose por fase</h3>
+      <div class="scroll-x">
+        <table class="inv-tab">
+          <thead><tr><th scope="col">Fase</th><th scope="col">Alcance y entregables asociados</th><th scope="col">Semanas</th><th scope="col" class="n">Peso</th><th scope="col" class="n">Importe</th></tr></thead>
+          <tbody>
+            <tr id="inv-f1"><th scope="row">Levantamiento, entrevistas y auditoría de evidencias<small>Fase 1</small></th><td class="d">Kick-off y selección de la muestra, cuestionarios de autodiagnóstico, entrevistas estratégicas y operativas, talleres de competencias y auditoría remota de repositorios CDE y modelos.</td><td data-l="Semanas" class="nw">1 a 3</td><td data-l="Peso" class="n">40&nbsp;%</td><td data-l="Importe" class="n">$65,280.00</td></tr>
+            <tr id="inv-f2"><th scope="row">Diagnóstico de madurez y matriz cuantitativa<small>Fase 2</small></th><td class="d">Calificación de las siete áreas, análisis de causa raíz de brechas, calibración y validación de calificaciones, herramienta en Excel editable e informe ejecutivo de diagnóstico en PDF.</td><td data-l="Semanas" class="nw">3 a 5</td><td data-l="Peso" class="n">35&nbsp;%</td><td data-l="Importe" class="n">$57,120.00</td></tr>
+            <tr id="inv-f3"><th scope="row">Hoja de ruta estratégica y sesión ejecutiva<small>Fase 3</small></th><td class="d">Hoja de ruta a 6, 12 y 24 meses con acciones, dependencias, KPI y observaciones tecnológicas; material de presentación ejecutiva y sesión de sustentación ante la Dirección General y Proyectos Estratégicos.</td><td data-l="Semanas" class="nw">5 y 6</td><td data-l="Peso" class="n">25&nbsp;%</td><td data-l="Importe" class="n">$40,800.00</td></tr>
+          </tbody>
+          <tfoot><tr><th scope="row">Total</th><td class="d">Ejecución integral del servicio de diagnóstico y hoja de ruta en modalidad 100&nbsp;% remota.</td><td data-l="Semanas" class="nw">6</td><td data-l="Peso" class="n">100&nbsp;%</td><td data-l="Importe" class="n">$163,200.00</td></tr></tfoot>
+        </table>
+      </div>
+      <p class="inv-bar-n">Importes en pesos mexicanos, más IVA.</p>
+    </div>
+
+    <div class="sub" id="inv-pagos">
+      <h3 class="blk-h">Esquema de hitos de pago</h3>
+      <p class="blk-p">Los honorarios se facturan asociados al cumplimiento de hitos técnicos verificables del servicio.</p>
+      <div class="pay-bar" aria-hidden="true" style="margin-top:18px"><span style="--p:30"></span><span style="--p:10"></span><span style="--p:35"></span><span style="--p:25"></span></div>
+      <ol class="pay">
+        <li><span class="pay-p">30<small>%</small></span><h4>Anticipo</h4><span class="pay-m">$48,960.00 más IVA</span><p>A la firma del contrato de prestación de servicios y del acuerdo de confidencialidad, al inicio de la fase 1.</p><p class="pay-w">A la firma<span data-when="ini" data-pre="Inicio: " hidden></span></p></li>
+        <li><span class="pay-p">10<small>%</small></span><h4>Cierre de fase 1</h4><span class="pay-m">$16,320.00 más IVA</span><p>Al concluir el levantamiento, las entrevistas y la auditoría de evidencias de los proyectos muestra.</p><p class="pay-w">Fin de la semana 3<span data-when="fin-3" hidden></span></p></li>
+        <li><span class="pay-p">35<small>%</small></span><h4>Cierre de fase 2</h4><span class="pay-m">$57,120.00 más IVA</span><p>Contra entrega del diagnóstico de madurez, la matriz cuantitativa editable en Excel y el informe ejecutivo en PDF.</p><p class="pay-w">Fin de la semana 5<span data-when="fin-5" hidden></span></p></li>
+        <li><span class="pay-p">25<small>%</small></span><h4>Cierre de fase 3</h4><span class="pay-m">$40,800.00 más IVA</span><p>Contra entrega de la hoja de ruta estratégica y realización de la sesión ejecutiva de presentación.</p><p class="pay-w">Fin de la semana 6<span data-when="fin-6" hidden></span></p></li>
+      </ol>
+    </div>
+
+    <div class="sub" id="inv-terminos">
+      <h3 class="blk-h sub-h">Términos y vigencia</h3>
+      <div class="terms">
+        <div class="panel panel--paper"><h3>Modalidad remota y viáticos extraordinarios</h3><p>El servicio no contempla gastos de traslado ni hospedaje por ejecutarse en modalidad 100&nbsp;% remota. Las visitas presenciales extraordinarias que se soliciten de común acuerdo se cotizan a costo comprobable, previa autorización por escrito de Grupo Hermosillo.</p></div>
+        <div class="panel panel--paper"><h3>Vigencia de la oferta</h3><p>La propuesta técnica y económica tiene una validez de treinta (30) días naturales a partir de la fecha de su emisión.</p></div>
+      </div>
+    </div>
+    <span class="sec-end" aria-hidden="true"></span>
+  </div>
+</section>
+
+<section id="cobertura" class="sec sec--paper" aria-labelledby="cobertura-t">
+  <div class="wrap">
+    <header class="sec-head">
+      <span class="eyebrow">10 · Cobertura de la solicitud</span>
+      <h2 id="cobertura-t">Cada apartado de la solicitud, con su respuesta en esta propuesta</h2>
+      <p>Referencia cruzada entre la solicitud de propuesta de Grupo Hermosillo y las secciones de esta propuesta. Cada enlace lleva a la respuesta.</p>
+    </header>
+    <div class="cob">
+      <div class="panel cob-g">
+        <h3>Objetivo y alcance</h3>
+        <ul class="cob-l">
+          <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg><span class="cob-r">Nivel actual de madurez BIM con base en evidencia</span><span class="cob-a">Calificación por área con su fuente verificable.<a class="tag" href="#areas">Áreas</a></span></li>
+          <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg><span class="cob-r">Fortalezas, brechas y sus causas</span><span class="cob-a">Análisis de causa raíz de las brechas detectadas.<a class="tag" href="#met-cadena">Método</a></span></li>
+          <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg><span class="cob-r">Línea base para evaluaciones posteriores</span><span class="cob-a">Herramienta editable y reutilizable.<a class="tag" href="#ent-1">Entregables</a></span></li>
+          <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg><span class="cob-r">Ciclo de vida completo, con foco en la gestión del proceso</span><span class="cob-a">Diseño, preconstrucción, compras, construcción y entrega.<a class="tag" href="#req-ciclo">Requerimiento</a></span></li>
+          <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg><span class="cob-r">Muestra de proyectos definida en conjunto</span><span class="cob-a">Hasta cuatro proyectos, concertados en el kick-off.<a class="tag" href="#muestra">Muestra</a></span></li>
+        </ul>
+      </div>
+      <div class="panel cob-g">
+        <h3>Hoja de ruta</h3>
+        <ul class="cob-l">
+          <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg><span class="cob-r">Horizontes de 6 y 12 meses, y opcional de 24</span><span class="cob-a">Incluye los tres horizontes.<a class="tag" href="#ent-2">Entregables</a></span></li>
+          <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg><span class="cob-r">Acciones, responsables, dependencias, capacitación e indicadores</span><span class="cob-a">Matriz priorizada por iniciativa, con observaciones y puntos por validar.<a class="tag" href="#ent-2">Entregables</a></span></li>
+          <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg><span class="cob-r">Sin recomendación de compra de software</span><span class="cob-a">Necesidades tecnológicas registradas como observaciones, con su impacto.<a class="tag" href="#req-premisas">Premisas</a></span></li>
+        </ul>
+      </div>
+      <div class="panel cob-g">
+        <h3>Áreas y modelo de evaluación</h3>
+        <ul class="cob-l">
+          <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg><span class="cob-r">Áreas mínimas y revisión de la documentación</span><span class="cob-a">Siete áreas y bitácora de evidencias.<a class="tag" href="#areas">Áreas</a></span></li>
+          <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg><span class="cob-r">Modelo, fuente, escala y justificación</span><span class="cob-a">Modelo de Succar alineado con la serie ISO 19650, con su escala de madurez.<a class="tag" href="#metodo">Método</a></span></li>
+          <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg><span class="cob-r">Calificación general y por área, con su evidencia</span><span class="cob-a">Indicador agregado y calificación por área.<a class="tag" href="#met-cadena">Método</a></span></li>
+        </ul>
+      </div>
+      <div class="panel cob-g">
+        <h3>Entregables y seguimiento</h3>
+        <ul class="cob-l">
+          <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg><span class="cob-r">Diagnóstico de madurez en formato editable</span><span class="cob-a">Excel formulado e informe ejecutivo en PDF.<a class="tag" href="#ent-1">Entregables</a></span></li>
+          <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg><span class="cob-r">Sesión de presentación de resultados</span><span class="cob-a">Sesión ejecutiva virtual con material en PPTX y PDF.<a class="tag" href="#ent-3">Entregables</a></span></li>
+          <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg><span class="cob-r">Seguimiento continuo con quien lidera el diagnóstico en Grupo Hermosillo</span><span class="cob-a">Sincronización semanal de 30 minutos.<a class="tag" href="#prg-seg">Plan de trabajo</a></span></li>
+        </ul>
+      </div>
+      <div class="panel cob-g">
+        <h3>Contenido de la propuesta</h3>
+        <ul class="cob-l">
+          <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg><span class="cob-r">Propuesta técnica</span><span class="cob-a">Método, modelo de madurez, áreas, fuentes de evidencia y criterios de calificación.<a class="tag" href="#metodo">Método</a></span></li>
+          <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg><span class="cob-r">Capacidad instalada</span><span class="cob-a">Equipo con rol, dedicación y currículum, y experiencia de la firma.<a class="tag" href="#equipo">Equipo</a></span></li>
+          <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg><span class="cob-r">Plan de trabajo y cronograma</span><span class="cob-a">Fases, actividades, hitos y duración total, con entrevistas y presentación de resultados.<a class="tag" href="#programa">Plan de trabajo</a></span></li>
+          <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg><span class="cob-r">Propuesta económica</span><span class="cob-a">Desglose por fase, forma de pago y vigencia.<a class="tag" href="#inversion">Inversión</a></span></li>
+        </ul>
+      </div>
+      <div class="panel cob-g">
+        <h3>Fuera del alcance</h3>
+        <ul class="cob-l">
+          <li><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg><span class="cob-r">Software y servicios de modelado</span><span class="cob-a">Compra, instalación o configuración de software, y modelado en cualquier disciplina, excluidos del alcance.<a class="tag" href="#req-noinc">Requerimiento</a></span></li>
+        </ul>
+      </div>
+    </div>
+    <span class="sec-end" aria-hidden="true"></span>
+  </div>
+</section>
+
+<section id="contacto" class="sec sec--navy ctc" aria-labelledby="contacto-t">
+  <svg class="ctc-stripes" viewBox="0 0 400 64" preserveAspectRatio="xMaxYMin meet" aria-hidden="true" focusable="false"><g fill="#5DB531"><polygon points="4,64 28,64 70,0 46,0"/><polygon points="54,64 78,64 120,0 96,0"/><polygon points="104,64 128,64 170,0 146,0"/><polygon points="154,64 178,64 220,0 196,0"/><polygon points="204,64 228,64 270,0 246,0"/><polygon points="254,64 278,64 320,0 296,0"/><polygon points="304,64 328,64 370,0 346,0"/><polygon points="354,64 378,64 420,0 396,0"/></g></svg>
+  <div class="wrap ctc-in">
+    <header class="sec-head">
+      <span class="eyebrow">Contacto</span>
+      <h2 id="contacto-t">Contacto de Sohersa para esta propuesta</h2>
+      <p class="ctc-name">Ing. Alejandro Vizcaíno</p>
+      <p class="ctc-role">Director Comercial · Sohersa BIM</p>
+      <p class="ctc-cta"><a class="btn btn--light" href="mailto:a.vizcaino@gruposohersa.com?subject=Diagn%C3%B3stico%20de%20madurez%20BIM%20%C2%B7%20Grupo%20Hermosillo"><svg class="ico" width="18" height="18" aria-hidden="true"><use href="#i-correo"/></svg>Escribir a a.vizcaino@gruposohersa.com</a></p>
+    </header>
+    <ul class="ctc-list" aria-label="Datos de contacto">
+      <li class="ctc-row"><span class="ctc-ico"><svg class="ico" width="20" height="20" aria-hidden="true"><use href="#i-tel"/></svg></span><span><span class="ctc-k">Teléfono</span><a class="ctc-v" href="tel:+523316013380">+52 33 1601 3380</a></span><button type="button" class="btn btn--sm ctc-copy" data-copy="+52 33 1601 3380"><svg class="ico" width="16" height="16" aria-hidden="true"><use href="#i-copiar"/></svg><span>Copiar</span></button></li>
+      <li class="ctc-row"><span class="ctc-ico"><svg class="ico" width="20" height="20" aria-hidden="true"><use href="#i-correo"/></svg></span><span><span class="ctc-k">Correo</span><a class="ctc-v" href="mailto:a.vizcaino@gruposohersa.com">a.vizcaino@gruposohersa.com</a></span><button type="button" class="btn btn--sm ctc-copy" data-copy="a.vizcaino@gruposohersa.com"><svg class="ico" width="16" height="16" aria-hidden="true"><use href="#i-copiar"/></svg><span>Copiar</span></button></li>
+      <li class="ctc-row"><span class="ctc-ico"><svg class="ico" width="20" height="20" aria-hidden="true"><use href="#i-dir"/></svg></span><span><span class="ctc-k">Dirección</span><span class="ctc-v">C. Franz Liszt #5293, La Estancia, 45030 Zapopan, Jalisco, México</span></span><button type="button" class="btn btn--sm ctc-copy" data-copy="C. Franz Liszt #5293, La Estancia, 45030 Zapopan, Jalisco, México"><svg class="ico" width="16" height="16" aria-hidden="true"><use href="#i-copiar"/></svg><span>Copiar</span></button></li>
+    </ul>
+    <p class="ctc-nota">Versión interactiva de la propuesta técnica y económica de noviembre de 2026 (versión 1.0). Los alcances y los importes son los de la propuesta.</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="foot-strip" aria-hidden="true"><svg viewBox="0 0 1440 28" preserveAspectRatio="xMaxYMid slice" focusable="false"><g fill="#5DB531"><polygon points="880,28 904,28 936,0 912,0"/><polygon points="930,28 954,28 986,0 962,0"/><polygon points="980,28 1004,28 1036,0 1012,0"/><polygon points="1030,28 1054,28 1086,0 1062,0"/><polygon points="1080,28 1104,28 1136,0 1112,0"/><polygon points="1130,28 1154,28 1186,0 1162,0"/><polygon points="1180,28 1204,28 1236,0 1212,0"/><polygon points="1230,28 1254,28 1286,0 1262,0"/><polygon points="1280,28 1304,28 1336,0 1312,0"/><polygon points="1330,28 1354,28 1386,0 1362,0"/><polygon points="1380,28 1404,28 1436,0 1412,0"/><polygon points="1430,28 1454,28 1486,0 1462,0"/></g></svg></div>
+  <div class="wrap foot-in">
+    <div class="foot-logo"><img src="logo-sohersa.png" alt="Sohersa BIM" width="1000" height="440"></div>
+    <div class="foot-col"><b>Ing. Alejandro Vizcaíno</b><br>+52 33 1601 3380 · a.vizcaino@gruposohersa.com</div>
+    <div class="foot-col"><b>C. Franz Liszt #5293, La Estancia</b><br>45030 Zapopan, Jalisco, México</div>
+    <div class="foot-col"><b>Diagnóstico de madurez BIM</b><br>Grupo Hermosillo · Noviembre de 2026 · Confidencial</div>
+  </div>
+</footer>
+
+<script>
+{
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const store={
+  get(k){try{return window.localStorage.getItem(k)}catch(e){return null}},
+  set(k,v){try{if(v==null||v==='')window.localStorage.removeItem(k);else window.localStorage.setItem(k,v)}catch(e){}}
+};
+const K='sohersa-ghd-';
+const reduce=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+/* Navegación */
+const toggle=$('#nav-toggle'),menu=$('#nav-menu'),scroller=$('#nav-scroll');
+const closeMenu=()=>{menu.hidden=true;toggle.setAttribute('aria-expanded','false')};
+toggle.addEventListener('click',e=>{e.stopPropagation();const open=menu.hidden;menu.hidden=!open;toggle.setAttribute('aria-expanded',String(open))});
+document.addEventListener('click',e=>{if(!menu.hidden&&!menu.contains(e.target)&&e.target!==toggle)closeMenu()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden){closeMenu();toggle.focus()}});
+$$('.nav-menu-link').forEach(a=>a.addEventListener('click',closeMenu));
+const links=$$('.nav-link,.nav-menu-link');
+const fades=()=>{const m=scroller.scrollWidth-scroller.clientWidth;scroller.classList.toggle('fade-l',scroller.scrollLeft>4);scroller.classList.toggle('fade-r',scroller.scrollLeft<m-4)};
+scroller.addEventListener('scroll',fades,{passive:true});
+window.addEventListener('resize',fades);
+fades();
+let activo='';
+const setActive=id=>{
+  if(id===activo)return;activo=id;
+  links.forEach(a=>{const on=a.getAttribute('href')==='#'+id;a.classList.toggle('is-active',on);if(on)a.setAttribute('aria-current','true');else a.removeAttribute('aria-current')});
+  const cur=$('.nav-link.is-active');
+  if(cur&&scroller.offsetParent){const l=cur.offsetLeft-scroller.clientWidth/2+cur.clientWidth/2;scroller.scrollTo({left:Math.max(0,l),behavior:reduce?'auto':'smooth'})}
+};
+if('IntersectionObserver' in window){
+  const navObs=new IntersectionObserver(es=>{es.forEach(en=>{if(en.isIntersecting)setActive(en.target.id)})},{rootMargin:'-45% 0px -50% 0px'});
+  $$('main section[id]').forEach(s=>navObs.observe(s));
+}
+
+/* Resaltado del destino al seguir un enlace interno */
+const flash=id=>{const t=document.getElementById(id);if(!t)return;t.classList.remove('is-flash');void t.offsetWidth;t.classList.add('is-flash');window.setTimeout(()=>t.classList.remove('is-flash'),1700)};
+document.addEventListener('click',e=>{
+  const a=e.target.closest('a[href^="#"]');if(!a)return;
+  if(!a.closest('.route,.cob,.inv-bar'))return;
+  const id=a.getAttribute('href').slice(1);
+  if(id)window.setTimeout(()=>flash(id),reduce?0:480);
+});
+
+/* Calendario */
+const MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const MESL=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DIA=['dom','lun','mar','mié','jue','vie','sáb'];
+const DIAL=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const parse=v=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v||'');if(!m)return null;const d=new Date(+m[1],+m[2]-1,+m[3]);return isNaN(d.getTime())?null:d};
+const add=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
+const habil=d=>d.getDay()>0&&d.getDay()<6;
+const ultimoHabil=d=>{let x=d;while(!habil(x))x=add(x,-1);return x};
+const sumaHabiles=(d,n)=>{let x=d,k=n;while(k>0){x=add(x,1);if(habil(x))k--}return x};
+const corto=d=>d.getDate()+' '+MES[d.getMonth()];
+const medio=d=>DIA[d.getDay()]+' '+d.getDate()+' '+MES[d.getMonth()]+' '+d.getFullYear();
+const largo=d=>DIAL[d.getDay()]+' '+d.getDate()+' de '+MESL[d.getMonth()]+' de '+d.getFullYear();
+const rango=(a,b)=>(a.getMonth()===b.getMonth()&&a.getFullYear()===b.getFullYear())?(a.getDate()+'–'+b.getDate()+' '+MES[a.getMonth()]):(corto(a)+' – '+corto(b));
+const semIni=(d,k)=>add(d,7*(k-1));
+const semFin=(d,k)=>ultimoHabil(add(d,7*k-1));
+const cuando=(k,d)=>{if(k==='ini')return d;if(k==='cde')return sumaHabiles(d,5);const m=/^fin-(\d)$/.exec(k);return m?semFin(d,+m[1]):null};
+const inp=$('#prg-inicio'),estado=$('#prg-estado'),limpiar=$('#prg-limpiar');
+const pintar=()=>{
+  const d=parse(inp.value);
+  $$('[data-wkd]').forEach(el=>{el.textContent=d?corto(semIni(d,+el.dataset.wkd)):''});
+  $$('[data-fr]').forEach(el=>{const p=el.dataset.fr.split('-').map(Number);el.textContent=d?rango(semIni(d,p[0]),semFin(d,p[1])):'';el.hidden=!d});
+  $$('[data-when]').forEach(el=>{const r=d?cuando(el.dataset.when,d):null;if(r){el.textContent=(el.dataset.pre||'')+medio(r);el.hidden=false}else{el.textContent=el.dataset.vacio||'';el.hidden=!el.dataset.vacio}});
+  estado.textContent=d?('Del '+largo(d)+' al '+largo(semFin(d,6))+'. Fechas estimadas en semanas naturales, sin considerar días inhábiles.'):'Sin fecha de inicio, el calendario se expresa en semanas.';
+  limpiar.hidden=!d;
+};
+inp.addEventListener('change',()=>{store.set(K+'inicio',parse(inp.value)?inp.value:null);pintar()});
+inp.addEventListener('input',pintar);
+limpiar.addEventListener('click',()=>{inp.value='';store.set(K+'inicio',null);pintar();inp.focus()});
+const guardada=store.get(K+'inicio');
+if(guardada&&parse(guardada))inp.value=guardada;
+pintar();
+
+/* Compromisos */
+const cmps=$$('.cmp input[type=checkbox]'),cmpN=$('#cmp-n');
+const contar=()=>{const n=cmps.filter(c=>c.checked).length;cmpN.textContent=n?(n+' de '+cmps.length+' compromisos marcados como confirmados.'):'Cada compromiso puede marcarse conforme Grupo Hermosillo lo confirme.'};
+cmps.forEach(c=>{
+  if(store.get(K+c.id)==='1')c.checked=true;
+  c.closest('.cmp-i').classList.toggle('is-ok',c.checked);
+  c.addEventListener('change',()=>{store.set(K+c.id,c.checked?'1':null);c.closest('.cmp-i').classList.toggle('is-ok',c.checked);contar()});
+});
+contar();
+
+/* Copiar datos de contacto */
+$$('[data-copy]').forEach(b=>b.addEventListener('click',()=>{
+  const lab=b.querySelector('span');
+  const fin=(msg,ok)=>{lab.textContent=msg;b.classList.toggle('is-done',ok);window.setTimeout(()=>{lab.textContent='Copiar';b.classList.remove('is-done')},1800)};
+  try{navigator.clipboard.writeText(b.dataset.copy).then(()=>fin('Copiado',true),()=>fin('No disponible',false))}catch(e){fin('No disponible',false)}
+}));
+}
+</script>
+</body>
+</html>
